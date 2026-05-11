@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:baladeyate/utils/constants.dart';
-import './signup.dart';
+import 'package:go_router/go_router.dart';
 
 class LogIn extends StatefulWidget {
   const LogIn({super.key});
@@ -25,9 +25,7 @@ class _LogInState extends State<LogIn> {
 
   void _handleLogin() {
     if (_formKey.currentState?.validate() ?? false) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('تم تسجيل الدخول بنجاح')),
-      );
+      context.go('/main');
     }
   }
 
@@ -109,8 +107,8 @@ class _LogInState extends State<LogIn> {
                       Container(
                         width: 4,
                         height: 80,
-                        color: AppConstants.primaryForest,
-                        margin: const EdgeInsets.only(right: 16),
+                        color: AppConstants.green,
+                        margin: const EdgeInsets.only(left: 16),
                       ),
                       Expanded(
                         child: Column(
@@ -251,10 +249,7 @@ class _LogInState extends State<LogIn> {
                   // Sign Up Link
                   GestureDetector(
                     onTap: () {
-                      Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(builder: (context) => const SignUP()),
-                      );
+                      context.go('/signup');
                     },
                     child: RichText(
                       textDirection: TextDirection.rtl,

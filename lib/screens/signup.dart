@@ -1,4 +1,6 @@
+import 'package:baladeyate/widgets/custom_textfield.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import '../utils/constants.dart';
 import './login.dart';
 
@@ -90,7 +92,7 @@ class _SignUPState extends State<SignUP> {
                 const SizedBox(height: 32),
                 // First Name Field
                 _buildLabel('الاسم الأول'),
-                _buildTextField(
+                CustomTextfield(
                   controller: _firstNameController,
                   hint: 'مثال: يوسف',
                   suffixIcon: null,
@@ -98,7 +100,7 @@ class _SignUPState extends State<SignUP> {
                 const SizedBox(height: 24),
                 // Authority Field
                 _buildLabel('الكنية'),
-                _buildTextField(
+                CustomTextfield(
                   controller: _authorityController,
                   hint: 'مثال: الحطيب',
                   suffixIcon: null,
@@ -106,7 +108,7 @@ class _SignUPState extends State<SignUP> {
                 const SizedBox(height: 24),
                 // Job Number Field
                 _buildLabel('الرقم الوطني'),
-                _buildTextField(
+                CustomTextfield(
                   controller: _jobNumberController,
                   hint: '00000000000',
                   suffixIcon: Icons.badge,
@@ -114,7 +116,7 @@ class _SignUPState extends State<SignUP> {
                 const SizedBox(height: 24),
                 // Phone Number Field
                 _buildLabel('رقم الهاتف'),
-                _buildTextField(
+                CustomTextfield(
                   controller: _phoneController,
                   hint: '+963 900 000 000',
                   suffixIcon: Icons.phone,
@@ -216,10 +218,7 @@ class _SignUPState extends State<SignUP> {
                 // Sign In Link
                 GestureDetector(
                   onTap: () {
-                    Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(builder: (context) => const LogIn()),
-                    );
+                    context.go('/login');
                   },
                   child: RichText(
                     textDirection: TextDirection.rtl,
@@ -274,60 +273,6 @@ class _SignUPState extends State<SignUP> {
           fontSize: 14,
           color: Colors.black87,
         ),
-      ),
-    );
-  }
-
-  Widget _buildTextField({
-    required TextEditingController controller,
-    required String hint,
-    IconData? suffixIcon,
-  }) {
-    return Container(
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 8,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: TextFormField(
-        controller: controller,
-        textDirection: TextDirection.rtl,
-        decoration: InputDecoration(
-          hintText: hint,
-          hintTextDirection: TextDirection.rtl,
-          filled: true,
-          fillColor: Colors.grey[100],
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: const BorderSide(color: Colors.black, width: 1.5),
-          ),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: const BorderSide(color: Colors.black, width: 1.5),
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: const BorderSide(color: Colors.black, width: 2),
-          ),
-          suffixIcon: suffixIcon != null
-              ? Icon(suffixIcon, color: Colors.grey[400])
-              : null,
-          contentPadding: const EdgeInsets.symmetric(
-            horizontal: 16,
-            vertical: 16,
-          ),
-        ),
-        validator: (value) {
-          if (value?.isEmpty ?? true) {
-            return 'هذا الحقل مطلوب';
-          }
-          return null;
-        },
       ),
     );
   }
@@ -412,7 +357,7 @@ class _SignUPState extends State<SignUP> {
               color: Color(0xFFFFD699),
               shape: BoxShape.circle,
             ),
-            child: Icon(
+            child: const Icon(
               Icons.cloud_upload_outlined,
               color: AppConstants.primaryForest,
               size: 32,

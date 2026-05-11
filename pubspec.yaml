@@ -9,7 +9,24 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  flutter_bloc: ^8.1.0
+  dartz: ^0.10.1
+  infinite_scroll_pagination: ^5.1.1
+  # responsive_x_toolkit: 0.0.9
+  dio: ^5.9.0
+  flutter_bloc: ^9.1.1
+  get_it: ^8.3.0
+  equatable: ^2.0.7
+  # shared_preferences: ^2.5.3
+  freezed_annotation: ^2.4.1
+  # google_fonts: ^6.0.0
+  flutter_animate: ^4.5.2
+  # hydrated_bloc: ^10.1.1
+  go_router: ^13.0.0
+  # path_provider: ^2.1.5
+  flutter_svg: ^2.0.10+1
+  lottie: ^3.1.2
+  # device_preview: ^1.1.0
+  # video_player: ^2.9.0
 
 dev_dependencies:
   flutter_test:
@@ -20,7 +37,20 @@ flutter:
   uses-material-design: true
   assets:
     - assets/images/
-  # fonts:
-  #   - family: Alyamama
-  #     fonts:
-  #       - asset: assets/fonts/Alyamama.ttf
+  fonts:
+    - family: Alyamama
+      fonts:
+        - asset: assets/fonts/Alyamama-Light.ttf
+          weight: 300
+        - asset: assets/fonts/Alyamama-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/Alyamama-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/Alyamama-SemiBold.ttf
+          weight: 600
+        - asset: assets/fonts/Alyamama-Bold.ttf
+          weight: 700
+        - asset: assets/fonts/Alyamama-ExtraBold.ttf
+          weight: 800
+        - asset: assets/fonts/Alyamama-Black.ttf
+          weight: 900

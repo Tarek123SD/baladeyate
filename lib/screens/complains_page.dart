@@ -1,55 +1,70 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+import '../utils/constants.dart';
 
 class ComplaintScreen extends StatelessWidget {
   const ComplaintScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xffedebe0),
-      body: Stack(
-        children: [
-          /// 🔹 Background Pattern
-          Positioned.fill(
-            child: Opacity(
-              opacity: 0.2,
-              child: Image.asset(
-                'assets/images/background_white.png',
-                // repeat: ImageRepeat.repeat,
-              ),
-            ),
-          ),
-
-          /// 🔹 Main Content
-          SafeArea(
-            child: Column(
-              children: [
-                _buildHeader(),
-                Expanded(
-                  child: SingleChildScrollView(
-                    padding: const EdgeInsets.all(16),
-                    child: _buildFormCard(),
+    return Container(
+      decoration: const BoxDecoration(
+        image: DecorationImage(
+          image: AssetImage('assets/images/background_white.png'),
+          fit: BoxFit.cover,
+        ),
+      ),
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        appBar: AppBar(
+          backgroundColor: Colors.white,
+          elevation: 4,
+          automaticallyImplyLeading: false,
+          title: Row(
+            textDirection: TextDirection.rtl,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              SizedBox(
+                width: 250,
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: Image.asset(
+                    'assets/images/Syrian_horizontal_dark_green.png',
+                    fit: BoxFit.cover,
                   ),
                 ),
-                _buildBottomNav(),
-              ],
-            ),
+              ),
+              Row(
+                children: [
+                  IconButton(
+                    onPressed: () {
+                      context.go('/notifications');
+                    },
+                    icon: const Icon(
+                      Icons.notifications_none,
+                      color: Colors.black87,
+                      size: 24,
+                    ),
+                    padding: EdgeInsets.zero,
+                  ),
+                ],
+              ),
+            ],
           ),
-        ],
-      ),
-    );
-  }
-
-  /// ================= HEADER =================
-  Widget _buildHeader() {
-    return const Padding(
-      padding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Icon(Icons.account_balance, color: Colors.brown),
-          Icon(Icons.notifications_none),
-        ],
+        ),
+        body: SafeArea(
+          child: Column(
+            children: [
+              Expanded(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(16),
+                  child: _buildFormCard(),
+                ),
+              ),
+              _buildBottomNav(),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -74,6 +89,7 @@ class ComplaintScreen extends StatelessWidget {
               style: TextStyle(
                 fontSize: 22,
                 fontWeight: FontWeight.bold,
+                color: AppConstants.primaryForest,
               ),
             ),
           ),
@@ -143,12 +159,17 @@ class ComplaintScreen extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 14),
       decoration: BoxDecoration(
-        color: isActive ? Colors.amber : Colors.grey.shade200,
+        color: isActive ? AppConstants.green : Colors.grey.shade200,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: Colors.grey.shade400),
       ),
       child: Center(
-        child: Text(text),
+        child: Text(
+          text,
+          style: TextStyle(
+            color: isActive ? Colors.white : Colors.black,
+          ),
+        ),
       ),
     );
   }
@@ -176,7 +197,7 @@ class ComplaintScreen extends StatelessWidget {
       height: 150,
       decoration: BoxDecoration(
         border: Border.all(
-          color: Colors.brown,
+          color: AppConstants.primaryForest,
           style: BorderStyle.solid,
         ),
         borderRadius: BorderRadius.circular(12),
@@ -185,9 +206,13 @@ class ComplaintScreen extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.upload_file, size: 30),
+            Icon(Icons.upload_file,
+                size: 30, color: AppConstants.primaryForest),
             SizedBox(height: 10),
-            Text('رفع صور أو مستندات'),
+            Text(
+              'رفع صور أو مستندات',
+              style: TextStyle(color: AppConstants.primaryForest),
+            ),
           ],
         ),
       ),
@@ -199,11 +224,11 @@ class ComplaintScreen extends StatelessWidget {
     return Container(
       height: 120,
       decoration: BoxDecoration(
-        color: Colors.amber.shade200,
+        color: AppConstants.secondaryGoldenWheat,
         borderRadius: BorderRadius.circular(12),
       ),
       child: const Center(
-        child: Icon(Icons.location_pin),
+        child: Icon(Icons.location_pin, color: AppConstants.primaryForest),
       ),
     );
   }
