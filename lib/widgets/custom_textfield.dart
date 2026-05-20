@@ -1,5 +1,5 @@
-import 'package:baladeyate/utils/constants.dart';
 import 'package:flutter/material.dart';
+import 'package:responsive_x_toolkit/responsive_x.dart';
 
 class CustomTextfield extends StatelessWidget {
   const CustomTextfield({
@@ -14,14 +14,15 @@ class CustomTextfield extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final radius = 12.r(context);
     return Container(
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(radius),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 8,
-            offset: const Offset(0, 4),
+            color: Colors.black.withValues(alpha: 0.1),
+            blurRadius: 8.r(context),
+            offset: Offset(0, 4.s(context)),
           ),
         ],
       ),
@@ -37,23 +38,23 @@ class CustomTextfield extends StatelessWidget {
           filled: true,
           fillColor: Colors.grey[100],
           border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(radius),
             borderSide: const BorderSide(color: Colors.black, width: 1.5),
           ),
           enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(radius),
             borderSide: const BorderSide(color: Colors.black, width: 1.5),
           ),
           focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(radius),
             borderSide: const BorderSide(color: Colors.black, width: 2),
           ),
           suffixIcon: suffixIcon != null
               ? Icon(suffixIcon, color: Colors.grey[400])
               : null,
-          contentPadding: const EdgeInsets.symmetric(
-            horizontal: 16,
-            vertical: 16,
+          contentPadding: EdgeInsets.symmetric(
+            horizontal: 16.s(context),
+            vertical: 16.s(context),
           ),
         ),
         validator: (value) {

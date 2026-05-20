@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:responsive_x_toolkit/responsive_x.dart';
 
 import '../utils/constants.dart';
 
@@ -13,20 +14,25 @@ class MainNavigationScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final radius = 20.r(context);
+    final iconSize = 22.s(context);
+    final selectedFont = 11.s(context);
+    final unselectedFont = 10.s(context);
+
     return Scaffold(
       body: AnimatedSwitcher(
         duration: const Duration(milliseconds: 300),
         child: navigationShell,
       ),
       bottomNavigationBar: ClipRRect(
-        borderRadius: const BorderRadius.only(
-          topLeft: Radius.circular(20),
-          topRight: Radius.circular(20),
+        borderRadius: BorderRadius.only(
+          topLeft: Radius.circular(radius),
+          topRight: Radius.circular(radius),
         ),
         child: BottomNavigationBar(
-          iconSize: 22,
-          selectedFontSize: 11,
-          unselectedFontSize: 10,
+          iconSize: iconSize,
+          selectedFontSize: selectedFont,
+          unselectedFontSize: unselectedFont,
           type: BottomNavigationBarType.fixed,
           backgroundColor: AppConstants.secondaryForest,
           selectedItemColor: Colors.white,
@@ -35,22 +41,22 @@ class MainNavigationScreen extends StatelessWidget {
           onTap: (index) {
             navigationShell.goBranch(index);
           },
-          items: const [
+          items: [
             BottomNavigationBarItem(
-              icon: Icon(Icons.home),
+              icon: Icon(Icons.home, size: iconSize),
               label: 'الرئيسية',
             ),
             BottomNavigationBarItem(
-              icon: Icon(Icons.person),
+              icon: Icon(Icons.person, size: iconSize),
               label: 'الملف الشخصي',
             ),
             BottomNavigationBarItem(
-              icon: Icon(Icons.volunteer_activism),
+              icon: Icon(Icons.volunteer_activism, size: iconSize),
               label: 'التبرعات',
             ),
             BottomNavigationBarItem(
-              icon: Icon(Icons.settings),
-              label: 'الإعدادات',
+              icon: Icon(Icons.support_agent_outlined, size: iconSize),
+              label: 'الشكاوي',
             ),
           ],
         ),

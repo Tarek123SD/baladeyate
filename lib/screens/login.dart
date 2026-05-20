@@ -1,6 +1,8 @@
+import 'package:baladeyate/widgets/responsive_body.dart';
 import 'package:flutter/material.dart';
 import 'package:baladeyate/utils/constants.dart';
 import 'package:go_router/go_router.dart';
+import 'package:responsive_x_toolkit/responsive_x.dart';
 
 class LogIn extends StatefulWidget {
   const LogIn({super.key});
@@ -40,14 +42,13 @@ class _LogInState extends State<LogIn> {
           ),
         ),
         child: SingleChildScrollView(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24),
+          child: ResponsiveBody(
             child: Form(
               key: _formKey,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  const SizedBox(height: 60),
+                  SizedBox(height: 60.h(context)),
                   // Header with logo and text
                   // Container(
                   //   width: 100,
@@ -77,10 +78,10 @@ class _LogInState extends State<LogIn> {
                   // ),
                   Image.asset(
                     'assets/images/Syrian_logo_icon_gold.png',
-                    width: 150,
-                    height: 150,
+                    width: 150.s(context),
+                    height: 150.s(context),
                   ),
-                  const SizedBox(height: 40),
+                  SizedBox(height: 40.h(context)),
                   // Title
                   Text(
                     'تطبيق المواطن',
@@ -90,7 +91,7 @@ class _LogInState extends State<LogIn> {
                         ),
                     textDirection: TextDirection.rtl,
                   ),
-                  const SizedBox(height: 8),
+                  SizedBox(height: 8.h(context)),
                   // Subtitle
                   Text(
                     'الجمهورية العربية السورية',
@@ -99,16 +100,16 @@ class _LogInState extends State<LogIn> {
                         ),
                     textDirection: TextDirection.rtl,
                   ),
-                  const SizedBox(height: 50),
+                  SizedBox(height: 50.h(context)),
                   // Login section with vertical line
                   Row(
                     textDirection: TextDirection.rtl,
                     children: [
                       Container(
-                        width: 4,
-                        height: 80,
+                        width: 4.s(context),
+                        height: 80.h(context),
                         color: AppConstants.green,
-                        margin: const EdgeInsets.only(left: 16),
+                        margin: EdgeInsets.only(left: 16.s(context)),
                       ),
                       Expanded(
                         child: Column(
@@ -125,7 +126,7 @@ class _LogInState extends State<LogIn> {
                                   ),
                               textDirection: TextDirection.rtl,
                             ),
-                            const SizedBox(height: 8),
+                            SizedBox(height: 8.h(context)),
                             Text(
                               'يرجى إدخال بيانات الهوية الشخصية',
                               style: Theme.of(context)
@@ -141,25 +142,25 @@ class _LogInState extends State<LogIn> {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 30),
+                  SizedBox(height: 30.h(context)),
                   // National ID Field
-                  _buildLabel('الرقم الوطني'),
+                  _buildLabel(context, 'الرقم الوطني'),
                   _buildTextField(
                     controller: _nationalIdController,
                     hint: '000-000-000-000',
                     suffixIcon: Icons.person,
                   ),
-                  const SizedBox(height: 24),
+                  SizedBox(height: 24.h(context)),
                   // Password Field with Remember Me
                   Row(
                     textDirection: TextDirection.rtl,
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text(
+                      Text(
                         'كلمة المرور',
                         style: TextStyle(
                           fontWeight: FontWeight.w500,
-                          fontSize: 14,
+                          fontSize: 14.s(context),
                           color: Colors.black87,
                         ),
                         textDirection: TextDirection.rtl,
@@ -198,7 +199,7 @@ class _LogInState extends State<LogIn> {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 8),
+                  SizedBox(height: 8.h(context)),
                   _buildPasswordField(
                     controller: _passwordController,
                     isVisible: _showPassword,
@@ -208,28 +209,28 @@ class _LogInState extends State<LogIn> {
                       });
                     },
                   ),
-                  const SizedBox(height: 32),
+                  SizedBox(height: 32.h(context)),
                   // Login Button
                   SizedBox(
                     width: double.infinity,
-                    height: 56,
+                    height: 56.h(context),
                     child: ElevatedButton(
                       onPressed: _handleLogin,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppConstants.secondaryForest,
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(28),
+                          borderRadius: BorderRadius.circular(28.r(context)),
                         ),
                       ),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          const Icon(
+                          Icon(
                             Icons.arrow_back,
                             color: Colors.white,
-                            size: 20,
+                            size: 20.s(context),
                           ),
-                          const SizedBox(width: 12),
+                          SizedBox(width: 12.s(context)),
                           Text(
                             'تسجيل الدخول',
                             style: Theme.of(context)
@@ -238,14 +239,14 @@ class _LogInState extends State<LogIn> {
                                 ?.copyWith(
                                   color: Colors.white,
                                   fontWeight: FontWeight.w600,
-                                  fontSize: 16,
+                                  fontSize: 16.s(context),
                                 ),
                           ),
                         ],
                       ),
                     ),
                   ),
-                  const SizedBox(height: 24),
+                  SizedBox(height: 24.h(context)),
                   // Sign Up Link
                   GestureDetector(
                     onTap: () {
@@ -268,25 +269,25 @@ class _LogInState extends State<LogIn> {
                                 ?.copyWith(
                                   color: AppConstants.primaryForest,
                                   fontWeight: FontWeight.w700,
-                                  fontSize: 14,
+                                  fontSize: 14.s(context),
                                 ),
                           ),
                         ],
                       ),
                     ),
                   ),
-                  const SizedBox(height: 40),
+                  SizedBox(height: 40.h(context)),
                   // Footer
                   Text(
                     'SOVEREIGN SECURE ACCESS V2.0',
                     textAlign: TextAlign.center,
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                           color: Colors.grey[400],
-                          fontSize: 10,
+                          fontSize: 10.s(context),
                           fontWeight: FontWeight.w300,
                         ),
                   ),
-                  const SizedBox(height: 24),
+                  SizedBox(height: 24.h(context)),
                 ],
               ),
             ),
@@ -296,15 +297,15 @@ class _LogInState extends State<LogIn> {
     );
   }
 
-  Widget _buildLabel(String label) {
+  Widget _buildLabel(BuildContext context, String label) {
     return Align(
       alignment: Alignment.centerRight,
       child: Text(
         label,
         textDirection: TextDirection.rtl,
-        style: const TextStyle(
+        style: TextStyle(
           fontWeight: FontWeight.w500,
-          fontSize: 14,
+          fontSize: 14.s(context),
           color: Colors.black87,
         ),
       ),
@@ -316,14 +317,15 @@ class _LogInState extends State<LogIn> {
     required String hint,
     IconData? suffixIcon,
   }) {
+    final r = 12.r(context);
     return Container(
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(r),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 8,
-            offset: const Offset(0, 4),
+            color: Colors.black.withValues(alpha: 0.1),
+            blurRadius: 8.r(context),
+            offset: Offset(0, 4.s(context)),
           ),
         ],
       ),
@@ -336,23 +338,23 @@ class _LogInState extends State<LogIn> {
           filled: true,
           fillColor: Colors.grey[100],
           border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(r),
             borderSide: const BorderSide(color: Colors.black, width: 1.5),
           ),
           enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(r),
             borderSide: const BorderSide(color: Colors.black, width: 1.5),
           ),
           focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(r),
             borderSide: const BorderSide(color: Colors.black, width: 2),
           ),
           suffixIcon: suffixIcon != null
               ? Icon(suffixIcon, color: Colors.grey[400])
               : null,
-          contentPadding: const EdgeInsets.symmetric(
-            horizontal: 16,
-            vertical: 16,
+          contentPadding: EdgeInsets.symmetric(
+            horizontal: 16.s(context),
+            vertical: 16.s(context),
           ),
         ),
         validator: (value) {
@@ -370,14 +372,15 @@ class _LogInState extends State<LogIn> {
     required bool isVisible,
     required VoidCallback onToggle,
   }) {
+    final r = 12.r(context);
     return Container(
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(r),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 8,
-            offset: const Offset(0, 4),
+            color: Colors.black.withValues(alpha: 0.1),
+            blurRadius: 8.r(context),
+            offset: Offset(0, 4.s(context)),
           ),
         ],
       ),
@@ -391,15 +394,15 @@ class _LogInState extends State<LogIn> {
           filled: true,
           fillColor: Colors.grey[100],
           border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(r),
             borderSide: const BorderSide(color: Colors.black, width: 1.5),
           ),
           enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(r),
             borderSide: const BorderSide(color: Colors.black, width: 1.5),
           ),
           focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(r),
             borderSide: const BorderSide(color: Colors.black, width: 2),
           ),
           suffixIcon: IconButton(
@@ -409,9 +412,9 @@ class _LogInState extends State<LogIn> {
             ),
             onPressed: onToggle,
           ),
-          contentPadding: const EdgeInsets.symmetric(
-            horizontal: 16,
-            vertical: 16,
+          contentPadding: EdgeInsets.symmetric(
+            horizontal: 16.s(context),
+            vertical: 16.s(context),
           ),
         ),
         validator: (value) {

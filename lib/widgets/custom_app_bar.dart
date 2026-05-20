@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:flutter_svg/flutter_svg.dart';
+import 'package:responsive_x_toolkit/responsive_x.dart';
 
 class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   const CustomAppBar({super.key});
@@ -10,6 +10,9 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
 
   @override
   Widget build(BuildContext context) {
+    final logoWidth = (250.w(context)).clamp(140.0, 320.0);
+    final iconSize = 24.s(context);
+
     return AppBar(
       backgroundColor: Colors.white,
       elevation: 4,
@@ -19,10 +22,9 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           SizedBox(
-            width: 250,
-            // height: 20,
+            width: logoWidth,
             child: ClipRRect(
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(8.r(context)),
               child: Image.asset(
                 'assets/images/Syrian_horizontal_dark_green.png',
                 fit: BoxFit.cover,
@@ -35,10 +37,21 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
                 onPressed: () {
                   context.push('/notifications');
                 },
-                icon: const Icon(
+                icon: Icon(
                   Icons.notifications_none,
                   color: Colors.black87,
-                  size: 24,
+                  size: iconSize,
+                ),
+                padding: EdgeInsets.zero,
+              ),
+              IconButton(
+                onPressed: () {
+                  context.push('/settings');
+                },
+                icon: Icon(
+                  Icons.settings,
+                  color: Colors.black87,
+                  size: iconSize,
                 ),
                 padding: EdgeInsets.zero,
               ),

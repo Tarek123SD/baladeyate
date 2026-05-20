@@ -1,6 +1,5 @@
 import 'package:baladeyate/widgets/custom_app_bar.dart';
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import '../utils/constants.dart';
 
 class Donations extends StatelessWidget {
@@ -33,7 +32,7 @@ class Donations extends StatelessWidget {
                     borderRadius: BorderRadius.circular(28),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.5),
+                        color: Colors.black.withValues(alpha: 0.5),
                         blurRadius: 20,
                         offset: const Offset(0, 12),
                       ),
@@ -238,7 +237,7 @@ Widget _buildStatisticCard(BuildContext context, String value, String label) {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.2),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 14,
             offset: const Offset(0, 8),
           ),
@@ -286,7 +285,7 @@ Widget _buildCampaignCard({
       borderRadius: BorderRadius.circular(22),
       boxShadow: [
         BoxShadow(
-          color: Colors.black.withOpacity(0.05),
+          color: Colors.black.withValues(alpha: 0.05),
           blurRadius: 18,
           offset: const Offset(0, 10),
         ),
@@ -299,7 +298,7 @@ Widget _buildCampaignCard({
           width: 120,
           height: 180,
           decoration: BoxDecoration(
-            color: iconColor.withOpacity(0.15),
+            color: iconColor.withValues(alpha: 0.15),
             borderRadius: const BorderRadius.only(
               topRight: Radius.circular(22),
               bottomRight: Radius.circular(22),
@@ -321,7 +320,7 @@ Widget _buildCampaignCard({
                   padding:
                       const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                   decoration: BoxDecoration(
-                    color: iconColor.withOpacity(0.14),
+                    color: iconColor.withValues(alpha: 0.14),
                     borderRadius: BorderRadius.circular(16),
                   ),
                   child: Text(
@@ -375,7 +374,8 @@ Widget _buildCampaignCard({
                     Text(
                       'الهدف 50,000',
                       style: TextStyle(
-                        color: AppConstants.primaryForest.withOpacity(0.65),
+                        color:
+                            AppConstants.primaryForest.withValues(alpha: 0.65),
                         fontSize: 11,
                       ),
                     ),
@@ -409,18 +409,16 @@ Widget _buildAmountButton(int amount, BuildContext context) {
       width: (MediaQuery.of(context).size.width - 84) / 2,
       padding: const EdgeInsets.symmetric(vertical: 16),
       decoration: BoxDecoration(
-        color: isSelected ? AppConstants.primaryForest : Colors.white,
+        color: Colors.white,
         borderRadius: BorderRadius.circular(18),
         border: Border.all(
-          color: isSelected
-              ? AppConstants.primaryForest
-              : AppConstants.secondaryGoldenWheat,
+          color: AppConstants.secondaryGoldenWheat,
           width: 1.4,
         ),
         boxShadow: [
           if (!isSelected)
             BoxShadow(
-              color: Colors.black.withOpacity(0.03),
+              color: Colors.black.withValues(alpha: 0.03),
               blurRadius: 10,
               offset: const Offset(0, 6),
             ),
@@ -430,7 +428,7 @@ Widget _buildAmountButton(int amount, BuildContext context) {
       child: Text(
         '${amount.toString().replaceAllMapped(RegExp(r"\B(?=(\d{3})+(?!\d))"), (match) => ",")} ل.س',
         style: const TextStyle(
-          color: isSelected ? Colors.white : AppConstants.primaryForest,
+          color: AppConstants.primaryForest,
           fontWeight: FontWeight.bold,
           fontSize: 14,
         ),

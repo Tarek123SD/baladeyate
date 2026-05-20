@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
+import 'package:responsive_x_toolkit/responsive_x.dart';
+
 import '../utils/constants.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -23,6 +25,9 @@ class _SplashScreenState extends State<SplashScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final bottom = 100.h(context);
+    final horizontal = 24.s(context);
+
     return Scaffold(
       body: Container(
         decoration: const BoxDecoration(
@@ -51,10 +56,10 @@ class _SplashScreenState extends State<SplashScreen> {
                     curve: Curves.easeInOut,
                   ),
             ),
-            const Positioned(
-              bottom: 100,
-              left: 24,
-              right: 24,
+            Positioned(
+              bottom: bottom,
+              left: horizontal,
+              right: horizontal,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
@@ -62,24 +67,24 @@ class _SplashScreenState extends State<SplashScreen> {
                     'الديوان الرقمي',
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
-                      fontSize: 28,
+                      fontSize: 28.s(context),
                       color: AppConstants.thirdGoldenWheat,
                     ),
                   ),
-                  SizedBox(height: 10),
+                  SizedBox(height: 10.h(context)),
                   Text(
                     'الجمهورية العربية السورية',
                     style: TextStyle(
                       color: AppConstants.secondaryGoldenWheat,
-                      fontSize: 20,
+                      fontSize: 20.s(context),
                     ),
                   ),
-                  SizedBox(height: 10),
+                  SizedBox(height: 10.h(context)),
                   Text(
                     'المنصة الوطنية لخدمات المواطنة',
                     style: TextStyle(
                       color: AppConstants.thirdGoldenWheat,
-                      fontSize: 18,
+                      fontSize: 18.s(context),
                     ),
                   ),
                 ],

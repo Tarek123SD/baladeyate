@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:responsive_x_toolkit/responsive_x.dart';
 
 class CustomCard extends StatelessWidget {
   const CustomCard({
@@ -7,46 +8,44 @@ class CustomCard extends StatelessWidget {
     required this.icon,
     required this.iconColor,
     required this.title,
-    required this.context,
   });
-  final BuildContext context;
+
   final String title;
   final IconData icon;
   final Color? bgColor;
   final Color? iconColor;
+
   @override
   Widget build(BuildContext context) {
-    return Expanded(
-      child: Container(
-        decoration: BoxDecoration(
-          color: bgColor,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: Colors.black,
-            width: 0.5,
+    return Container(
+      decoration: BoxDecoration(
+        color: bgColor,
+        borderRadius: BorderRadius.circular(16.r(context)),
+        border: Border.all(
+          color: Colors.black,
+          width: 0.5,
+        ),
+      ),
+      padding: EdgeInsets.symmetric(vertical: 20.s(context)),
+      child: Column(
+        children: [
+          Icon(
+            icon,
+            size: 32.s(context),
+            color: iconColor,
           ),
-        ),
-        padding: const EdgeInsets.symmetric(vertical: 20),
-        child: Column(
-          children: [
-            Icon(
-              icon,
-              size: 32,
-              color: iconColor,
+          SizedBox(height: 12.s(context)),
+          Text(
+            title,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 14.s(context),
+              fontWeight: FontWeight.w500,
+              color: Colors.black87,
             ),
-            const SizedBox(height: 12),
-            Text(
-              title,
-              textAlign: TextAlign.center,
-              style: const TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
-                color: Colors.black87,
-              ),
-              textDirection: TextDirection.rtl,
-            ),
-          ],
-        ),
+            textDirection: TextDirection.rtl,
+          ),
+        ],
       ),
     );
   }

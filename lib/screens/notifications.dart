@@ -190,11 +190,11 @@ class Notifications extends StatelessWidget {
           width: double.infinity,
           padding: const EdgeInsets.fromLTRB(18, 18, 22, 18),
           decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.95),
+            color: Colors.white.withValues(alpha: 0.95),
             borderRadius: BorderRadius.circular(20),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.05),
+                color: Colors.black.withValues(alpha: 0.05),
                 blurRadius: 18,
                 offset: const Offset(0, 8),
               ),
@@ -242,7 +242,7 @@ class Notifications extends StatelessWidget {
           top: 16,
           child: CircleAvatar(
             radius: 28,
-            backgroundColor: iconColor.withOpacity(0.16),
+            backgroundColor: iconColor.withValues(alpha: 0.16),
             child: Icon(
               icon,
               size: 28,

@@ -1,5 +1,8 @@
+import 'package:baladeyate/widgets/custom_app_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:responsive_x_toolkit/responsive_x.dart';
+
 import '../utils/constants.dart';
 
 class ComplaintScreen extends StatelessWidget {
@@ -16,52 +19,25 @@ class ComplaintScreen extends StatelessWidget {
       ),
       child: Scaffold(
         backgroundColor: Colors.transparent,
-        appBar: AppBar(
-          backgroundColor: Colors.white,
-          elevation: 4,
-          automaticallyImplyLeading: false,
-          title: Row(
-            textDirection: TextDirection.rtl,
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              SizedBox(
-                width: 250,
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(8),
-                  child: Image.asset(
-                    'assets/images/Syrian_horizontal_dark_green.png',
-                    fit: BoxFit.cover,
-                  ),
-                ),
-              ),
-              Row(
-                children: [
-                  IconButton(
-                    onPressed: () {
-                      context.go('/notifications');
-                    },
-                    icon: const Icon(
-                      Icons.notifications_none,
-                      color: Colors.black87,
-                      size: 24,
-                    ),
-                    padding: EdgeInsets.zero,
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
+
+        /// ================= APP BAR =================
+        appBar: CustomAppBar(),
         body: SafeArea(
           child: Column(
             children: [
               Expanded(
                 child: SingleChildScrollView(
-                  padding: const EdgeInsets.all(16),
-                  child: _buildFormCard(),
+                  padding: EdgeInsets.all(16.s(context)),
+                  child: Center(
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(
+                        maxWidth: 700.w(context),
+                      ),
+                      child: _buildFormCard(context),
+                    ),
+                  ),
                 ),
               ),
-              _buildBottomNav(),
             ],
           ),
         ),
@@ -70,46 +46,55 @@ class ComplaintScreen extends StatelessWidget {
   }
 
   /// ================= FORM CARD =================
-  Widget _buildFormCard() {
+  Widget _buildFormCard(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(16.s(context)),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.9),
-        borderRadius: BorderRadius.circular(20),
+        color: Colors.white.withValues(alpha: 0.9),
+        borderRadius: BorderRadius.circular(20.r(context)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
-          const SizedBox(height: 10),
+          SizedBox(height: 10.s(context)),
 
-          /// 🔹 Title
-          const Center(
+          /// TITLE
+          Center(
             child: Text(
               'تقديم شكوى رسمية',
               style: TextStyle(
-                fontSize: 22,
+                fontSize: 22.f(context),
                 fontWeight: FontWeight.bold,
                 color: AppConstants.primaryForest,
               ),
             ),
           ),
 
-          const SizedBox(height: 20),
+          SizedBox(height: 20.s(context)),
 
-          /// 🔹 Priority Buttons
-          const Text('درجة الأولوية'),
-          const SizedBox(height: 10),
+          /// PRIORITY
+          Text(
+            'درجة الأولوية',
+            style: TextStyle(
+              fontSize: 15.f(context),
+            ),
+          ),
+
+          SizedBox(height: 10.s(context)),
+
           Row(
             children: [
               Expanded(
                 child: _buildButton(
+                  context,
                   text: 'طارئ / مستعجل',
                   isActive: false,
                 ),
               ),
-              const SizedBox(width: 10),
+              SizedBox(width: 10.s(context)),
               Expanded(
                 child: _buildButton(
+                  context,
                   text: 'اعتيادي',
                   isActive: true,
                 ),
@@ -117,56 +102,98 @@ class ComplaintScreen extends StatelessWidget {
             ],
           ),
 
-          const SizedBox(height: 20),
+          SizedBox(height: 20.s(context)),
 
-          /// 🔹 Subject
-          const Text('موضوع الشكوى'),
-          const SizedBox(height: 8),
-          _buildInputField(hint: 'مثال: صيانة الطرق...'),
+          /// SUBJECT
+          Text(
+            'موضوع الشكوى',
+            style: TextStyle(
+              fontSize: 15.f(context),
+            ),
+          ),
 
-          const SizedBox(height: 20),
+          SizedBox(height: 8.s(context)),
 
-          /// 🔹 Details
-          const Text('تفاصيل الشكوى'),
-          const SizedBox(height: 8),
           _buildInputField(
+            context,
+            hint: 'مثال: صيانة الطرق...',
+          ),
+
+          SizedBox(height: 20.s(context)),
+
+          /// DETAILS
+          Text(
+            'تفاصيل الشكوى',
+            style: TextStyle(
+              fontSize: 15.f(context),
+            ),
+          ),
+
+          SizedBox(height: 8.s(context)),
+
+          _buildInputField(
+            context,
             hint: 'يرجى كتابة وصف دقيق...',
             maxLines: 5,
           ),
 
-          const SizedBox(height: 20),
+          SizedBox(height: 20.s(context)),
 
-          /// 🔹 Upload Box
-          const Text('المرفقات و الصور'),
-          const SizedBox(height: 10),
-          _buildUploadBox(),
+          /// UPLOAD
+          Text(
+            'المرفقات و الصور',
+            style: TextStyle(
+              fontSize: 15.f(context),
+            ),
+          ),
 
-          const SizedBox(height: 20),
+          SizedBox(height: 10.s(context)),
 
-          /// 🔹 Map Section
-          const Text('الموقع الجغرافي'),
-          const SizedBox(height: 10),
-          _buildMap(),
+          _buildUploadBox(context),
 
-          const SizedBox(height: 20),
+          SizedBox(height: 20.s(context)),
+
+          /// MAP
+          Text(
+            'الموقع الجغرافي',
+            style: TextStyle(
+              fontSize: 15.f(context),
+            ),
+          ),
+
+          SizedBox(height: 10.s(context)),
+
+          _buildMap(context),
+
+          SizedBox(height: 20.s(context)),
         ],
       ),
     );
   }
 
   /// ================= BUTTON =================
-  Widget _buildButton({required String text, required bool isActive}) {
+  Widget _buildButton(
+    BuildContext context, {
+    required String text,
+    required bool isActive,
+  }) {
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 14),
+      padding: EdgeInsets.symmetric(
+        vertical: 14.s(context),
+      ),
       decoration: BoxDecoration(
         color: isActive ? AppConstants.green : Colors.grey.shade200,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.shade400),
+        borderRadius: BorderRadius.circular(12.r(context)),
+        border: Border.all(
+          color: Colors.grey.shade400,
+        ),
       ),
       child: Center(
         child: Text(
           text,
+          textAlign: TextAlign.center,
           style: TextStyle(
+            fontSize: 14.f(context),
             color: isActive ? Colors.white : Colors.black,
           ),
         ),
@@ -175,16 +202,30 @@ class ComplaintScreen extends StatelessWidget {
   }
 
   /// ================= INPUT =================
-  Widget _buildInputField({required String hint, int maxLines = 1}) {
+  Widget _buildInputField(
+    BuildContext context, {
+    required String hint,
+    int maxLines = 1,
+  }) {
     return TextField(
       maxLines: maxLines,
       textAlign: TextAlign.right,
+      style: TextStyle(
+        fontSize: 14.f(context),
+      ),
       decoration: InputDecoration(
         hintText: hint,
+        hintStyle: TextStyle(
+          fontSize: 13.f(context),
+        ),
         filled: true,
         fillColor: Colors.grey.shade200,
+        contentPadding: EdgeInsets.symmetric(
+          horizontal: 14.s(context),
+          vertical: 14.s(context),
+        ),
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(12.r(context)),
           borderSide: BorderSide.none,
         ),
       ),
@@ -192,26 +233,31 @@ class ComplaintScreen extends StatelessWidget {
   }
 
   /// ================= UPLOAD BOX =================
-  Widget _buildUploadBox() {
+  Widget _buildUploadBox(BuildContext context) {
     return Container(
-      height: 150,
+      height: 150.h(context),
       decoration: BoxDecoration(
         border: Border.all(
           color: AppConstants.primaryForest,
-          style: BorderStyle.solid,
         ),
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(12.r(context)),
       ),
-      child: const Center(
+      child: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.upload_file,
-                size: 30, color: AppConstants.primaryForest),
-            SizedBox(height: 10),
+            Icon(
+              Icons.upload_file,
+              size: 30.ic(context),
+              color: AppConstants.primaryForest,
+            ),
+            SizedBox(height: 10.s(context)),
             Text(
               'رفع صور أو مستندات',
-              style: TextStyle(color: AppConstants.primaryForest),
+              style: TextStyle(
+                fontSize: 14.f(context),
+                color: AppConstants.primaryForest,
+              ),
             ),
           ],
         ),
@@ -220,35 +266,19 @@ class ComplaintScreen extends StatelessWidget {
   }
 
   /// ================= MAP =================
-  Widget _buildMap() {
+  Widget _buildMap(BuildContext context) {
     return Container(
-      height: 120,
+      height: 120.h(context),
       decoration: BoxDecoration(
         color: AppConstants.secondaryGoldenWheat,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(12.r(context)),
       ),
-      child: const Center(
-        child: Icon(Icons.location_pin, color: AppConstants.primaryForest),
-      ),
-    );
-  }
-
-  /// ================= BOTTOM NAV =================
-  Widget _buildBottomNav() {
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 10),
-      decoration: const BoxDecoration(
-        color: Color(0xff0f3d2e),
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      child: const Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
-        children: [
-          Icon(Icons.settings, color: Colors.white),
-          Icon(Icons.fingerprint, color: Colors.white),
-          Icon(Icons.description, color: Colors.white),
-          Icon(Icons.home, color: Colors.white),
-        ],
+      child: Center(
+        child: Icon(
+          Icons.location_pin,
+          size: 30.ic(context),
+          color: AppConstants.primaryForest,
+        ),
       ),
     );
   }

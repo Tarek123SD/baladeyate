@@ -313,7 +313,7 @@ class _FamilyProfileState extends State<FamilyProfile> {
                           padding: const EdgeInsets.only(bottom: 12),
                           child: _buildFamilyMemberCard(context, member),
                         );
-                      }).toList(),
+                      }),
                     ],
                   ),
                 ),

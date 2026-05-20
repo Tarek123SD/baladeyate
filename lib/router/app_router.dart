@@ -1,4 +1,7 @@
+import 'package:baladeyate/screens/building_info.dart';
+import 'package:baladeyate/screens/daily_tasks.dart';
 import 'package:baladeyate/screens/splash_screen.dart';
+import 'package:baladeyate/screens/track_complains.dart';
 import 'package:go_router/go_router.dart';
 
 // Navigation
@@ -15,7 +18,7 @@ import 'package:baladeyate/screens/settings.dart';
 import 'package:baladeyate/screens/signup.dart';
 
 final GoRouter appRouter = GoRouter(
-  initialLocation: '/splash',
+  initialLocation: '/info',
   routes: [
     // =========================
     // Routes WITHOUT Bottom Bar
@@ -23,6 +26,10 @@ final GoRouter appRouter = GoRouter(
     GoRoute(
       path: '/splash',
       builder: (context, state) => const SplashScreen(),
+    ),
+    GoRoute(
+      path: '/settings',
+      builder: (context, state) => const Settings(),
     ),
     GoRoute(
       path: '/login',
@@ -43,7 +50,14 @@ final GoRouter appRouter = GoRouter(
       path: '/complains',
       builder: (context, state) => const ComplaintScreen(),
     ),
-
+    GoRoute(
+      path: '/tasks',
+      builder: (context, state) => const DailyTasks(),
+    ),
+    GoRoute(
+      path: '/info',
+      builder: (context, state) => const BuildingInfo(),
+    ),
     // =========================
     // Routes WITH Bottom Bar
     // =========================
@@ -89,8 +103,8 @@ final GoRouter appRouter = GoRouter(
         StatefulShellBranch(
           routes: [
             GoRoute(
-              path: '/settings',
-              builder: (context, state) => const Settings(),
+              path: '/track',
+              builder: (context, state) => const TrackComplains(),
             ),
           ],
         ),
