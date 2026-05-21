@@ -4,6 +4,9 @@ import 'package:w_builder/src/core/services/cache_service.dart';
 import 'package:w_builder/src/core/services/end_points.dart';
 import 'package:w_builder/src/core/services/interceptors/auth_interceptor.dart';
 
+import 'package:baladeyate/features/auth/cubits/auth_cubit/auth_cubit.dart';
+import 'package:baladeyate/features/auth/repo/auth_repository.dart';
+
 import 'api_services.dart';
 import 'package:get_it/get_it.dart';
 
@@ -48,4 +51,10 @@ Future<void> setupServiceLocator() async {
   });
 
   sl.registerLazySingleton<ApiService>(() => ApiService(dio: sl()));
+
+  sl.registerLazySingleton<AuthRepository>(() => AuthRepository());
+
+  sl.registerFactory<AuthCubit>(
+    () => AuthCubit(authRepository: sl<AuthRepository>()),
+  );
 }

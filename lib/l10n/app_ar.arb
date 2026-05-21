@@ -1,0 +1,17 @@
+{
+  "@@locale": "ar",
+  "appTitle": "بلديتي",
+  "navHome": "الرئيسية",
+  "navProfile": "الملف الشخصي",
+  "navDonations": "التبرعات",
+  "navTrack": "الشكاوي",
+  "fieldRequired": "هذا الحقل مطلوب",
+  "passwordRequired": "كلمة المرور مطلوبة",
+  "passwordMinLength": "يجب أن تكون كلمة المرور 8 أحرف على الأقل",
+  "signupPasswordRequired": "كلمة السر مطلوبة",
+  "signupPasswordMinLength": "يجب أن تكون كلمة السر 8 أحرف على الأقل",
+  "invalidEmail": "صيغة البريد الإلكتروني غير صحيحة",
+  "accountCreated": "تم إنشاء الحساب بنجاح",
+  "loginTitle": "تسجيل الدخول",
+  "signupTitle": "إنشاء حساب"
+}

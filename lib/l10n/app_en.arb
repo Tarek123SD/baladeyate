@@ -1,0 +1,17 @@
+{
+  "@@locale": "en",
+  "appTitle": "Baladeyate",
+  "navHome": "Home",
+  "navProfile": "Profile",
+  "navDonations": "Donations",
+  "navTrack": "Track",
+  "fieldRequired": "This field is required",
+  "passwordRequired": "Password is required",
+  "passwordMinLength": "Password must be at least 8 characters",
+  "signupPasswordRequired": "Password is required",
+  "signupPasswordMinLength": "Password must be at least 8 characters",
+  "invalidEmail": "Invalid email format",
+  "accountCreated": "Account created successfully",
+  "loginTitle": "Login",
+  "signupTitle": "Sign Up"
+}

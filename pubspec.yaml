@@ -9,6 +9,9 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+  intl: any
   dartz: ^0.10.1
   infinite_scroll_pagination: ^5.1.1
   responsive_x_toolkit: ^1.0.5
@@ -39,6 +42,7 @@ dev_dependencies:
   json_serializable: ^6.14.0
 
 flutter:
+  generate: true
   uses-material-design: true
   assets:
     - assets/images/
