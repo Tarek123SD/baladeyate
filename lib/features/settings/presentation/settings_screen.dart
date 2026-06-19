@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:baladeyate/config/theme/app_colors.dart';
+import 'package:baladeyate/core/constants/app_assets.dart';
 import 'package:baladeyate/core/services/service_locator.dart';
 import 'package:baladeyate/core/widgets/custom_app_bar.dart';
 import 'package:baladeyate/core/widgets/custom_settings_option_card.dart';
@@ -53,7 +54,7 @@ class SettingsScreen extends StatelessWidget {
       child: Container(
         decoration: const BoxDecoration(
           image: DecorationImage(
-            image: AssetImage('assets/images/background_white.png'),
+            image: AssetImage(AppAssets.backgroundWhite),
             fit: BoxFit.cover,
           ),
         ),

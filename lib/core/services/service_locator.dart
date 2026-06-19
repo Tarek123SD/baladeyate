@@ -4,6 +4,7 @@ import 'package:baladeyate/core/services/cache_service.dart';
 import 'package:baladeyate/core/services/end_points.dart';
 import 'package:baladeyate/core/services/interceptors/auth_interceptor.dart';
 
+import 'package:baladeyate/core/services/fcm/fcm_service.dart';
 import 'package:baladeyate/features/auth/cubits/auth_cubit/auth_cubit.dart';
 import 'package:baladeyate/features/auth/repo/auth_repository.dart';
 import 'package:baladeyate/features/complaints/cubits/complaints_cubit/complaints_cubit.dart';
@@ -69,8 +70,18 @@ Future<void> setupServiceLocator() async {
     () => ComplaintsRepository(apiService: sl()),
   );
 
+  sl.registerLazySingleton<FcmService>(
+    () => FcmService(
+      authRepository: sl<AuthRepository>(),
+      cacheService: sl<CacheService>(),
+    ),
+  );
+
   sl.registerLazySingleton<AuthCubit>(
-    () => AuthCubit(authRepository: sl<AuthRepository>()),
+    () => AuthCubit(
+      authRepository: sl<AuthRepository>(),
+      fcmService: sl<FcmService>(),
+    ),
   );
 
   sl.registerFactory<ComplaintsCubit>(

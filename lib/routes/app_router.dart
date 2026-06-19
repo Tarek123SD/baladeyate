@@ -23,7 +23,7 @@ final GoRouter appRouter = _createAppRouter();
 
 GoRouter _createAppRouter() {
   final router = GoRouter(
-    initialLocation: '/splash',
+    initialLocation: '/tasks',
     debugLogDiagnostics: kDebugMode,
     observers: [appRouteObserver],
     routes: [

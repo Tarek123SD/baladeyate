@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:responsive_x_toolkit/responsive_x.dart';
 
+import 'package:baladeyate/core/constants/app_assets.dart';
 import 'package:baladeyate/core/widgets/custom_app_bar.dart';
 import 'package:baladeyate/config/theme/app_colors.dart';
 
@@ -19,7 +20,7 @@ class HomeScreen extends StatelessWidget {
     return Container(
       decoration: const BoxDecoration(
         image: DecorationImage(
-          image: AssetImage('assets/images/background_white.png'),
+          image: AssetImage(AppAssets.backgroundWhite),
           fit: BoxFit.cover,
         ),
       ),
@@ -116,7 +117,7 @@ class HomeScreen extends StatelessWidget {
                               decoration: const BoxDecoration(
                                 image: DecorationImage(
                                   image: AssetImage(
-                                    'assets/images/splash_screen_wallpaper.png',
+                                    AppAssets.splashWallpaper,
                                   ),
                                   fit: BoxFit.cover,
                                 ),

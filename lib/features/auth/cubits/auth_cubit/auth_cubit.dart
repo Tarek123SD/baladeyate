@@ -1,15 +1,20 @@
 import 'dart:io';
+import 'package:baladeyate/core/services/fcm/fcm_service.dart';
 import 'package:baladeyate/features/auth/models/user.dart';
 import 'package:baladeyate/features/auth/cubits/auth_cubit/auth_state.dart';
 import 'package:baladeyate/features/auth/repo/auth_repository.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 class AuthCubit extends Cubit<AuthState> {
-  AuthCubit({required AuthRepository authRepository})
-      : _authRepository = authRepository,
+  AuthCubit({
+    required AuthRepository authRepository,
+    required FcmService fcmService,
+  })  : _authRepository = authRepository,
+        _fcmService = fcmService,
         super(const AuthInitial());
 
   final AuthRepository _authRepository;
+  final FcmService _fcmService;
 
   /// Signup with email, password, and identity image
   Future<void> signup({
@@ -35,6 +40,7 @@ class AuthCubit extends Cubit<AuthState> {
         identityImage: identityImage,
       );
       emit(AuthSuccess(user: user));
+      await _fcmService.syncTokenWithBackend();
     } catch (e) {
       emit(AuthFailure(message: _messageFromError(e)));
     }
@@ -44,8 +50,14 @@ class AuthCubit extends Cubit<AuthState> {
   Future<void> login(String email, String password) async {
     emit(const AuthLoading());
     try {
-      final user = await _authRepository.login(email, password);
+      final fcmToken = await _fcmService.getToken();
+      final user = await _authRepository.loginCitizen(
+        email,
+        password,
+        fcmToken: fcmToken,
+      );
       emit(AuthSuccess(user: user));
+      await _fcmService.syncTokenWithBackend();
     } catch (e) {
       emit(AuthFailure(message: _messageFromError(e)));
     }
@@ -76,6 +88,8 @@ class AuthCubit extends Cubit<AuthState> {
       // Non-blocking: login still succeeds without push registration.
     }
   }
+
+  Future<void> syncPushToken() => _fcmService.syncTokenWithBackend();
 
   String _messageFromError(Object error) {
     final message = error.toString().replaceFirst('Exception: ', '');

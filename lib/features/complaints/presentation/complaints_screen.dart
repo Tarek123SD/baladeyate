@@ -11,6 +11,7 @@ import 'package:go_router/go_router.dart';
 import 'package:responsive_x_toolkit/responsive_x.dart';
 
 import 'package:baladeyate/config/theme/app_colors.dart';
+import 'package:baladeyate/core/constants/app_assets.dart';
 
 class ComplaintsScreen extends StatefulWidget {
   const ComplaintsScreen({super.key});
@@ -57,7 +58,7 @@ class _ComplaintsScreenState extends State<ComplaintsScreen> {
           return Container(
             decoration: const BoxDecoration(
               image: DecorationImage(
-                image: AssetImage('assets/images/background_white.png'),
+                image: AssetImage(AppAssets.backgroundWhite),
                 fit: BoxFit.cover,
               ),
             ),

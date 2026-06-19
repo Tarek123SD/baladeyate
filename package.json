@@ -1,0 +1,31 @@
+{
+  "name": "baladeyate",
+  "version": "1.0.0",
+  "description": "A new Flutter project.",
+  "main": "index.js",
+  "directories": {
+    "lib": "lib"
+  },
+  "scripts": {
+    "firebase": "firebase",
+    "firebase:login": "firebase login",
+    "firebase:configure": "powershell -ExecutionPolicy Bypass -File scripts/firebase_configure.ps1",
+    "firebase:setup": "powershell -ExecutionPolicy Bypass -File scripts/setup_firebase.ps1",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Tarek123SD/baladeyate.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/Tarek123SD/baladeyate/issues"
+  },
+  "homepage": "https://github.com/Tarek123SD/baladeyate#readme",
+  "devDependencies": {
+    "firebase-tools": "^15.22.0"
+  }
+}

@@ -11,6 +11,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:responsive_x_toolkit/responsive_x.dart';
 import 'package:baladeyate/config/theme/app_colors.dart';
 import 'package:baladeyate/config/validator/validator.dart';
+import 'package:baladeyate/core/constants/app_assets.dart';
 
 class SignupScreen extends StatefulWidget {
   const SignupScreen({super.key});
@@ -72,7 +73,7 @@ class _SignupScreenState extends State<SignupScreen> {
         body: Container(
           decoration: const BoxDecoration(
             image: DecorationImage(
-              image: AssetImage('assets/images/background_white.png'),
+              image: AssetImage(AppAssets.backgroundWhite),
               fit: BoxFit.cover,
             ),
           ),
@@ -85,7 +86,7 @@ class _SignupScreenState extends State<SignupScreen> {
                   children: [
                     SizedBox(height: 40.h(context)),
                     Image.asset(
-                      'assets/images/Syrian_logo_icon_gold.png',
+                      AppAssets.logoGold,
                       width: 120.s(context),
                       height: 120.s(context),
                       fit: BoxFit.contain,

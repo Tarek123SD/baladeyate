@@ -1,9 +1,9 @@
+import 'package:baladeyate/config/theme/app_colors.dart';
+import 'package:baladeyate/core/constants/app_assets.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
 import 'package:responsive_x_toolkit/responsive_x.dart';
-
-import 'package:baladeyate/config/theme/app_colors.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -32,14 +32,14 @@ class _SplashScreenState extends State<SplashScreen> {
       body: Container(
         decoration: const BoxDecoration(
           image: DecorationImage(
-            image: AssetImage('assets/images/splash_screen_wallpaper.png'),
+            image: AssetImage(AppAssets.splashWallpaper),
             fit: BoxFit.cover,
           ),
         ),
         child: Stack(
           children: [
             Center(
-              child: Image.asset('assets/images/Syrian_logo_icon_gold.png')
+              child: Image.asset(AppAssets.logoGold)
                   .animate()
                   .fadeIn(duration: 500.ms)
                   .scale(

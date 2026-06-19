@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:baladeyate/config/theme/app_colors.dart';
+import 'package:baladeyate/core/constants/app_assets.dart';
 import 'package:baladeyate/core/widgets/custom_notification_card.dart';
 import 'package:responsive_x_toolkit/responsive_x.dart';
 
@@ -14,7 +15,7 @@ class NotificationsScreen extends StatelessWidget {
     return Container(
       decoration: const BoxDecoration(
         image: DecorationImage(
-          image: AssetImage('assets/images/background_white.png'),
+          image: AssetImage(AppAssets.backgroundWhite),
           fit: BoxFit.cover,
         ),
       ),

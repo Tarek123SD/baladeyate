@@ -59,7 +59,8 @@ class FormDropdownField extends StatelessWidget {
             ],
           ),
           child: DropdownButtonFormField<String>(
-            value: value,
+            key: ValueKey(value),
+            initialValue: value,
             onChanged: enabled ? onChanged : null,
             items: items
                 .map(

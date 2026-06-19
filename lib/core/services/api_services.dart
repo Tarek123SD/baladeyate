@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 
 class ApiService {
   final Dio _dio;
@@ -55,10 +56,10 @@ class ApiService {
   }
 
   void printUrl(String endpoint) {
-    print("${_dio.options.baseUrl}$endpoint");
+    debugPrint('${_dio.options.baseUrl}$endpoint');
   }
 
   void printResponse(Response<dynamic> response) {
-    print("response =>${response.statusCode}\n${response.data}");
+    debugPrint('response =>${response.statusCode}\n${response.data}');
   }
 }

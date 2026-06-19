@@ -47,7 +47,11 @@
 	<true/>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>التطبيق يحتاج للوصول إلى موقعك لعرض مهمتك الحالية على الخريطة.</string>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>remote-notification</string>
+	</array>
 	<key>GMSApiKey</key>
-	<string>YOUR_GOOGLE_MAPS_API_KEY</string>
+	<string>AIzaSyAjGG9Z8JjwUnH0xWD7FtdyqSt4lbwu7Pg</string>
 </dict>
 </plist>

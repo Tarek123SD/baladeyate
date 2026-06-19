@@ -1,8 +1,8 @@
+import 'package:baladeyate/config/theme/app_colors.dart';
+import 'package:baladeyate/core/constants/app_assets.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:responsive_x_toolkit/responsive_x.dart';
-
-import 'package:baladeyate/config/theme/app_colors.dart';
 
 class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   const CustomAppBar({
@@ -51,7 +51,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
             child: ClipRRect(
               borderRadius: BorderRadius.circular(8.r(context)),
               child: Image.asset(
-                'assets/images/Syrian_horizontal_dark_green.png',
+                AppAssets.logoHorizontalDarkGreen,
                 fit: BoxFit.contain,
                 alignment: Alignment.centerRight,
               ),

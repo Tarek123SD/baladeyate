@@ -1,10 +1,9 @@
+import 'package:baladeyate/core/services/failure_service/auth_failure.dart';
+import 'package:baladeyate/core/services/failure_service/failure.dart';
+import 'package:baladeyate/core/services/failure_service/generice_failure.dart';
+import 'package:baladeyate/core/services/failure_service/internet_failure.dart';
 import 'package:dio/dio.dart';
-// ignore: implementation_imports
-import 'package:flutter/src/widgets/framework.dart';
-import 'package:w_builder/src/core/services/failure_service/auth_failure.dart';
-import 'package:w_builder/src/core/services/failure_service/failure.dart';
-import 'package:w_builder/src/core/services/failure_service/generice_failure.dart';
-import 'package:w_builder/src/core/services/failure_service/internet_failure.dart';
+import 'package:flutter/material.dart';
 
 class FailureFactory extends Failure {
   FailureFactory(super.message);
@@ -37,7 +36,6 @@ class FailureFactory extends Failure {
 
   @override
   Future<void> handle(BuildContext context, {void Function()? onRetry}) {
-    GenericFailureFactory('An unexpected error occurred. Please try again.');
-    throw UnimplementedError();
+    return GenericFailureFactory(message).handle(context, onRetry: onRetry);
   }
 }

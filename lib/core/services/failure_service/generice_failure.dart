@@ -1,6 +1,6 @@
+import 'package:baladeyate/core/services/failure_service/failure.dart';
+import 'package:baladeyate/core/shared/dialogs/error_dialog.dart';
 import 'package:flutter/widgets.dart';
-import 'package:w_builder/src/core/services/failure_service/failure.dart';
-import 'package:w_builder/src/core/shared/dialogs/error_dialog.dart';
 
 class GenericFailureFactory extends Failure {
   GenericFailureFactory(super.message);

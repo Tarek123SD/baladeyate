@@ -1,5 +1,6 @@
 import 'package:baladeyate/config/theme/app_colors.dart';
 import 'package:baladeyate/config/validator/validator.dart';
+import 'package:baladeyate/core/constants/app_assets.dart';
 import 'package:baladeyate/core/widgets/responsive_body.dart';
 import 'package:baladeyate/core/widgets/custom_form_field_label.dart';
 import 'package:baladeyate/features/auth/cubits/auth_cubit/auth_cubit.dart';
@@ -52,7 +53,7 @@ class _AuthScreenState extends State<AuthScreen> {
         body: Container(
           decoration: const BoxDecoration(
             image: DecorationImage(
-              image: AssetImage('assets/images/background_white.png'),
+              image: AssetImage(AppAssets.backgroundWhite),
               fit: BoxFit.cover,
             ),
           ),
@@ -65,7 +66,7 @@ class _AuthScreenState extends State<AuthScreen> {
                   children: [
                     SizedBox(height: 60.h(context)),
                     Image.asset(
-                      'assets/images/Syrian_logo_icon_gold.png',
+                      AppAssets.logoGold,
                       width: 150.s(context),
                       height: 150.s(context),
                     ),

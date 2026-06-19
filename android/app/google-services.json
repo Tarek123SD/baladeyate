@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "581379212105",
+    "project_id": "balditi",
+    "storage_bucket": "balditi.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:581379212105:android:4152b61efe3e11eb1a9098",
+        "android_client_info": {
+          "package_name": "com.example.baladeyate"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAHfHRaaBKccREbDBm3WGcmz9zk6f4VYOc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
