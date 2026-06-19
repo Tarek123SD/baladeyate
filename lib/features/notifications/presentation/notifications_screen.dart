@@ -1,12 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:baladeyate/config/theme/app_colors.dart';
+import 'package:baladeyate/core/widgets/custom_notification_card.dart';
+import 'package:responsive_x_toolkit/responsive_x.dart';
 
 class NotificationsScreen extends StatelessWidget {
   const NotificationsScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final horizontalPadding = context.isMobile ? 16.w(context) : 24.w(context);
+
     return Container(
       decoration: const BoxDecoration(
         image: DecorationImage(
@@ -22,7 +26,6 @@ class NotificationsScreen extends StatelessWidget {
           automaticallyImplyLeading: false,
           title: Row(
             textDirection: TextDirection.rtl,
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               IconButton(
                 onPressed: () {
@@ -32,60 +35,41 @@ class NotificationsScreen extends StatelessWidget {
                     context.go('/main');
                   }
                 },
-                icon: const Icon(
+                icon: Icon(
                   Icons.arrow_forward_ios,
                   color: AppColors.primaryForest,
-                  size: 20,
+                  size: 20.ic(context),
                 ),
                 padding: EdgeInsets.zero,
               ),
-              const Expanded(
+              Expanded(
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.center,
+                  mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
                       'الإشعارات',
+                      textAlign: TextAlign.center,
                       style: TextStyle(
                         color: AppColors.primaryForest,
-                        fontSize: 20,
+                        fontSize: 20.f(context),
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    SizedBox(height: 6),
+                    SizedBox(height: 4.h(context)),
                     Text(
                       'يمكنك متابعة أحدث التنبيهات هنا',
+                      textAlign: TextAlign.center,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                       style: TextStyle(
-                        color: Color(0xFF6D6D6D),
-                        fontSize: 12,
+                        color: const Color(0xFF6D6D6D),
+                        fontSize: 12.f(context),
                       ),
                     ),
                   ],
                 ),
               ),
-              const SizedBox(width: 8),
-              Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  color: AppColors.secondaryForest,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: const Icon(
-                  Icons.person,
-                  color: Colors.white,
-                  size: 22,
-                ),
-              ),
-              const SizedBox(width: 12),
-              IconButton(
-                onPressed: () {},
-                icon: const Icon(
-                  Icons.settings,
-                  color: AppColors.primaryForest,
-                  size: 24,
-                ),
-                padding: EdgeInsets.zero,
-              ),
+              SizedBox(width: 48.s(context)),
             ],
           ),
         ),
@@ -94,34 +78,39 @@ class NotificationsScreen extends StatelessWidget {
             textDirection: TextDirection.rtl,
             child: SingleChildScrollView(
               child: Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+                padding: EdgeInsets.symmetric(
+                  horizontal: horizontalPadding,
+                  vertical: 18.h(context),
+                ),
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    const Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    Row(
                       children: [
-                        Text(
-                          'تحديد الكل كمقروء',
-                          style: TextStyle(
-                            color: AppColors.primaryGoldenWheat,
-                            fontSize: 14,
-                            fontWeight: FontWeight.bold,
+                        Expanded(
+                          child: Text(
+                            'تحديد الكل كمقروء',
+                            textAlign: TextAlign.left,
+                            style: TextStyle(
+                              color: AppColors.primaryGoldenWheat,
+                              fontSize: 14.f(context),
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                         ),
+                        SizedBox(width: 12.w(context)),
                         Text(
                           'اليوم',
                           style: TextStyle(
                             color: AppColors.primaryForest,
-                            fontSize: 14,
+                            fontSize: 14.f(context),
                             fontWeight: FontWeight.w600,
                           ),
                         ),
                       ],
                     ),
-                    const SizedBox(height: 22),
-                    _buildNotificationCard(
+                    SizedBox(height: 22.h(context)),
+                    const CustomNotificationCard(
                       time: 'منذ ساعتين',
                       title: 'تم قبول طلب تجديد الهوية',
                       message:
@@ -129,8 +118,8 @@ class NotificationsScreen extends StatelessWidget {
                       icon: Icons.check_circle,
                       iconColor: AppColors.green,
                     ),
-                    const SizedBox(height: 18),
-                    _buildNotificationCard(
+                    SizedBox(height: 18.h(context)),
+                    const CustomNotificationCard(
                       time: 'أمس',
                       title: 'صيانة مجدولة لشبكة المياه',
                       message:
@@ -138,8 +127,8 @@ class NotificationsScreen extends StatelessWidget {
                       icon: Icons.water_drop,
                       iconColor: AppColors.primaryForest,
                     ),
-                    const SizedBox(height: 18),
-                    _buildNotificationCard(
+                    SizedBox(height: 18.h(context)),
+                    const CustomNotificationCard(
                       time: 'قبل يومين',
                       title: 'تم تحديث بيانات العائلة بنجاح',
                       message:
@@ -147,25 +136,29 @@ class NotificationsScreen extends StatelessWidget {
                       icon: Icons.family_restroom,
                       iconColor: AppColors.secondaryForest,
                     ),
-                    const SizedBox(height: 40),
-                    const Column(
-                      children: [
-                        Icon(
-                          Icons.notifications_off_outlined,
-                          size: 48,
-                          color: Color(0xFF9A9A9A),
-                        ),
-                        SizedBox(height: 14),
-                        Text(
-                          'لا توجد إشعارات قديمة',
-                          style: TextStyle(
-                            color: Color(0xFF9A9A9A),
-                            fontSize: 14,
+                    SizedBox(height: 40.h(context)),
+                    Center(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.notifications_off_outlined,
+                            size: 48.ic(context),
+                            color: const Color(0xFF9A9A9A),
                           ),
-                        ),
-                      ],
+                          SizedBox(height: 14.h(context)),
+                          Text(
+                            'لا توجد إشعارات قديمة',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              color: const Color(0xFF9A9A9A),
+                              fontSize: 14.f(context),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                    const SizedBox(height: 20),
+                    SizedBox(height: 20.h(context)),
                   ],
                 ),
               ),
@@ -173,84 +166,6 @@ class NotificationsScreen extends StatelessWidget {
           ),
         ),
       ),
-    );
-  }
-
-  Widget _buildNotificationCard({
-    required String time,
-    required String title,
-    required String message,
-    required IconData icon,
-    required Color iconColor,
-  }) {
-    return Stack(
-      clipBehavior: Clip.none,
-      children: [
-        Container(
-          width: double.infinity,
-          padding: const EdgeInsets.fromLTRB(18, 18, 22, 18),
-          decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.95),
-            borderRadius: BorderRadius.circular(20),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.05),
-                blurRadius: 18,
-                offset: const Offset(0, 8),
-              ),
-            ],
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    time,
-                    style: const TextStyle(
-                      color: Color(0xFF7A7A7A),
-                      fontSize: 12,
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                ],
-              ),
-              const SizedBox(height: 10),
-              Text(
-                title,
-                style: const TextStyle(
-                  color: AppColors.primaryForest,
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 10),
-              Text(
-                message,
-                style: const TextStyle(
-                  color: Color(0xFF5B5B5B),
-                  fontSize: 14,
-                  height: 1.7,
-                ),
-              ),
-            ],
-          ),
-        ),
-        Positioned(
-          right: -6,
-          top: 16,
-          child: CircleAvatar(
-            radius: 28,
-            backgroundColor: iconColor.withValues(alpha: 0.16),
-            child: Icon(
-              icon,
-              size: 28,
-              color: iconColor,
-            ),
-          ),
-        ),
-      ],
     );
   }
 }

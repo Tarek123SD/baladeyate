@@ -1,3 +1,5 @@
+import 'dart:io';
+import 'package:baladeyate/features/auth/models/user.dart';
 import 'package:baladeyate/features/auth/cubits/auth_cubit/auth_state.dart';
 import 'package:baladeyate/features/auth/repo/auth_repository.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -9,13 +11,74 @@ class AuthCubit extends Cubit<AuthState> {
 
   final AuthRepository _authRepository;
 
+  /// Signup with email, password, and identity image
+  Future<void> signup({
+    required String firstName,
+    required String lastName,
+    required String nationalNumber,
+    required String phoneNumber,
+    required String email,
+    required String password,
+    required String passwordConfirmation,
+    required File identityImage,
+  }) async {
+    emit(const AuthLoading());
+    try {
+      final user = await _authRepository.signup(
+        firstName: firstName,
+        lastName: lastName,
+        nationalNumber: nationalNumber,
+        phoneNumber: phoneNumber,
+        email: email,
+        password: password,
+        passwordConfirmation: passwordConfirmation,
+        identityImage: identityImage,
+      );
+      emit(AuthSuccess(user: user));
+    } catch (e) {
+      emit(AuthFailure(message: _messageFromError(e)));
+    }
+  }
+
+  /// Login with email and password
   Future<void> login(String email, String password) async {
     emit(const AuthLoading());
     try {
       final user = await _authRepository.login(email, password);
       emit(AuthSuccess(user: user));
     } catch (e) {
-      emit(AuthFailure(message: e.toString()));
+      emit(AuthFailure(message: _messageFromError(e)));
     }
+  }
+
+  /// Logout from the API and clear the local session.
+  Future<void> logout() async {
+    emit(const AuthLoading());
+    try {
+      await _authRepository.logout();
+      emit(const AuthLoggedOut());
+    } catch (e) {
+      emit(AuthFailure(message: _messageFromError(e)));
+    }
+  }
+
+  /// Updates the in-memory user after profile or verification changes.
+  void updateUser(User user) {
+    emit(AuthSuccess(user: user));
+  }
+
+  /// Persists an FCM token for push notifications when available.
+  Future<void> registerFcmToken(String token) async {
+    if (token.isEmpty) return;
+    try {
+      await _authRepository.updateFcmToken(token);
+    } catch (_) {
+      // Non-blocking: login still succeeds without push registration.
+    }
+  }
+
+  String _messageFromError(Object error) {
+    final message = error.toString().replaceFirst('Exception: ', '');
+    return message.isNotEmpty ? message : 'حدث خطأ غير متوقع';
   }
 }

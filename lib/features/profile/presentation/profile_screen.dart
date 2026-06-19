@@ -1,6 +1,14 @@
-import 'package:baladeyate/core/widgets/custom_app_bar.dart';
-import 'package:flutter/material.dart';
 import 'package:baladeyate/config/theme/app_colors.dart';
+import 'package:baladeyate/core/services/service_locator.dart';
+import 'package:baladeyate/core/widgets/custom_app_bar.dart';
+import 'package:baladeyate/core/widgets/custom_profile_family_member_card.dart';
+import 'package:baladeyate/core/widgets/custom_profile_tab_button.dart';
+import 'package:baladeyate/features/profile/cubits/profile_cubit/profile_cubit.dart';
+import 'package:baladeyate/features/profile/cubits/profile_cubit/profile_state.dart';
+import 'package:baladeyate/features/profile/models/household.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:responsive_x_toolkit/responsive_x.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -12,491 +20,358 @@ class ProfileScreen extends StatefulWidget {
 class _ProfileScreenState extends State<ProfileScreen> {
   int selectedTab = 0;
 
-  final List<Map<String, dynamic>> familyMembers = [
-    {
-      'name': 'محمد علي الأحمد',
-      'number': '011882222 : الرقم الوطني',
-      'role': 'رب الأسرة',
-      'image': 'MA',
-      'bgColor': const Color(0xFFB8956A),
-    },
-    {
-      'name': 'ليلى يوسف خليل',
-      'number': '011554499 : الرقم الوطني',
-      'role': 'الزوجة',
-      'image': 'LY',
-      'bgColor': const Color(0xFFB8956A),
-    },
-    {
-      'name': 'أحمد محمد الأحمد',
-      'number': '011990011 : الرقم الوطني',
-      'role': 'ابن',
-      'image': 'ا',
-      'bgColor': const Color(0xFFA0C9C3),
-    },
-    {
-      'name': 'سارة محمد الأحمد',
-      'number': '011887722 : الرقم الوطني',
-      'role': 'ابنة',
-      'image': 'س',
-      'bgColor': const Color(0xFFF4D9B8),
-    },
+  static const _memberColors = [
+    Color(0xFFB8956A),
+    Color(0xFFA0C9C3),
+    Color(0xFFF4D9B8),
+    Color(0xFF8FB8AE),
   ];
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: const BoxDecoration(
-        image: DecorationImage(
-          image: AssetImage('assets/images/background_white.png'),
-          fit: BoxFit.cover,
-        ),
-      ),
-      child: Scaffold(
-        backgroundColor: Colors.transparent,
-        appBar: const CustomAppBar(),
-        body: SafeArea(
-          child: SingleChildScrollView(
-            child: Column(
-              children: [
-                // Family Card Section
-                Container(
-                  width: double.infinity,
-                  decoration: const BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
-                      colors: [
-                        Color(0xFF5FA89D),
-                        Color(0xFF7BC9B8),
-                      ],
-                    ),
-                  ),
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 24, vertical: 35),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      Text(
-                        ' الملف الرقمي الموحد ',
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: AppColors.primaryCharcoal,
-                            ),
-                        textDirection: TextDirection.rtl,
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'البطاقة العائلية',
-                        style:
-                            Theme.of(context).textTheme.headlineSmall?.copyWith(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                        textDirection: TextDirection.rtl,
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        '#963-0411-8822',
-                        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                              color: Colors.white,
-                              fontWeight: FontWeight.w600,
-                            ),
-                        textDirection: TextDirection.rtl,
-                      ),
-                    ],
-                  ),
-                ),
+    final horizontalPadding = context.isMobile ? 16.w(context) : 24.w(context);
 
-                // Family Info Cards
-                Transform.translate(
-                  offset: const Offset(0, -30),
-                  child: Container(
-                    margin: const EdgeInsets.symmetric(horizontal: 24),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(24),
-                      boxShadow: const [
-                        BoxShadow(
-                          color: Color.fromRGBO(0, 0, 0, 0.08),
-                          blurRadius: 14,
-                          offset: Offset(0, 8),
-                        ),
-                      ],
-                    ),
-                    padding: const EdgeInsets.all(20),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.end,
-                          children: [
-                            Text(
-                              'بيانات السكن',
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .titleMedium
-                                  ?.copyWith(
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                              textDirection: TextDirection.rtl,
-                            ),
-                            const SizedBox(width: 8),
-                            const Icon(Icons.home, color: Colors.amber),
-                          ],
-                        ),
-                        const SizedBox(height: 16),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: Container(
-                                padding: const EdgeInsets.all(16),
-                                decoration: BoxDecoration(
-                                  color: Colors.grey[100],
-                                  borderRadius: BorderRadius.circular(16),
-                                ),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.end,
-                                  children: [
-                                    Text(
-                                      'الهيئة / المقر',
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .bodySmall
-                                          ?.copyWith(
-                                            color: Colors.grey[600],
-                                            fontWeight: FontWeight.w600,
-                                          ),
-                                      textDirection: TextDirection.rtl,
-                                    ),
-                                    const SizedBox(height: 8),
-                                    Text(
-                                      'بناء اليسومين - 14',
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .titleMedium
-                                          ?.copyWith(
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                      textDirection: TextDirection.rtl,
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Container(
-                                padding: const EdgeInsets.all(16),
-                                decoration: BoxDecoration(
-                                  color: Colors.grey[100],
-                                  borderRadius: BorderRadius.circular(16),
-                                ),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.end,
-                                  children: [
-                                    Text(
-                                      'الشارع / الحي',
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .bodySmall
-                                          ?.copyWith(
-                                            color: Colors.grey[600],
-                                            fontWeight: FontWeight.w600,
-                                          ),
-                                      textDirection: TextDirection.rtl,
-                                    ),
-                                    const SizedBox(height: 8),
-                                    Text(
-                                      'شارع الملك، حي الجلاء',
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .bodyMedium
-                                          ?.copyWith(
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                      textDirection: TextDirection.rtl,
-                                      maxLines: 2,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 16),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.end,
-                          children: [
-                            const Icon(Icons.location_on,
-                                color: Colors.teal, size: 18),
-                            const SizedBox(width: 8),
-                            Text(
-                              'تحديث الموقع',
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .bodyMedium
-                                  ?.copyWith(
-                                    color: Colors.teal,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                              textDirection: TextDirection.rtl,
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
+    return BlocProvider(
+      create: (_) => sl<ProfileCubit>()..loadHousehold(),
+      child: BlocConsumer<ProfileCubit, ProfileState>(
+        listener: (context, state) {
+          if (state is ProfileFailure) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(state.message)),
+            );
+          }
+        },
+        builder: (context, profileState) {
+          final household =
+              profileState is ProfileLoaded ? profileState.household : null;
+          final isLoading = profileState is ProfileLoading;
+          final errorMessage =
+              profileState is ProfileFailure ? profileState.message : null;
 
-                const SizedBox(height: 20),
-
-                // Tab Buttons
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24),
-                  child: Row(
-                    children: [
-                      _buildTabButton('الرقبة العائلية', 0),
-                      const SizedBox(width: 12),
-                      _buildTabButton('العقارات', 1),
-                      const SizedBox(width: 12),
-                      _buildTabButton('المدافن', 2),
-                    ],
-                  ),
-                ),
-
-                const SizedBox(height: 24),
-
-                // Family Members Section
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.end,
-                        children: [
-                          Text(
-                            'الأسرة المسجلين',
-                            style: Theme.of(context)
-                                .textTheme
-                                .titleLarge
-                                ?.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.black,
-                                ),
-                            textDirection: TextDirection.rtl,
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 16),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 12, vertical: 8),
-                        decoration: BoxDecoration(
-                          color: Colors.teal[200],
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: Text(
-                          '4 أفراد',
-                          style:
-                              Theme.of(context).textTheme.labelSmall?.copyWith(
-                                    color: Colors.teal[800],
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                          textDirection: TextDirection.rtl,
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      ...familyMembers.map((member) {
-                        return Padding(
-                          padding: const EdgeInsets.only(bottom: 12),
-                          child: _buildFamilyMemberCard(context, member),
-                        );
-                      }),
-                    ],
-                  ),
-                ),
-
-                const SizedBox(height: 24),
-
-                // Digital Wallet Section
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24),
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: AppColors.primaryForest,
-                      borderRadius: BorderRadius.circular(24),
-                    ),
-                    padding: const EdgeInsets.all(20),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      textDirection: TextDirection.rtl,
-                      children: [
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.end,
-                          children: [
-                            Text(
-                              'الخزينة الرقمية',
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .titleMedium
-                                  ?.copyWith(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                              textDirection: TextDirection.rtl,
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              'للوصول إلى الوثائق العائلية المحفوظة فكرونيا',
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .bodySmall
-                                  ?.copyWith(
-                                    color: Colors.white70,
-                                  ),
-                              textDirection: TextDirection.rtl,
-                              maxLines: 2,
-                            ),
-                          ],
-                        ),
-                        Container(
-                          width: 50,
-                          height: 50,
-                          decoration: BoxDecoration(
-                            color: Colors.amber,
-                            shape: BoxShape.circle,
-                          ),
-                          child: const Icon(
-                            Icons.folder,
-                            color: Colors.white,
-                            size: 28,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-
-                const SizedBox(height: 30),
-              ],
+          return Container(
+            decoration: const BoxDecoration(
+              image: DecorationImage(
+                image: AssetImage('assets/images/background_white.png'),
+                fit: BoxFit.cover,
+              ),
             ),
-          ),
-        ),
+            child: Scaffold(
+              backgroundColor: Colors.transparent,
+              appBar: const CustomAppBar(),
+              body: SafeArea(
+                child: RefreshIndicator(
+                  onRefresh: () =>
+                      context.read<ProfileCubit>().loadHousehold(),
+                  child: SingleChildScrollView(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    child: Column(
+                      children: [
+                        _buildHeaderCard(context, household),
+                        Transform.translate(
+                          offset: Offset(0, -30.h(context)),
+                          child: _buildAddressCard(
+                            context,
+                            horizontalPadding: horizontalPadding,
+                            household: household,
+                            isLoading: isLoading,
+                            errorMessage: errorMessage,
+                          ),
+                        ),
+                        SizedBox(height: 20.h(context)),
+                        Padding(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: horizontalPadding,
+                          ),
+                          child: Row(
+                            children: [
+                              CustomProfileTabButton(
+                                label: 'الرقبة العائلية',
+                                isSelected: selectedTab == 0,
+                                onTap: () => setState(() => selectedTab = 0),
+                              ),
+                              SizedBox(width: 12.w(context)),
+                              CustomProfileTabButton(
+                                label: 'العقارات',
+                                isSelected: selectedTab == 1,
+                                onTap: () => setState(() => selectedTab = 1),
+                              ),
+                              SizedBox(width: 12.w(context)),
+                              CustomProfileTabButton(
+                                label: 'المدافن',
+                                isSelected: selectedTab == 2,
+                                onTap: () => setState(() => selectedTab = 2),
+                              ),
+                            ],
+                          ),
+                        ),
+                        SizedBox(height: 24.h(context)),
+                        Padding(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: horizontalPadding,
+                          ),
+                          child: _buildTabContent(
+                            context,
+                            household: household,
+                            isLoading: isLoading,
+                            errorMessage: errorMessage,
+                          ),
+                        ),
+                        SizedBox(height: 30.h(context)),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          );
+        },
       ),
     );
   }
 
-  Widget _buildTabButton(String label, int index) {
-    final isSelected = selectedTab == index;
-    return Expanded(
-      child: GestureDetector(
-        onTap: () {
-          setState(() {
-            selectedTab = index;
-          });
-        },
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 12),
-          decoration: BoxDecoration(
-            color: isSelected ? AppColors.primaryForest : Colors.white,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color:
-                  isSelected ? AppColors.primaryForest : Colors.grey[300]!,
-            ),
-          ),
-          child: Text(
-            label,
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              color: isSelected ? Colors.white : Colors.black87,
-              fontWeight: FontWeight.w600,
-              fontSize: 13,
-            ),
+  Widget _buildHeaderCard(BuildContext context, Household? household) {
+    return Container(
+      width: double.infinity,
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [Color(0xFF5FA89D), Color(0xFF7BC9B8)],
+        ),
+      ),
+      padding: EdgeInsets.symmetric(
+        horizontal: 24.w(context),
+        vertical: 35.h(context),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          Text(
+            ' الملف الرقمي الموحد ',
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: AppColors.primaryCharcoal,
+                ),
             textDirection: TextDirection.rtl,
           ),
-        ),
+          SizedBox(height: 8.h(context)),
+          Text(
+            'البطاقة العائلية',
+            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
+            textDirection: TextDirection.rtl,
+          ),
+          SizedBox(height: 8.h(context)),
+          Text(
+            household?.familyBook ?? '—',
+            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w600,
+                ),
+            textDirection: TextDirection.rtl,
+          ),
+        ],
       ),
     );
   }
 
-  Widget _buildFamilyMemberCard(
-      BuildContext context, Map<String, dynamic> member) {
+  Widget _buildAddressCard(
+    BuildContext context, {
+    required double horizontalPadding,
+    required Household? household,
+    required bool isLoading,
+    required String? errorMessage,
+  }) {
     return Container(
+      margin: EdgeInsets.symmetric(horizontal: horizontalPadding),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(24.r(context)),
         boxShadow: const [
           BoxShadow(
-            color: Color.fromRGBO(0, 0, 0, 0.05),
-            blurRadius: 10,
-            offset: Offset(0, 4),
+            color: Color.fromRGBO(0, 0, 0, 0.08),
+            blurRadius: 14,
+            offset: Offset(0, 8),
           ),
         ],
       ),
-      padding: const EdgeInsets.all(16),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        textDirection: TextDirection.rtl,
+      padding: EdgeInsets.all(20.s(context)),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.end,
         children: [
           Row(
-            textDirection: TextDirection.rtl,
+            mainAxisAlignment: MainAxisAlignment.end,
             children: [
-              const Icon(Icons.arrow_back_ios, size: 16, color: Colors.grey),
-              const SizedBox(width: 8),
-              Container(
-                width: 50,
-                height: 50,
-                decoration: BoxDecoration(
-                  color: member['bgColor'],
-                  shape: BoxShape.circle,
-                ),
-                child: Center(
-                  child: Text(
-                    member['image'],
-                    style: const TextStyle(
-                      color: Colors.white,
+              Text(
+                'بيانات السكن',
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.bold,
-                      fontSize: 18,
                     ),
-                  ),
-                ),
+                textDirection: TextDirection.rtl,
               ),
+              SizedBox(width: 8.w(context)),
+              Icon(Icons.home, color: Colors.amber, size: 20.ic(context)),
             ],
           ),
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 12),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Text(
-                    member['name'],
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
-                    textDirection: TextDirection.rtl,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
+          if (isLoading) ...[
+            SizedBox(height: 20.h(context)),
+            const Center(child: CircularProgressIndicator()),
+          ] else if (errorMessage != null) ...[
+            SizedBox(height: 16.h(context)),
+            Text(
+              errorMessage,
+              textDirection: TextDirection.rtl,
+              textAlign: TextAlign.right,
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: AppColors.secondaryCharcoal,
+                    height: 1.5,
                   ),
-                  const SizedBox(height: 4),
-                  Text(
-                    member['number'],
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: Colors.grey[600],
-                        ),
-                    textDirection: TextDirection.rtl,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ],
-              ),
             ),
+          ] else ...[
+            SizedBox(height: 16.h(context)),
+            Row(
+              children: [
+                Expanded(
+                  child: _infoTile(
+                    context,
+                    title: 'الهيئة / المقر',
+                    value: household?.buildingName ?? '—',
+                  ),
+                ),
+                SizedBox(width: 12.w(context)),
+                Expanded(
+                  child: _infoTile(
+                    context,
+                    title: 'الشارع / الحي',
+                    value: household?.address ?? '—',
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _infoTile(
+    BuildContext context, {
+    required String title,
+    required String value,
+  }) {
+    return Container(
+      padding: EdgeInsets.all(16.s(context)),
+      decoration: BoxDecoration(
+        color: Colors.grey[100],
+        borderRadius: BorderRadius.circular(16.r(context)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          Text(
+            title,
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: Colors.grey[600],
+                  fontWeight: FontWeight.w600,
+                ),
+            textDirection: TextDirection.rtl,
+          ),
+          SizedBox(height: 8.h(context)),
+          Text(
+            value,
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+            textDirection: TextDirection.rtl,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildTabContent(
+    BuildContext context, {
+    required Household? household,
+    required bool isLoading,
+    required String? errorMessage,
+  }) {
+    if (selectedTab != 0) {
+      return Center(
+        child: Padding(
+          padding: EdgeInsets.symmetric(vertical: 24.h(context)),
+          child: Text(
+            'لا توجد بيانات متاحة من الخادم لهذا القسم حالياً',
+            textAlign: TextAlign.center,
+            textDirection: TextDirection.rtl,
+            style: Theme.of(context).textTheme.bodyLarge,
+          ),
+        ),
+      );
+    }
+
+    if (isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    if (household == null) {
+      return Text(
+        errorMessage ?? 'لا توجد بيانات عائلية متاحة',
+        textDirection: TextDirection.rtl,
+        textAlign: TextAlign.right,
+      );
+    }
+
+    final members = household.members;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.end,
+      children: [
+        Text(
+          'الأسرة المسجلين',
+          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
+          textDirection: TextDirection.rtl,
+        ),
+        SizedBox(height: 16.h(context)),
+        Container(
+          padding: EdgeInsets.symmetric(
+            horizontal: 12.w(context),
+            vertical: 8.h(context),
+          ),
+          decoration: BoxDecoration(
+            color: Colors.teal[200],
+            borderRadius: BorderRadius.circular(20.r(context)),
+          ),
+          child: Text(
+            '${members.length} أفراد',
+            style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                  color: Colors.teal[800],
+                  fontWeight: FontWeight.w600,
+                ),
+            textDirection: TextDirection.rtl,
+          ),
+        ),
+        SizedBox(height: 16.h(context)),
+        ...members.asMap().entries.map((entry) {
+          final member = entry.value;
+          final color = _memberColors[entry.key % _memberColors.length];
+          return Padding(
+            padding: EdgeInsets.only(bottom: 12.h(context)),
+            child: CustomProfileFamilyMemberCard(
+              member: {
+                'name': member.fullName,
+                'number': '${member.nationalId} : الرقم الوطني',
+                'role': member.roleLabel,
+                'image': member.initials,
+                'bgColor': color,
+              },
+            ),
+          );
+        }),
+      ],
     );
   }
 }

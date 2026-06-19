@@ -1,6 +1,16 @@
-import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import 'package:baladeyate/config/theme/app_colors.dart';
+import 'package:baladeyate/core/services/service_locator.dart';
+import 'package:baladeyate/core/widgets/custom_app_bar.dart';
+import 'package:baladeyate/core/widgets/custom_track_complaint_card.dart';
+import 'package:baladeyate/core/widgets/custom_track_filter_button.dart';
+import 'package:baladeyate/core/widgets/custom_track_statistic_card.dart';
+import 'package:baladeyate/features/complaints/cubits/complaints_cubit/complaints_cubit.dart';
+import 'package:baladeyate/features/complaints/cubits/complaints_cubit/complaints_state.dart';
+import 'package:baladeyate/features/complaints/presentation/complaint_detail_sheet.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
+import 'package:responsive_x_toolkit/responsive_x.dart';
 
 class TrackComplaintsScreen extends StatefulWidget {
   const TrackComplaintsScreen({super.key});
@@ -12,272 +22,217 @@ class TrackComplaintsScreen extends StatefulWidget {
 class _TrackComplaintsScreenState extends State<TrackComplaintsScreen> {
   int selectedFilter = 0;
 
-  final List<Map<String, dynamic>> _complaints = [
-    {
-      'statusLabel': 'قيد المراجعة',
-      'statusColor': const Color(0xFFFFB980),
-      'icon': Icons.remove_red_eye,
-      'title': 'انقطاع المياه في حي القصاع',
-      'date': 'تم تقديمها في 14 أكتوبر 2023',
-      'request': '#9821',
-      'description':
-          'نعاني من انقطاع متكرر للمياه الصالحة للشرب منذ ثلاثة أيام دون سابق إنذار أو توضيح من مؤسسة المياه.',
-      'tags': ['دمشق', 'مياه'],
-    },
-    {
-      'statusLabel': 'تم الحل بنجاح',
-      'statusColor': const Color(0xFFE2F5E8),
-      'icon': Icons.flash_on,
-      'title': 'عطل في محول الكهرباء الرئيسي',
-      'date': 'تم تقديمها في 10 أكتوبر 2023',
-      'request': '#9755',
-      'description':
-          'وضع متكرر في أعمدة الإنارة يُبقي انقطاعاً كلياً في الحي السكني الثالث.',
-      'tags': ['ريف دمشق', 'كهرباء'],
-    },
-    {
-      'statusLabel': 'قيد المراجعة',
-      'statusColor': const Color(0xFFFFB980),
-      'icon': Icons.delete_outline,
-      'title': 'تراكم النفايات في الساحة العامة',
-      'date': 'تم تقديمها في 08 أكتوبر 2023',
-      'request': '#9601',
-      'description':
-          'لم يتم إفراغ حاويات القمامة منذ أكثر من أسبوع مما أدى لتراكمها بشكل غير صحي.',
-      'tags': ['حلب', 'نفايات'],
-    },
-  ];
-
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: const BoxDecoration(
-        image: DecorationImage(
-          image: AssetImage('assets/images/background_white.png'),
-          fit: BoxFit.cover,
-        ),
-      ),
-      child: Scaffold(
-        floatingActionButtonLocation: FloatingActionButtonLocation.startFloat,
-        backgroundColor: Colors.transparent,
-        appBar: AppBar(
-          backgroundColor: Colors.white,
-          elevation: 4,
-          automaticallyImplyLeading: false,
-          title: Row(
-            textDirection: TextDirection.rtl,
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              SizedBox(
-                width: 250,
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(8),
-                  child: Image.asset(
-                    'assets/images/Syrian_horizontal_dark_green.png',
-                    fit: BoxFit.cover,
-                  ),
-                ),
-              ),
-              IconButton(
-                onPressed: () {
-                  context.go('/notifications');
-                },
-                icon: const Icon(
-                  Icons.notifications_none,
-                  color: Colors.black87,
-                  size: 24,
-                ),
-                padding: EdgeInsets.zero,
-              ),
-            ],
-          ),
-        ),
-        floatingActionButton: FloatingActionButton(
-          shape: const CircleBorder(),
-          onPressed: () {
-            context.go('/complains');
-          },
-          backgroundColor: AppColors.green,
-          child: const Icon(
-            Icons.add,
-            color: AppColors.thirdGoldenWheat,
-          ),
-        ),
-        body: SafeArea(
-          child: Directionality(
-            textDirection: TextDirection.rtl,
-            child: SingleChildScrollView(
-              child: Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    const SizedBox(height: 14),
-                    Text(
-                      'مركز تتبع الشكاوى والمقترحات',
-                      style:
-                          Theme.of(context).textTheme.headlineSmall?.copyWith(
-                                color: AppColors.primaryForest,
-                                fontWeight: FontWeight.bold,
-                              ),
-                    ),
-                    const SizedBox(height: 12),
-                    Text(
-                      'نلتزم بالشفافية و السرعة في معالجة طلباتكم لضمان جودة الخدمات العامة في كافة المحافظات.',
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: const Color(0xFF3A4B3F),
-                            height: 1.7,
-                          ),
-                    ),
-                    const SizedBox(height: 24),
-                    Row(
-                      children: [
-                        _buildStatisticCard(
-                          title: 'إجمالي الشكاوى',
-                          value: '12 طلب',
-                          backgroundColor: Colors.white,
-                          textColor: const Color(0xFF1F3A2E),
-                        ),
-                        const SizedBox(width: 12),
-                        _buildStatisticCard(
-                          title: 'قيد المعالجة',
-                          value: '03 طلب',
-                          backgroundColor: Colors.white,
-                          textColor: const Color(0xFF1F3A2E),
-                        ),
-                        const SizedBox(width: 12),
-                        _buildStatisticCard(
-                          title: 'تم الحل',
-                          value: '09 طلب',
-                          backgroundColor: AppColors.primaryForest,
-                          textColor: Colors.white,
-                          icon: Icons.task_alt,
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 24),
-                    Row(
-                      children: [
-                        _buildFilterButton('الكل', 0),
-                        const SizedBox(width: 8),
-                        _buildFilterButton('قيد الانتظار', 1),
-                        const SizedBox(width: 8),
-                        _buildFilterButton('مكتملة', 2),
-                      ],
-                    ),
-                    const SizedBox(height: 24),
-                    Column(
-                      children: _complaints.map((complaint) {
-                        return Padding(
-                          padding: const EdgeInsets.only(bottom: 16),
-                          child: _buildComplaintCard(context, complaint),
-                        );
-                      }).toList(),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
+    final horizontalPadding = context.isMobile ? 16.w(context) : 24.w(context);
 
-  Widget _buildStatisticCard({
-    required String title,
-    required String value,
-    required Color backgroundColor,
-    required Color textColor,
-    IconData? icon,
-  }) {
-    return Expanded(
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
-        decoration: BoxDecoration(
-          color: backgroundColor,
-          borderRadius: BorderRadius.circular(20),
-          boxShadow: const [
-            BoxShadow(
-              color: Color.fromRGBO(0, 0, 0, 0.05),
-              blurRadius: 14,
-              offset: Offset(0, 10),
-            ),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.end,
-          children: [
-            Text(
-              title,
-              style: TextStyle(
-                color: textColor,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            const SizedBox(height: 10),
-            if (icon != null)
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  Text(
-                    value,
-                    style: TextStyle(
-                      color: textColor,
-                      fontSize: 22,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Icon(
-                    icon,
-                    color: textColor,
-                    size: 24,
-                  ),
-                ],
-              )
-            else
-              Text(
-                value,
-                style: TextStyle(
-                  color: textColor,
-                  fontSize: 22,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildFilterButton(String label, int index) {
-    final bool isSelected = selectedFilter == index;
-    return Expanded(
-      child: GestureDetector(
-        onTap: () {
-          setState(() {
-            selectedFilter = index;
-          });
+    return BlocProvider(
+      create: (_) => sl<ComplaintsCubit>()..loadComplaints(),
+      child: BlocListener<ComplaintsCubit, ComplaintsState>(
+        listener: (context, state) {
+          if (state is ComplaintsFailure) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(state.message)),
+            );
+          }
         },
         child: Container(
-          height: 44,
-          decoration: BoxDecoration(
-            color: isSelected ? AppColors.primaryForest : Colors.white,
-            borderRadius: BorderRadius.circular(22),
-            border: Border.all(
-              color: isSelected
-                  ? AppColors.primaryForest
-                  : const Color(0xFFE0E0E0),
+          decoration: const BoxDecoration(
+            image: DecorationImage(
+              image: AssetImage('assets/images/background_white.png'),
+              fit: BoxFit.cover,
             ),
           ),
-          alignment: Alignment.center,
-          child: Text(
-            label,
-            style: TextStyle(
-              color: isSelected ? Colors.white : AppColors.primaryForest,
-              fontWeight: FontWeight.w600,
+          child: Scaffold(
+            floatingActionButtonLocation:
+                FloatingActionButtonLocation.startFloat,
+            backgroundColor: Colors.transparent,
+            appBar: const CustomAppBar(),
+            floatingActionButton: FloatingActionButton(
+              shape: const CircleBorder(),
+              onPressed: () {
+                context.go('/complains');
+              },
+              backgroundColor: AppColors.green,
+              child: const Icon(
+                Icons.add,
+                color: AppColors.thirdGoldenWheat,
+              ),
+            ),
+            body: SafeArea(
+              child: Directionality(
+                textDirection: TextDirection.rtl,
+                child: Center(
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(maxWidth: 900.w(context)),
+                    child: BlocBuilder<ComplaintsCubit, ComplaintsState>(
+                      builder: (context, state) {
+                        if (state is ComplaintsLoading) {
+                          return const Center(
+                            child: CircularProgressIndicator(),
+                          );
+                        }
+
+                        if (state is ComplaintsFailure) {
+                          return Center(
+                            child: Padding(
+                              padding: EdgeInsets.symmetric(
+                                horizontal: horizontalPadding,
+                              ),
+                              child: _buildErrorSection(
+                                context,
+                                message: state.message,
+                                onRetry: () => context
+                                    .read<ComplaintsCubit>()
+                                    .loadComplaints(),
+                              ),
+                            ),
+                          );
+                        }
+
+                        if (state is! ComplaintsLoaded) {
+                          return const SizedBox.shrink();
+                        }
+
+                        final complaints = state.filtered(selectedFilter);
+
+                        return RefreshIndicator(
+                          onRefresh: () =>
+                              context.read<ComplaintsCubit>().loadComplaints(),
+                          child: SingleChildScrollView(
+                            physics: const AlwaysScrollableScrollPhysics(),
+                            child: Padding(
+                              padding: EdgeInsets.symmetric(
+                                horizontal: horizontalPadding,
+                                vertical: 20.h(context),
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.end,
+                                children: [
+                                  SizedBox(height: 14.h(context)),
+                                  Center(
+                                    child: Text(
+                                      'مركز تتبع الشكاوي والمقترحات',
+                                      textAlign: TextAlign.center,
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .headlineSmall
+                                          ?.copyWith(
+                                            color: AppColors.primaryForest,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                    ),
+                                  ),
+                                  SizedBox(height: 12.h(context)),
+                                  Text(
+                                    'نلتزم بالشفافية و السرعة في معالجة طلباتكم لضمان جودة الخدمات العامة في كافة المحافظات.',
+                                    textAlign: TextAlign.center,
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .bodyMedium
+                                        ?.copyWith(
+                                          color: const Color(0xFF3A4B3F),
+                                          height: 1.7,
+                                        ),
+                                  ),
+                                  SizedBox(height: 24.h(context)),
+                                  Row(
+                                    children: [
+                                      CustomTrackStatisticCard(
+                                        title: 'إجمالي الشكاوى',
+                                        value: '${state.totalCount} طلب',
+                                        backgroundColor: Colors.white,
+                                        textColor: const Color(0xFF1F3A2E),
+                                      ),
+                                      SizedBox(width: 12.w(context)),
+                                      CustomTrackStatisticCard(
+                                        title: 'قيد المعالجة',
+                                        value: '${state.inProgressCount} طلب',
+                                        backgroundColor: Colors.white,
+                                        textColor: const Color(0xFF1F3A2E),
+                                      ),
+                                      SizedBox(width: 12.w(context)),
+                                      CustomTrackStatisticCard(
+                                        title: 'تم الحل',
+                                        value: '${state.resolvedCount} طلب',
+                                        backgroundColor:
+                                            AppColors.primaryForest,
+                                        textColor: Colors.white,
+                                        icon: Icons.task_alt,
+                                      ),
+                                    ],
+                                  ),
+                                  SizedBox(height: 24.h(context)),
+                                  Row(
+                                    children: [
+                                      CustomTrackFilterButton(
+                                        label: 'الكل',
+                                        isSelected: selectedFilter == 0,
+                                        onTap: () =>
+                                            setState(() => selectedFilter = 0),
+                                      ),
+                                      SizedBox(width: 8.w(context)),
+                                      CustomTrackFilterButton(
+                                        label: 'قيد الانتظار',
+                                        isSelected: selectedFilter == 1,
+                                        onTap: () =>
+                                            setState(() => selectedFilter = 1),
+                                      ),
+                                      SizedBox(width: 8.w(context)),
+                                      CustomTrackFilterButton(
+                                        label: 'مكتملة',
+                                        isSelected: selectedFilter == 2,
+                                        onTap: () =>
+                                            setState(() => selectedFilter = 2),
+                                      ),
+                                    ],
+                                  ),
+                                  SizedBox(height: 24.h(context)),
+                                  if (complaints.isEmpty)
+                                    Padding(
+                                      padding: EdgeInsets.symmetric(
+                                          vertical: 32.h(context)),
+                                      child: Center(
+                                        child: Text(
+                                          'لا توجد شكاوى حالياً',
+                                          style: Theme.of(context)
+                                              .textTheme
+                                              .bodyLarge
+                                              ?.copyWith(
+                                                color:
+                                                    AppColors.secondaryCharcoal,
+                                              ),
+                                        ),
+                                      ),
+                                    )
+                                  else
+                                    Column(
+                                      children: complaints.map((complaint) {
+                                        return Padding(
+                                          padding: EdgeInsets.only(
+                                            bottom: 16.h(context),
+                                          ),
+                                          child: CustomTrackComplaintCard(
+                                            complaint:
+                                                complaint.toTrackCardMap(),
+                                            onTap: () => showComplaintDetailSheet(
+                                              context,
+                                              complaint: complaint,
+                                            ),
+                                          ),
+                                        );
+                                      }).toList(),
+                                    ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ),
+              ),
             ),
           ),
         ),
@@ -285,132 +240,60 @@ class _TrackComplaintsScreenState extends State<TrackComplaintsScreen> {
     );
   }
 
-  Widget _buildComplaintCard(
-      BuildContext context, Map<String, dynamic> complaint) {
+  Widget _buildErrorSection(
+    BuildContext context, {
+    required String message,
+    required VoidCallback onRetry,
+  }) {
     return Container(
-      padding: const EdgeInsets.all(18),
+      width: double.infinity,
+      padding: EdgeInsets.all(16.s(context)),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: const [
-          BoxShadow(
-            color: Color.fromRGBO(0, 0, 0, 0.06),
-            blurRadius: 18,
-            offset: Offset(0, 10),
-          ),
-        ],
+        color: Colors.white.withValues(alpha: 0.92),
+        borderRadius: BorderRadius.circular(16.r(context)),
+        border: Border.all(
+          color: AppColors.thirdGoldenWheat.withValues(alpha: 0.8),
+        ),
       ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.end,
+        mainAxisSize: MainAxisSize.min,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                decoration: BoxDecoration(
-                  color: complaint['statusColor'],
-                  borderRadius: BorderRadius.circular(14),
-                ),
-                child: Text(
-                  complaint['statusLabel'],
-                  style: const TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ),
-              Row(
-                children: [
-                  Icon(complaint['icon'],
-                      color: AppColors.primaryForest, size: 22),
-                  const SizedBox(width: 10),
-                  SizedBox(
-                    width: 170,
-                    child: Text(
-                      complaint['title'],
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-          const SizedBox(height: 14),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                complaint['date'],
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: const Color(0xFF777777),
-                    ),
-              ),
-              Text(
-                complaint['request'],
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: const Color(0xFF777777),
-                      fontWeight: FontWeight.w600,
-                    ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
           Text(
-            complaint['description'],
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  height: 1.6,
-                  color: const Color(0xFF4D4D4D),
-                ),
+            message,
+            textAlign: TextAlign.center,
+            textDirection: TextDirection.rtl,
+            style: TextStyle(
+              fontSize: 14.f(context),
+              fontWeight: FontWeight.w600,
+              color: Colors.black,
+              height: 1.5,
+            ),
           ),
-          const SizedBox(height: 18),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: complaint['tags'].map<Widget>((tag) {
-                  return Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFE7F4EC),
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    child: Text(
-                      tag,
-                      style: const TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFF235235),
-                      ),
-                    ),
-                  );
-                }).toList(),
-              ),
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                decoration: BoxDecoration(
-                  color: AppColors.thirdGoldenWheat,
-                  borderRadius: BorderRadius.circular(18),
+          SizedBox(height: 14.h(context)),
+          SizedBox(
+            height: 44.h(context),
+            child: OutlinedButton.icon(
+              onPressed: onRetry,
+              style: OutlinedButton.styleFrom(
+                foregroundColor: AppColors.primaryForest,
+                backgroundColor:
+                    AppColors.thirdGoldenWheat.withValues(alpha: 0.35),
+                side: BorderSide(
+                  color: AppColors.primaryForest.withValues(alpha: 0.35),
                 ),
-                child: const Text(
-                  'تحديث الحالة',
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black87,
-                  ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12.r(context)),
                 ),
               ),
-            ],
+              icon: Icon(Icons.refresh_rounded, size: 18.s(context)),
+              label: Text(
+                'إعادة المحاولة',
+                style: TextStyle(
+                  fontSize: 14.f(context),
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
           ),
         ],
       ),

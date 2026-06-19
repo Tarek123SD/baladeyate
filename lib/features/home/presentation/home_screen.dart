@@ -1,8 +1,11 @@
+import 'package:baladeyate/features/auth/cubits/auth_cubit/auth_cubit.dart';
+import 'package:baladeyate/features/auth/cubits/auth_cubit/auth_state.dart';
 import 'package:baladeyate/features/home/presentation/components/custom_card.dart';
 import 'package:baladeyate/features/home/presentation/components/greeting_card.dart';
 import 'package:baladeyate/features/home/presentation/components/section_header.dart';
 import 'package:baladeyate/features/home/presentation/components/update_card.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:responsive_x_toolkit/responsive_x.dart';
 
 import 'package:baladeyate/core/widgets/custom_app_bar.dart';
@@ -32,9 +35,26 @@ class HomeScreen extends StatelessWidget {
                   delegate: SliverChildListDelegate(
                     [
                       // Greeting Card
-                      const GreetingCard(
-                        greeting: 'صباح الخير',
-                        name: 'أهلا بك، أحمد',
+                      BlocBuilder<AuthCubit, AuthState>(
+                        builder: (context, state) {
+                          final userName =
+                              state is AuthSuccess ? state.user.name : 'مواطن';
+                          final statusLabel = state is AuthSuccess
+                              ? (state.user.verificationStatusLabel ??
+                                  'حالة التوثيق غير معروفة')
+                              : 'سجّل الدخول لعرض حالتك';
+                          final isVerified = state is AuthSuccess &&
+                              state.user.isVerified;
+
+                          return GreetingCard(
+                            greeting: 'صباح الخير',
+                            name: 'أهلا بك، $userName',
+                            statusLabel: statusLabel,
+                            statusColor: isVerified
+                                ? Colors.amber
+                                : Colors.orange,
+                          );
+                        },
                       ),
                       SizedBox(height: 40.h(context)),
                       SizedBox(height: 40.h(context)),

@@ -1,38 +1,37 @@
 // ignore_for_file: constant_identifier_names
 
+/// Urban Services API endpoints (Postman: Urban Services API).
 class EndPoints {
-  static const String baseUrl = 'http://127.0.0.1:8000/api/';
-  static const String home = 'home';
-  static const String login = 'auth/dashboard/login';
-  static const String subjects = 'subjects';
-  static const String createSubject = 'create';
-  static const String editSubject = 'edit';
-  static const String deleteSubject = 'delete';
-  static const String create = 'create';
-  static const String update = 'update';
-  static const String requests = 'dashboard/course-enrollments/index';
-  static const String request_accept = 'dashboard/course-enrollments/update';
-  static const String admins = 'admins';
-  static const String createAdmin = 'createAdmin';
-  static const String dashboard_admins_helper = 'dashboard/admins/helper';
-  static const String dashboard_subjects_all = 'dashboard/subjects/all';
-  static const String dashboard_subjects_create = 'dashboard/subjects/create';
-  static const String dashboard_subjects_update = 'dashboard/subjects/update';
-  static const String dashboard_teachers_index = 'dashboard/teachers/index';
-  static const String dashboard_teachers_create = 'dashboard/teachers/create';
-  static const String dashboard_teachers_update = 'dashboard/teachers/update';
-  static const String dashboard_teacher_payouts_all =
-      'dashboard/teacher-payouts/all';
-  static const String dashboard_payouts_update =
-      'dashboard/teacher-payouts/update';
-  static const String dashboard_courses_index = 'dashboard/courses/index';
-  static const String dashboard_courses_create = 'dashboard/courses/create';
-  static const String dashboard_courses_update = 'dashboard/courses/update';
-  static const String dashboard_course_sessions_all =
-      'dashboard/course-sessions/all';
-  static const String attendance_sync = 'attendance/sync';
-  static const String dashboard_course_sessions_show =
-      'dashboard/course-sessions/show';
-  static const String dashboard_homeworks_create = 'dashboard/homeworks/create';
-  static const String dashboard_quizzes_create = 'dashboard/quizzes/create';
+  /// Android emulator maps host localhost via 10.0.2.2
+  static const String baseUrl = 'http://10.0.2.2:8000/api/';
+
+  // Auth
+  static const String signup = 'v1/signup';
+  static const String login = 'v1/login';
+  static const String logout = 'v1/logout';
+
+  // Citizen
+  static const String profile = 'v1/profile';
+  static const String verifyIdentity = 'v1/citizen/verify-identity';
+  static const String myHousehold = 'v1/citizen/my-household';
+  static const String complaints = 'v1/complaints';
+  static String complaintById(int id) => 'v1/complaints/$id';
+
+  // Delegate
+  static const String buildings = 'v1/buildings';
+  static String buildingById(int id) => 'v1/buildings/$id';
+  static const String apartments = 'v1/apartments';
+  static String apartmentById(int id) => 'v1/apartments/$id';
+  static const String families = 'v1/families';
+  static String familyById(int id) => 'v1/families/$id';
+  static const String households = 'v1/households';
+
+  // Admin
+  static const String shops = 'v1/shops';
+  static String shopById(int id) => 'v1/shops/$id';
+  static const String graves = 'v1/graves';
+  static String graveById(int id) => 'v1/graves/$id';
+
+  // Shared
+  static const String fcmToken = 'v1/notifications/fcm-token';
 }

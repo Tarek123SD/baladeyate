@@ -12,8 +12,8 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (_) => sl<AuthCubit>(),
+    return BlocProvider.value(
+      value: sl<AuthCubit>(),
       child: MaterialApp.router(
         debugShowCheckedModeBanner: false,
         onGenerateTitle: (context) => AppLocalizations.of(context)!.appTitle,

@@ -1,11 +1,11 @@
 import 'package:baladeyate/config/theme/app_colors.dart';
 import 'package:baladeyate/config/validator/validator.dart';
 import 'package:baladeyate/core/widgets/responsive_body.dart';
+import 'package:baladeyate/core/widgets/custom_form_field_label.dart';
 import 'package:baladeyate/features/auth/cubits/auth_cubit/auth_cubit.dart';
 import 'package:baladeyate/features/auth/cubits/auth_cubit/auth_state.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:baladeyate/l10n/app_localizations.dart';
 import 'package:go_router/go_router.dart';
 import 'package:responsive_x_toolkit/responsive_x.dart';
 
@@ -18,29 +18,26 @@ class AuthScreen extends StatefulWidget {
 
 class _AuthScreenState extends State<AuthScreen> {
   final _formKey = GlobalKey<FormState>();
-  final TextEditingController _nationalIdController = TextEditingController();
+  final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   bool _showPassword = false;
-  bool _rememberMe = false;
 
   @override
   void dispose() {
-    _nationalIdController.dispose();
+    _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
   }
 
   void _handleLogin() {
     if (_formKey.currentState?.validate() ?? false) {
-      final id = _nationalIdController.text.trim();
-      context.read<AuthCubit>().login(id, _passwordController.text);
+      final email = _emailController.text.trim();
+      context.read<AuthCubit>().login(email, _passwordController.text);
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-
     return BlocListener<AuthCubit, AuthState>(
       listener: (context, state) {
         if (state is AuthSuccess) {
@@ -75,10 +72,11 @@ class _AuthScreenState extends State<AuthScreen> {
                     SizedBox(height: 40.h(context)),
                     Text(
                       'تطبيق المواطن',
-                      style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                            fontWeight: FontWeight.bold,
-                            color: Colors.black,
-                          ),
+                      style:
+                          Theme.of(context).textTheme.headlineMedium?.copyWith(
+                                fontWeight: FontWeight.bold,
+                                color: Colors.black,
+                              ),
                       textDirection: TextDirection.rtl,
                     ),
                     SizedBox(height: 8.h(context)),
@@ -104,7 +102,7 @@ class _AuthScreenState extends State<AuthScreen> {
                             crossAxisAlignment: CrossAxisAlignment.end,
                             children: [
                               Text(
-                                l10n.loginTitle,
+                                "تسجيل الدخول",
                                 style: Theme.of(context)
                                     .textTheme
                                     .titleLarge
@@ -116,7 +114,7 @@ class _AuthScreenState extends State<AuthScreen> {
                               ),
                               SizedBox(height: 8.h(context)),
                               Text(
-                                'يرجى إدخال بيانات الهوية الشخصية',
+                                'يرجى إدخال البريد الاٍلكتروني وكلمة المرور',
                                 style: Theme.of(context)
                                     .textTheme
                                     .bodySmall
@@ -131,12 +129,14 @@ class _AuthScreenState extends State<AuthScreen> {
                       ],
                     ),
                     SizedBox(height: 30.h(context)),
-                    _buildLabel(context, 'الرقم الوطني'),
+                    const CustomFormFieldLabel(label: ' البريد الاٍلكتروني '),
+                    SizedBox(height: 8.h(context)),
                     _AuthTextField(
-                      controller: _nationalIdController,
-                      hint: '000-000-000-000',
-                      suffixIcon: Icons.person,
-                      validator: Validator.required,
+                      controller: _emailController,
+                      hint: 'example@gmail.com',
+                      suffixIcon: Icons.email_outlined,
+                      keyboardType: TextInputType.emailAddress,
+                      validator: Validator.email,
                     ),
                     SizedBox(height: 24.h(context)),
                     Row(
@@ -153,33 +153,15 @@ class _AuthScreenState extends State<AuthScreen> {
                           textDirection: TextDirection.rtl,
                         ),
                         GestureDetector(
-                          onTap: () {
-                            setState(() => _rememberMe = !_rememberMe);
-                          },
-                          child: Row(
-                            textDirection: TextDirection.rtl,
-                            children: [
-                              Checkbox(
-                                value: _rememberMe,
-                                onChanged: (value) {
-                                  setState(() {
-                                    _rememberMe = value ?? false;
-                                  });
-                                },
-                                activeColor: AppColors.primaryForest,
-                              ),
-                              Text(
-                                'نسيت كلمة المرور؟',
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .bodySmall
-                                    ?.copyWith(
+                          onTap: () {},
+                          child: Text(
+                            'نسيت كلمة المرور؟',
+                            style:
+                                Theme.of(context).textTheme.bodySmall?.copyWith(
                                       color: Colors.red,
                                       fontWeight: FontWeight.w600,
                                     ),
-                                textDirection: TextDirection.rtl,
-                              ),
-                            ],
+                            textDirection: TextDirection.rtl,
                           ),
                         ),
                       ],
@@ -223,7 +205,7 @@ class _AuthScreenState extends State<AuthScreen> {
                                       ),
                                       SizedBox(width: 12.s(context)),
                                       Text(
-                                        l10n.loginTitle,
+                                        "تسجيل الدخول",
                                         style: Theme.of(context)
                                             .textTheme
                                             .titleMedium
@@ -287,21 +269,6 @@ class _AuthScreenState extends State<AuthScreen> {
       ),
     );
   }
-
-  Widget _buildLabel(BuildContext context, String label) {
-    return Align(
-      alignment: Alignment.centerRight,
-      child: Text(
-        label,
-        textDirection: TextDirection.rtl,
-        style: TextStyle(
-          fontWeight: FontWeight.w500,
-          fontSize: 14.s(context),
-          color: Colors.black87,
-        ),
-      ),
-    );
-  }
 }
 
 class _AuthTextField extends StatelessWidget {
@@ -310,12 +277,14 @@ class _AuthTextField extends StatelessWidget {
     required this.hint,
     this.suffixIcon,
     required this.validator,
+    this.keyboardType,
   });
 
   final TextEditingController controller;
   final String hint;
   final IconData? suffixIcon;
   final String? Function(String?) validator;
+  final TextInputType? keyboardType;
 
   @override
   Widget build(BuildContext context) {
@@ -334,8 +303,11 @@ class _AuthTextField extends StatelessWidget {
       child: TextFormField(
         controller: controller,
         textDirection: TextDirection.rtl,
+        keyboardType: keyboardType,
+        style: const TextStyle(color: Colors.black),
         decoration: InputDecoration(
           hintText: hint,
+          hintStyle: TextStyle(color: Colors.grey[600]),
           hintTextDirection: TextDirection.rtl,
           filled: true,
           fillColor: Colors.grey[100],
@@ -396,8 +368,10 @@ class _AuthPasswordField extends StatelessWidget {
         controller: controller,
         textDirection: TextDirection.rtl,
         obscureText: !isVisible,
+        style: const TextStyle(color: Colors.black),
         decoration: InputDecoration(
           hintText: '••••••••',
+          hintStyle: TextStyle(color: Colors.grey[600]),
           hintTextDirection: TextDirection.rtl,
           filled: true,
           fillColor: Colors.grey[100],

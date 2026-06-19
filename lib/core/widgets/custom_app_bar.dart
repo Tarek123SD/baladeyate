@@ -2,16 +2,25 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:responsive_x_toolkit/responsive_x.dart';
 
+import 'package:baladeyate/config/theme/app_colors.dart';
+
 class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
-  const CustomAppBar({super.key});
+  const CustomAppBar({
+    super.key,
+    this.showSettings = true,
+    this.showBackButton = false,
+  });
+
+  final bool showSettings;
+  final bool showBackButton;
 
   @override
   Size get preferredSize => const Size.fromHeight(kToolbarHeight);
 
   @override
   Widget build(BuildContext context) {
-    final logoWidth = (250.w(context)).clamp(140.0, 320.0);
     final iconSize = 24.s(context);
+    final logoWidth = (220.w(context)).clamp(120.0, 260.0);
 
     return AppBar(
       backgroundColor: Colors.white,
@@ -19,19 +28,38 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
       automaticallyImplyLeading: false,
       title: Row(
         textDirection: TextDirection.rtl,
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
+          if (showBackButton)
+            IconButton(
+              onPressed: () {
+                if (context.canPop()) {
+                  context.pop();
+                } else {
+                  context.go('/main');
+                }
+              },
+              icon: Icon(
+                Icons.arrow_forward_ios,
+                color: AppColors.primaryForest,
+                size: 20.s(context),
+              ),
+              padding: EdgeInsets.zero,
+            ),
           SizedBox(
             width: logoWidth,
+            height: kToolbarHeight - 12,
             child: ClipRRect(
               borderRadius: BorderRadius.circular(8.r(context)),
               child: Image.asset(
                 'assets/images/Syrian_horizontal_dark_green.png',
-                fit: BoxFit.cover,
+                fit: BoxFit.contain,
+                alignment: Alignment.centerRight,
               ),
             ),
           ),
+          const Spacer(),
           Row(
+            mainAxisSize: MainAxisSize.min,
             children: [
               IconButton(
                 onPressed: () {
@@ -44,17 +72,18 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
                 ),
                 padding: EdgeInsets.zero,
               ),
-              IconButton(
-                onPressed: () {
-                  context.push('/settings');
-                },
-                icon: Icon(
-                  Icons.settings,
-                  color: Colors.black87,
-                  size: iconSize,
+              if (showSettings)
+                IconButton(
+                  onPressed: () {
+                    context.push('/settings');
+                  },
+                  icon: Icon(
+                    Icons.settings,
+                    color: Colors.black87,
+                    size: iconSize,
+                  ),
+                  padding: EdgeInsets.zero,
                 ),
-                padding: EdgeInsets.zero,
-              ),
             ],
           ),
         ],

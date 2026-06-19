@@ -1,63 +1,150 @@
-import 'package:baladeyate/core/widgets/custom_app_bar.dart';
+import 'package:baladeyate/core/services/service_locator.dart';
+import 'package:baladeyate/core/widgets/custom_complaint_input_field.dart';
+import 'package:baladeyate/core/widgets/custom_complaint_map_box.dart';
+import 'package:baladeyate/core/widgets/custom_complaint_priority_button.dart';
+import 'package:baladeyate/core/widgets/custom_complaint_upload_box.dart';
+import 'package:baladeyate/features/complaints/cubits/complaints_cubit/complaints_cubit.dart';
+import 'package:baladeyate/features/complaints/cubits/complaints_cubit/complaints_state.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import 'package:responsive_x_toolkit/responsive_x.dart';
 
 import 'package:baladeyate/config/theme/app_colors.dart';
 
-class ComplaintsScreen extends StatelessWidget {
+class ComplaintsScreen extends StatefulWidget {
   const ComplaintsScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: const BoxDecoration(
-        image: DecorationImage(
-          image: AssetImage('assets/images/background_white.png'),
-          fit: BoxFit.cover,
-        ),
-      ),
-      child: Scaffold(
-        backgroundColor: Colors.transparent,
+  State<ComplaintsScreen> createState() => _ComplaintsScreenState();
+}
 
-        /// ================= APP BAR =================
-        appBar: CustomAppBar(),
-        body: SafeArea(
-          child: Column(
-            children: [
-              Expanded(
-                child: SingleChildScrollView(
-                  padding: EdgeInsets.all(16.s(context)),
-                  child: Center(
-                    child: ConstrainedBox(
-                      constraints: BoxConstraints(
-                        maxWidth: 700.w(context),
+class _ComplaintsScreenState extends State<ComplaintsScreen> {
+  final TextEditingController _subjectController = TextEditingController();
+  final TextEditingController _detailsController = TextEditingController();
+  bool _isUrgent = false;
+
+  @override
+  void dispose() {
+    _subjectController.dispose();
+    _detailsController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocProvider(
+      create: (_) => sl<ComplaintsCubit>(),
+      child: BlocConsumer<ComplaintsCubit, ComplaintsState>(
+        listener: (context, state) {
+          if (state is ComplaintCreated) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('تم إرسال الشكوى بنجاح'),
+                backgroundColor: Colors.green,
+              ),
+            );
+            context.go('/track');
+          } else if (state is ComplaintsFailure) {
+            // Shown inline in the form.
+          }
+        },
+        builder: (context, state) {
+          final isSubmitting = state is ComplaintsLoading;
+          final errorMessage =
+              state is ComplaintsFailure ? state.message : null;
+
+          return Container(
+            decoration: const BoxDecoration(
+              image: DecorationImage(
+                image: AssetImage('assets/images/background_white.png'),
+                fit: BoxFit.cover,
+              ),
+            ),
+            child: Scaffold(
+              backgroundColor: Colors.transparent,
+              appBar: _buildAppBar(context),
+              body: SafeArea(
+                child: Column(
+                  children: [
+                    Expanded(
+                      child: SingleChildScrollView(
+                        padding: EdgeInsets.all(16.s(context)),
+                        child: Center(
+                          child: ConstrainedBox(
+                            constraints: BoxConstraints(
+                              maxWidth: 700.w(context),
+                            ),
+                            child: _buildFormCard(
+                              context,
+                              isSubmitting,
+                              errorMessage,
+                            ),
+                          ),
+                        ),
                       ),
-                      child: _buildFormCard(context),
                     ),
-                  ),
+                  ],
                 ),
               ),
-            ],
-          ),
-        ),
+            ),
+          );
+        },
       ),
     );
   }
 
-  /// ================= FORM CARD =================
-  Widget _buildFormCard(BuildContext context) {
-    return Container(
-      padding: EdgeInsets.all(16.s(context)),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.9),
-        borderRadius: BorderRadius.circular(20.r(context)),
+  PreferredSizeWidget _buildAppBar(BuildContext context) {
+    return AppBar(
+      backgroundColor: Colors.white,
+      elevation: 4,
+      automaticallyImplyLeading: false,
+      title: Row(
+        textDirection: TextDirection.rtl,
+        children: [
+          IconButton(
+            onPressed: () {
+              if (context.canPop()) {
+                context.pop();
+              } else {
+                context.go('/track');
+              }
+            },
+            icon: Icon(
+              Icons.arrow_forward_ios,
+              color: AppColors.primaryForest,
+              size: 20.ic(context),
+            ),
+            padding: EdgeInsets.zero,
+          ),
+          Expanded(
+            child: Text(
+              'تقديم شكوى',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: AppColors.primaryForest,
+                fontSize: 20.f(context),
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+          SizedBox(width: 48.s(context)),
+        ],
       ),
+    );
+  }
+
+  Widget _buildFormCard(
+    BuildContext context,
+    bool isSubmitting,
+    String? errorMessage,
+  ) {
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: 8.s(context)),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
-          SizedBox(height: 10.s(context)),
-
-          /// TITLE
+          SizedBox(height: 8.s(context)),
           Center(
             child: Text(
               'تقديم شكوى رسمية',
@@ -68,216 +155,226 @@ class ComplaintsScreen extends StatelessWidget {
               ),
             ),
           ),
-
-          SizedBox(height: 20.s(context)),
-
-          /// PRIORITY
-          Text(
-            'درجة الأولوية',
-            style: TextStyle(
-              fontSize: 15.f(context),
+          SizedBox(height: 6.s(context)),
+          Center(
+            child: Text(
+              'ساعدنا في تحسين الخدمات عبر مشاركة التفاصيل بدقة',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 13.f(context),
+                color: AppColors.secondaryCharcoal.withValues(alpha: 0.75),
+              ),
             ),
           ),
-
-          SizedBox(height: 10.s(context)),
-
-          Row(
-            children: [
-              Expanded(
-                child: _buildButton(
-                  context,
-                  text: 'طارئ / مستعجل',
-                  isActive: false,
+          SizedBox(height: 18.s(context)),
+          _buildSectionCard(
+            context: context,
+            title: 'درجة الأولوية',
+            child: Row(
+              children: [
+                Expanded(
+                  child: CustomComplaintPriorityButton(
+                    text: 'طارئ / مستعجل',
+                    isActive: _isUrgent,
+                    onTap: () => setState(() => _isUrgent = true),
+                  ),
+                ),
+                SizedBox(width: 10.s(context)),
+                Expanded(
+                  child: CustomComplaintPriorityButton(
+                    text: 'اعتيادي',
+                    isActive: !_isUrgent,
+                    onTap: () => setState(() => _isUrgent = false),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          SizedBox(height: 14.s(context)),
+          _buildSectionCard(
+            context: context,
+            title: 'موضوع الشكوى',
+            child: CustomComplaintInputField(
+              controller: _subjectController,
+              hint: 'مثال: صيانة الطرق...',
+            ),
+          ),
+          SizedBox(height: 14.s(context)),
+          _buildSectionCard(
+            context: context,
+            title: 'تفاصيل الشكوى',
+            child: CustomComplaintInputField(
+              controller: _detailsController,
+              hint: 'يرجى كتابة وصف دقيق...',
+              maxLines: 5,
+            ),
+          ),
+          SizedBox(height: 14.s(context)),
+          _buildSectionCard(
+            context: context,
+            title: 'المرفقات و الصور',
+            child: const CustomComplaintUploadBox(),
+          ),
+          SizedBox(height: 14.s(context)),
+          _buildSectionCard(
+            context: context,
+            title: 'الموقع الجغرافي',
+            child: const CustomComplaintMapBox(),
+          ),
+          SizedBox(height: 18.s(context)),
+          if (errorMessage != null) ...[
+            _buildErrorSection(
+              context,
+              message: errorMessage,
+              onRetry: () => _submitComplaint(context),
+            ),
+            SizedBox(height: 14.s(context)),
+          ],
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              onPressed: isSubmitting ? null : () => _submitComplaint(context),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.green,
+                foregroundColor: Colors.white,
+                elevation: 0,
+                padding: EdgeInsets.symmetric(vertical: 13.h(context)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14.r(context)),
                 ),
               ),
-              SizedBox(width: 10.s(context)),
-              Expanded(
-                child: _buildButton(
-                  context,
-                  text: 'اعتيادي',
-                  isActive: true,
+              icon: isSubmitting
+                  ? SizedBox(
+                      width: 18.s(context),
+                      height: 18.s(context),
+                      child: const CircularProgressIndicator(
+                        strokeWidth: 2,
+                        valueColor: AlwaysStoppedAnimation(Colors.white),
+                      ),
+                    )
+                  : Icon(
+                      Icons.send_rounded,
+                      size: 18.s(context),
+                    ),
+              label: Text(
+                'إرسال الشكوى',
+                style: TextStyle(
+                  fontSize: 15.f(context),
+                  fontWeight: FontWeight.w700,
                 ),
               ),
-            ],
-          ),
-
-          SizedBox(height: 20.s(context)),
-
-          /// SUBJECT
-          Text(
-            'موضوع الشكوى',
-            style: TextStyle(
-              fontSize: 15.f(context),
             ),
           ),
-
-          SizedBox(height: 8.s(context)),
-
-          _buildInputField(
-            context,
-            hint: 'مثال: صيانة الطرق...',
-          ),
-
-          SizedBox(height: 20.s(context)),
-
-          /// DETAILS
-          Text(
-            'تفاصيل الشكوى',
-            style: TextStyle(
-              fontSize: 15.f(context),
-            ),
-          ),
-
-          SizedBox(height: 8.s(context)),
-
-          _buildInputField(
-            context,
-            hint: 'يرجى كتابة وصف دقيق...',
-            maxLines: 5,
-          ),
-
-          SizedBox(height: 20.s(context)),
-
-          /// UPLOAD
-          Text(
-            'المرفقات و الصور',
-            style: TextStyle(
-              fontSize: 15.f(context),
-            ),
-          ),
-
-          SizedBox(height: 10.s(context)),
-
-          _buildUploadBox(context),
-
-          SizedBox(height: 20.s(context)),
-
-          /// MAP
-          Text(
-            'الموقع الجغرافي',
-            style: TextStyle(
-              fontSize: 15.f(context),
-            ),
-          ),
-
-          SizedBox(height: 10.s(context)),
-
-          _buildMap(context),
-
-          SizedBox(height: 20.s(context)),
+          SizedBox(height: 6.s(context)),
         ],
       ),
     );
   }
 
-  /// ================= BUTTON =================
-  Widget _buildButton(
-    BuildContext context, {
-    required String text,
-    required bool isActive,
-  }) {
-    return Container(
-      padding: EdgeInsets.symmetric(
-        vertical: 14.s(context),
-      ),
-      decoration: BoxDecoration(
-        color: isActive ? AppColors.green : Colors.grey.shade200,
-        borderRadius: BorderRadius.circular(12.r(context)),
-        border: Border.all(
-          color: Colors.grey.shade400,
-        ),
-      ),
-      child: Center(
-        child: Text(
-          text,
-          textAlign: TextAlign.center,
-          style: TextStyle(
-            fontSize: 14.f(context),
-            color: isActive ? Colors.white : Colors.black,
-          ),
-        ),
-      ),
-    );
+  void _submitComplaint(BuildContext context) {
+    final subject = _subjectController.text.trim();
+    final details = _detailsController.text.trim();
+
+    if (details.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('يرجى كتابة تفاصيل الشكوى')),
+      );
+      return;
+    }
+
+    final description = subject.isEmpty ? details : '$subject\n$details';
+
+    context.read<ComplaintsCubit>().createComplaint(
+          description: description,
+          isUrgent: _isUrgent,
+        );
   }
 
-  /// ================= INPUT =================
-  Widget _buildInputField(
+  Widget _buildErrorSection(
     BuildContext context, {
-    required String hint,
-    int maxLines = 1,
+    required String message,
+    required VoidCallback onRetry,
   }) {
-    return TextField(
-      maxLines: maxLines,
-      textAlign: TextAlign.right,
-      style: TextStyle(
-        fontSize: 14.f(context),
-      ),
-      decoration: InputDecoration(
-        hintText: hint,
-        hintStyle: TextStyle(
-          fontSize: 13.f(context),
-        ),
-        filled: true,
-        fillColor: Colors.grey.shade200,
-        contentPadding: EdgeInsets.symmetric(
-          horizontal: 14.s(context),
-          vertical: 14.s(context),
-        ),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12.r(context)),
-          borderSide: BorderSide.none,
-        ),
-      ),
-    );
-  }
-
-  /// ================= UPLOAD BOX =================
-  Widget _buildUploadBox(BuildContext context) {
     return Container(
-      height: 150.h(context),
+      width: double.infinity,
+      padding: EdgeInsets.all(14.s(context)),
       decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.88),
+        borderRadius: BorderRadius.circular(14.r(context)),
         border: Border.all(
-          color: AppColors.primaryForest,
+          color: AppColors.thirdGoldenWheat.withValues(alpha: 0.8),
         ),
-        borderRadius: BorderRadius.circular(12.r(context)),
       ),
-      child: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.upload_file,
-              size: 30.ic(context),
-              color: AppColors.primaryForest,
+      child: Column(
+        children: [
+          Text(
+            message,
+            textAlign: TextAlign.center,
+            textDirection: TextDirection.rtl,
+            style: TextStyle(
+              fontSize: 14.f(context),
+              fontWeight: FontWeight.w600,
+              color: Colors.black,
+              height: 1.5,
             ),
-            SizedBox(height: 10.s(context)),
-            Text(
-              'رفع صور أو مستندات',
-              style: TextStyle(
-                fontSize: 14.f(context),
-                color: AppColors.primaryForest,
+          ),
+          SizedBox(height: 14.h(context)),
+          SizedBox(
+            height: 44.h(context),
+            child: OutlinedButton.icon(
+              onPressed: onRetry,
+              style: OutlinedButton.styleFrom(
+                foregroundColor: AppColors.primaryForest,
+                backgroundColor:
+                    AppColors.thirdGoldenWheat.withValues(alpha: 0.35),
+                side: BorderSide(
+                  color: AppColors.primaryForest.withValues(alpha: 0.35),
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12.r(context)),
+                ),
+              ),
+              icon: Icon(Icons.refresh_rounded, size: 18.s(context)),
+              label: Text(
+                'إعادة المحاولة',
+                style: TextStyle(
+                  fontSize: 14.f(context),
+                  fontWeight: FontWeight.w700,
+                ),
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
 
-  /// ================= MAP =================
-  Widget _buildMap(BuildContext context) {
+  Widget _buildSectionCard({
+    required BuildContext context,
+    required String title,
+    required Widget child,
+  }) {
     return Container(
-      height: 120.h(context),
+      padding: EdgeInsets.all(12.s(context)),
       decoration: BoxDecoration(
-        color: AppColors.secondaryGoldenWheat,
-        borderRadius: BorderRadius.circular(12.r(context)),
+        color: Colors.white.withValues(alpha: 0.52),
+        borderRadius: BorderRadius.circular(14.r(context)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.7)),
       ),
-      child: Center(
-        child: Icon(
-          Icons.location_pin,
-          size: 30.ic(context),
-          color: AppColors.primaryForest,
-        ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          Text(
+            title,
+            style: TextStyle(
+              fontSize: 15.f(context),
+              fontWeight: FontWeight.w600,
+              color: AppColors.primaryForest,
+            ),
+          ),
+          SizedBox(height: 10.s(context)),
+          child,
+        ],
       ),
     );
   }
