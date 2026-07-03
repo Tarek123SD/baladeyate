@@ -78,7 +78,7 @@ class CitizenRepository {
 
   Future<void> updateFcmToken(String fcmToken) async {
     try {
-      await _apiService.patch(
+      await _apiService.post(
         EndPoints.fcmToken,
         data: {'fcm_token': fcmToken},
       );

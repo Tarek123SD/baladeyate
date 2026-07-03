@@ -40,5 +40,5 @@ class EndPoints {
   static const String notifications = 'v1/notifications';
   static String notificationRead(String id) => 'v1/notifications/$id/read';
   static const String notificationsReadAll = 'v1/notifications/read-all';
-  static const String fcmToken = 'v1/notifications/fcm-token';
+  static const String fcmToken = 'v1/notifications/update-fcm-token';
 }
