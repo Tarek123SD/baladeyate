@@ -46,6 +46,23 @@ class AuthCubit extends Cubit<AuthState> {
     }
   }
 
+  /// Login delegate with email and password.
+  Future<void> loginDelegate(String email, String password) async {
+    emit(const AuthLoading());
+    try {
+      final fcmToken = await _fcmService.getToken();
+      final user = await _authRepository.loginDelegate(
+        email,
+        password,
+        fcmToken: fcmToken,
+      );
+      emit(AuthSuccess(user: user));
+      await _fcmService.syncTokenWithBackend();
+    } catch (e) {
+      emit(AuthFailure(message: _messageFromError(e)));
+    }
+  }
+
   /// Login with email and password
   Future<void> login(String email, String password) async {
     emit(const AuthLoading());

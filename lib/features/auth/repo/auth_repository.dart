@@ -56,6 +56,36 @@ class AuthRepository {
     }
   }
 
+  /// Login delegate via POST /api/v1/login (email + password).
+  Future<User> loginDelegate(
+    String email,
+    String password, {
+    String? fcmToken,
+  }) async {
+    try {
+      final response = await _apiService.post(
+        EndPoints.login,
+        data: {
+          'email': email,
+          'password': password,
+          if (fcmToken != null && fcmToken.isNotEmpty) 'fcm_token': fcmToken,
+        },
+      );
+
+      final user = await _saveSessionFromResponse(response.data);
+      final role = _cacheService.getData(key: StorageKeys.role);
+
+      if (role != null && role != 'Delegate' && role != 'Admin') {
+        await _clearSession();
+        throw Exception('هذا الحساب غير مخصص للمندوبين');
+      }
+
+      return user;
+    } catch (error) {
+      throw _mapToAuthException(error, fallback: 'فشل تسجيل الدخول');
+    }
+  }
+
   /// Login citizen via POST /api/v1/login (email + password).
   Future<User> loginCitizen(
     String email,
@@ -103,7 +133,7 @@ class AuthRepository {
   }
 
   Future<void> updateFcmToken(String fcmToken) async {
-    await _apiService.patch(
+    await _apiService.post(
       EndPoints.fcmToken,
       data: {'fcm_token': fcmToken},
     );

@@ -142,6 +142,10 @@ class FcmService {
   }
 
   void _handleNotificationTap(RemoteMessage message) {
+    debugPrint(
+      'FCM notification tap: messageId=${message.messageId}, '
+      'data=${message.data}',
+    );
     appRouter.go('/notifications');
   }
 }

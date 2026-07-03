@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:responsive_x_toolkit/responsive_x.dart';
 import 'package:baladeyate/config/theme/app_colors.dart';
+import 'package:baladeyate/core/responsive/dimensions.dart';
 import 'package:baladeyate/core/widgets/custom_app_bar.dart';
 import 'package:baladeyate/core/widgets/form_dropdown_field.dart';
 import 'package:baladeyate/core/widgets/form_input_field.dart';
@@ -161,40 +162,44 @@ class _BuildingComplexScreenState extends State<BuildingComplexScreen>
       backgroundColor: Colors.white,
       appBar: const CustomAppBar(),
       body: SafeArea(
-        child: Column(
-          children: [
-            // Workflow Step Indicator
-            WorkflowStepIndicator(
-              steps: _stepLabelsAr,
-              currentStep: currentStep,
-              onStepTapped: (index) {
-                _tabController.animateTo(index);
-                _pageController.animateToPage(
-                  index,
-                  duration: const Duration(milliseconds: 400),
-                  curve: Curves.easeInOutCubic,
-                );
-              },
+        child: Center(
+          child: ConstrainedBox(
+            constraints: BoxConstraints(
+              maxWidth: Dimensions.contentMaxWidth.w(context),
             ),
-            // Main Content Area
-            Expanded(
-              child: isBuildingStep
-                  ? _buildBuildingStepContent(context)
-                  : PageView.builder(
-                      controller: _pageController,
-                      onPageChanged: _handlePageChange,
-                      itemCount: _screens.length,
-                      itemBuilder: (context, index) => _screens[index],
-                    ),
+            child: Column(
+              children: [
+                WorkflowStepIndicator(
+                  steps: _stepLabelsAr,
+                  currentStep: currentStep,
+                  onStepTapped: (index) {
+                    _tabController.animateTo(index);
+                    _pageController.animateToPage(
+                      index,
+                      duration: const Duration(milliseconds: 400),
+                      curve: Curves.easeInOutCubic,
+                    );
+                  },
+                ),
+                Expanded(
+                  child: isBuildingStep
+                      ? _buildBuildingStepContent(context)
+                      : PageView.builder(
+                          controller: _pageController,
+                          onPageChanged: _handlePageChange,
+                          itemCount: _screens.length,
+                          itemBuilder: (context, index) => _screens[index],
+                        ),
+                ),
+                WorkflowNavigationButtons(
+                  currentStep: currentStep,
+                  totalSteps: _stepLabelsAr.length,
+                  onNext: _handleNext,
+                  onPrevious: _handlePrevious,
+                ),
+              ],
             ),
-            // Navigation Buttons (for all steps)
-            WorkflowNavigationButtons(
-              currentStep: currentStep,
-              totalSteps: _stepLabelsAr.length,
-              onNext: _handleNext,
-              onPrevious: _handlePrevious,
-            ),
-          ],
+          ),
         ),
       ),
     );

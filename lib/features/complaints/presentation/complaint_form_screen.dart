@@ -13,14 +13,14 @@ import 'package:responsive_x_toolkit/responsive_x.dart';
 import 'package:baladeyate/config/theme/app_colors.dart';
 import 'package:baladeyate/core/constants/app_assets.dart';
 
-class ComplaintsScreen extends StatefulWidget {
-  const ComplaintsScreen({super.key});
+class ComplaintFormScreen extends StatefulWidget {
+  const ComplaintFormScreen({super.key});
 
   @override
-  State<ComplaintsScreen> createState() => _ComplaintsScreenState();
+  State<ComplaintFormScreen> createState() => _ComplaintFormScreenState();
 }
 
-class _ComplaintsScreenState extends State<ComplaintsScreen> {
+class _ComplaintFormScreenState extends State<ComplaintFormScreen> {
   final TextEditingController _subjectController = TextEditingController();
   final TextEditingController _detailsController = TextEditingController();
   bool _isUrgent = false;

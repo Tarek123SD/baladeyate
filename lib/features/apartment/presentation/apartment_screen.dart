@@ -46,25 +46,23 @@ class _ApartmentScreenState extends State<ApartmentScreen> {
             padding: EdgeInsets.symmetric(horizontal: 16.w(context)),
             child: Row(
               children: [
-                SizedBox(
-                  width:
-                      (MediaQuery.of(context).size.width - 44.w(context)) / 2,
+                Expanded(
                   child: InfoCard(
                     icon: Icons.layers_outlined,
                     title: 'الطابق',
                     subtitle: 'الطابق الرابع',
-                    iconColor: AppColors.primaryGoldenWheat.withValues(alpha: 0.2),
+                    iconColor:
+                        AppColors.primaryGoldenWheat.withValues(alpha: 0.2),
                   ),
                 ),
                 SizedBox(width: 12.w(context)),
-                SizedBox(
-                  width:
-                      (MediaQuery.of(context).size.width - 44.w(context)) / 2,
+                Expanded(
                   child: InfoCard(
                     icon: Icons.apartment_outlined,
                     title: 'المبنى',
                     subtitle: 'برج البياسمين A1',
-                    iconColor: AppColors.primaryGoldenWheat.withValues(alpha: 0.2),
+                    iconColor:
+                        AppColors.primaryGoldenWheat.withValues(alpha: 0.2),
                   ),
                 ),
               ],

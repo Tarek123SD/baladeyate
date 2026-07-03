@@ -39,6 +39,42 @@ class ApiResponseParser {
     return null;
   }
 
+  static List<T> parseList<T>(
+    dynamic data, {
+    required T Function(Map<String, dynamic> json) fromJson,
+    String? fallback,
+  }) {
+    final map = expectMap(data, fallback: fallback);
+    final payload = map['data'];
+    final List<dynamic> rawList;
+
+    if (payload is List) {
+      rawList = payload;
+    } else if (payload is Map<String, dynamic> && payload['data'] is List) {
+      rawList = payload['data'] as List<dynamic>;
+    } else {
+      rawList = const [];
+    }
+
+    return rawList
+        .whereType<Map<String, dynamic>>()
+        .map(fromJson)
+        .toList();
+  }
+
+  static T parseItem<T>(
+    dynamic data, {
+    required T Function(Map<String, dynamic> json) fromJson,
+    String? fallback,
+  }) {
+    final payload = expectData(data, fallback: fallback);
+    if (payload is! Map<String, dynamic>) {
+      throw Exception(fallback ?? 'استجابة غير صالحة من الخادم');
+    }
+
+    return fromJson(payload);
+  }
+
   static Exception mapError(
     Object error, {
     required String fallback,

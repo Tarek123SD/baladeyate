@@ -1,5 +1,6 @@
 import 'package:baladeyate/config/theme/app_colors.dart';
 import 'package:baladeyate/core/constants/app_assets.dart';
+import 'package:baladeyate/core/responsive/responsive_helper.dart';
 import 'package:baladeyate/core/services/service_locator.dart';
 import 'package:baladeyate/core/widgets/custom_app_bar.dart';
 import 'package:baladeyate/core/widgets/custom_profile_family_member_card.dart';
@@ -30,7 +31,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final horizontalPadding = context.isMobile ? 16.w(context) : 24.w(context);
+    final horizontalPadding = ResponsiveHelper.horizontalPadding(context);
 
     return BlocProvider(
       create: (_) => sl<ProfileCubit>()..loadHousehold(),

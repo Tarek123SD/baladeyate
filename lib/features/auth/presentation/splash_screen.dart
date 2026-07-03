@@ -67,7 +67,7 @@ class _SplashScreenState extends State<SplashScreen> {
                     'الديوان الرقمي',
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
-                      fontSize: 28.s(context),
+                      fontSize: 28.f(context),
                       color: AppColors.thirdGoldenWheat,
                     ),
                   ),
@@ -76,7 +76,7 @@ class _SplashScreenState extends State<SplashScreen> {
                     'الجمهورية العربية السورية',
                     style: TextStyle(
                       color: AppColors.secondaryGoldenWheat,
-                      fontSize: 20.s(context),
+                      fontSize: 20.f(context),
                     ),
                   ),
                   SizedBox(height: 10.h(context)),
@@ -84,7 +84,7 @@ class _SplashScreenState extends State<SplashScreen> {
                     'المنصة الوطنية لخدمات المواطنة',
                     style: TextStyle(
                       color: AppColors.thirdGoldenWheat,
-                      fontSize: 18.s(context),
+                      fontSize: 18.f(context),
                     ),
                   ),
                 ],

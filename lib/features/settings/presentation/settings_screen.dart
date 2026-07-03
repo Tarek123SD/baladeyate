@@ -2,6 +2,8 @@ import 'dart:io';
 
 import 'package:baladeyate/config/theme/app_colors.dart';
 import 'package:baladeyate/core/constants/app_assets.dart';
+import 'package:baladeyate/core/responsive/dimensions.dart';
+import 'package:baladeyate/core/responsive/responsive_helper.dart';
 import 'package:baladeyate/core/services/service_locator.dart';
 import 'package:baladeyate/core/widgets/custom_app_bar.dart';
 import 'package:baladeyate/core/widgets/custom_settings_option_card.dart';
@@ -21,7 +23,7 @@ class SettingsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final horizontalPadding = context.isMobile ? 16.w(context) : 24.w(context);
+    final horizontalPadding = ResponsiveHelper.horizontalPadding(context);
 
     return BlocProvider(
       create: (_) => sl<ProfileCubit>(),
@@ -67,7 +69,9 @@ class SettingsScreen extends StatelessWidget {
           body: SafeArea(
             child: Center(
               child: ConstrainedBox(
-                constraints: BoxConstraints(maxWidth: 760.w(context)),
+                constraints: BoxConstraints(
+                  maxWidth: Dimensions.contentMaxWidth.w(context),
+                ),
                 child: SingleChildScrollView(
                   padding: EdgeInsets.fromLTRB(
                     horizontalPadding,

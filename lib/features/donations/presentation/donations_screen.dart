@@ -1,4 +1,6 @@
 import 'package:baladeyate/config/theme/app_colors.dart';
+import 'package:baladeyate/core/responsive/dimensions.dart';
+import 'package:baladeyate/core/responsive/responsive_helper.dart';
 import 'package:baladeyate/core/constants/app_assets.dart';
 import 'package:baladeyate/core/widgets/custom_app_bar.dart';
 import 'package:baladeyate/core/widgets/custom_donation_amount_button.dart';
@@ -15,7 +17,7 @@ class DonationsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final horizontalPadding = context.isMobile ? 16.w(context) : 24.w(context);
+    final horizontalPadding = ResponsiveHelper.horizontalPadding(context);
 
     return Container(
       decoration: const BoxDecoration(
@@ -30,15 +32,25 @@ class DonationsScreen extends StatelessWidget {
         body: SafeArea(
           child: Center(
             child: ConstrainedBox(
-              constraints: BoxConstraints(maxWidth: 760.w(context)),
-              child: SingleChildScrollView(
-                padding: EdgeInsets.symmetric(
-                  horizontal: horizontalPadding,
-                  vertical: 18.h(context),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
+              constraints: BoxConstraints(
+                maxWidth: Dimensions.contentMaxWidth.w(context),
+              ),
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  final halfWidth = ResponsiveHelper.halfColumnWidth(
+                    context,
+                    availableWidth: constraints.maxWidth,
+                    gap: 16,
+                  );
+
+                  return SingleChildScrollView(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: horizontalPadding,
+                      vertical: 18.h(context),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
                     Container(
                       decoration: BoxDecoration(
                         color: AppColors.green,
@@ -137,34 +149,22 @@ class DonationsScreen extends StatelessWidget {
                       spacing: 16.w(context),
                       children: [
                         CustomDonationStatisticCard(
-                          width: (MediaQuery.of(context).size.width -
-                                  (horizontalPadding * 2) -
-                                  16.w(context)) /
-                              2,
+                          width: halfWidth,
                           value: '89K',
                           label: 'متبرع نشط',
                         ),
                         CustomDonationStatisticCard(
-                          width: (MediaQuery.of(context).size.width -
-                                  (horizontalPadding * 2) -
-                                  16.w(context)) /
-                              2,
+                          width: halfWidth,
                           value: '+145',
                           label: 'مشروع مدعوم',
                         ),
                         CustomDonationStatisticCard(
-                          width: (MediaQuery.of(context).size.width -
-                                  (horizontalPadding * 2) -
-                                  16.w(context)) /
-                              2,
+                          width: halfWidth,
                           value: '24/7',
                           label: 'خدمة كاملة',
                         ),
                         CustomDonationStatisticCard(
-                          width: (MediaQuery.of(context).size.width -
-                                  (horizontalPadding * 2) -
-                                  16.w(context)) /
-                              2,
+                          width: halfWidth,
                           value: '12',
                           label: 'محافظة مستفيدة',
                         ),
@@ -238,14 +238,9 @@ class DonationsScreen extends StatelessWidget {
                       spacing: 12.w(context),
                       runSpacing: 12.h(context),
                       children: _amounts.map((amount) {
-                        final buttonWidth =
-                            (MediaQuery.of(context).size.width -
-                                    (horizontalPadding * 2) -
-                                    12.w(context)) /
-                                2;
                         return CustomDonationAmountButton(
                           amount: amount,
-                          width: buttonWidth,
+                          width: halfWidth,
                         );
                       }).toList(),
                     ),
@@ -275,6 +270,8 @@ class DonationsScreen extends StatelessWidget {
                     ),
                   ],
                 ),
+                  );
+                },
               ),
             ),
           ),

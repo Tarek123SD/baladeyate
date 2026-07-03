@@ -1,3 +1,4 @@
+import 'package:baladeyate/core/responsive/app_responsive.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -5,7 +6,7 @@ void showErrorDialog(BuildContext context, String errorMessage) {
   showGeneralDialog(
     context: context,
     barrierDismissible: true,
-    barrierLabel: "Error",
+    barrierLabel: 'Error',
     transitionDuration: const Duration(milliseconds: 300),
     pageBuilder: (context, anim1, anim2) => const SizedBox(),
     transitionBuilder: (context, anim1, anim2, child) {
@@ -15,45 +16,54 @@ void showErrorDialog(BuildContext context, String errorMessage) {
           opacity: anim1,
           child: AlertDialog(
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(context.cornerRadius(16)),
             ),
             content: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const SizedBox(height: 16),
+                SizedBox(height: context.dim(16)),
                 Icon(
                   Icons.gpp_bad_outlined,
                   color: Colors.red.shade600,
-                  size: 60,
+                  size: context.iconSize(60),
                 ),
-                const SizedBox(height: 10),
+                SizedBox(height: context.dim(10)),
                 Text(
-                  "Something went wrong!",
+                  'حدث خطأ',
                   style: GoogleFonts.poppins(
-                    fontSize: 20,
+                    fontSize: context.text(20),
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                const SizedBox(height: 8),
+                SizedBox(height: context.dim(8)),
                 Text(
                   errorMessage,
                   textAlign: TextAlign.center,
-                  style: TextStyle(color: Colors.grey.shade600),
+                  style: TextStyle(
+                    color: Colors.grey.shade600,
+                    fontSize: context.text(14),
+                  ),
                 ),
-                const SizedBox(height: 24),
+                SizedBox(height: context.dim(24)),
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.red,
                       foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      padding: EdgeInsets.symmetric(
+                        vertical: context.dim(12),
+                      ),
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius:
+                            BorderRadius.circular(context.cornerRadius(12)),
                       ),
                     ),
                     onPressed: () => Navigator.of(context).pop(),
-                    child: Text("Ok"),
+                    child: Text(
+                      'حسناً',
+                      style: TextStyle(fontSize: context.text(14)),
+                    ),
                   ),
                 ),
               ],
