@@ -6,9 +6,11 @@ import 'package:baladeyate/features/home/presentation/components/section_header.
 import 'package:baladeyate/features/home/presentation/components/update_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import 'package:responsive_x_toolkit/responsive_x.dart';
 
 import 'package:baladeyate/core/constants/app_assets.dart';
+import 'package:baladeyate/core/responsive/dimensions.dart';
 import 'package:baladeyate/core/widgets/custom_app_bar.dart';
 import 'package:baladeyate/config/theme/app_colors.dart';
 
@@ -28,10 +30,15 @@ class HomeScreen extends StatelessWidget {
         backgroundColor: Colors.transparent,
         appBar: const CustomAppBar(),
         body: SafeArea(
-          child: CustomScrollView(
-            slivers: [
-              SliverPadding(
-                padding: EdgeInsets.all(24.s(context)),
+          child: Center(
+            child: ConstrainedBox(
+              constraints: BoxConstraints(
+                maxWidth: Dimensions.contentMaxWidth.w(context),
+              ),
+              child: CustomScrollView(
+                slivers: [
+                  SliverPadding(
+                    padding: EdgeInsets.all(Dimensions.pad(24, context)),
                 sliver: SliverList(
                   delegate: SliverChildListDelegate(
                     [
@@ -177,8 +184,10 @@ class HomeScreen extends StatelessWidget {
                     ],
                   ),
                 ),
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
         ),
       ),
@@ -187,12 +196,13 @@ class HomeScreen extends StatelessWidget {
 
   Widget _quickServiceCards(BuildContext context) {
     final gap = 12.s(context);
-    Widget tile(String title, IconData icon) {
+    Widget tile(String title, IconData icon, {VoidCallback? onTap}) {
       return CustomCard(
         title: title,
         icon: icon,
         bgColor: Colors.white,
         iconColor: AppColors.primaryForest,
+        onTap: onTap,
       );
     }
 
@@ -200,7 +210,7 @@ class HomeScreen extends StatelessWidget {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          tile('تقديم شكوى', Icons.volume_up),
+          tile('تقديم شكوى', Icons.volume_up, onTap: () => context.go('/complains')),
           SizedBox(height: gap),
           tile('المتحف الثقافي', Icons.groups),
           SizedBox(height: gap),
@@ -210,7 +220,13 @@ class HomeScreen extends StatelessWidget {
     }
     return Row(
       children: [
-        Expanded(child: tile('تقديم شكوى', Icons.volume_up)),
+        Expanded(
+          child: tile(
+            'تقديم شكوى',
+            Icons.volume_up,
+            onTap: () => context.go('/complains'),
+          ),
+        ),
         SizedBox(width: gap),
         Expanded(child: tile('المتحف الثقافي', Icons.groups)),
         SizedBox(width: gap),

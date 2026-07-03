@@ -1,21 +1,38 @@
 import 'package:baladeyate/config/theme/app_colors.dart';
+import 'package:baladeyate/core/responsive/responsive_helper.dart';
+import 'package:baladeyate/core/services/service_locator.dart';
 import 'package:baladeyate/core/widgets/custom_daily_task_card.dart';
 import 'package:baladeyate/core/widgets/custom_track_statistic_card.dart';
 import 'package:baladeyate/features/daily_tasks/models/daily_task.dart';
+import 'package:baladeyate/features/delegate/cubits/delegate_tasks_cubit/delegate_tasks_cubit.dart';
+import 'package:baladeyate/features/delegate/cubits/delegate_tasks_cubit/delegate_tasks_state.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:responsive_x_toolkit/responsive_x.dart';
 
-class DailyTasksScreen extends StatefulWidget {
+class DailyTasksScreen extends StatelessWidget {
   const DailyTasksScreen({super.key});
 
   @override
-  State<DailyTasksScreen> createState() => _DailyTasksScreenState();
+  Widget build(BuildContext context) {
+    return BlocProvider(
+      create: (_) => sl<DelegateTasksCubit>()..loadTasks(),
+      child: const _DailyTasksView(),
+    );
+  }
 }
 
-class _DailyTasksScreenState extends State<DailyTasksScreen> {
+class _DailyTasksView extends StatefulWidget {
+  const _DailyTasksView();
+
+  @override
+  State<_DailyTasksView> createState() => _DailyTasksViewState();
+}
+
+class _DailyTasksViewState extends State<_DailyTasksView> {
   static const LatLng _defaultCenter = LatLng(33.5138, 36.2765);
 
   static const double _sheetMinSize = 0.24;
@@ -32,38 +49,20 @@ class _DailyTasksScreenState extends State<DailyTasksScreen> {
   bool _isLocating = false;
   String? _locationMessage;
 
-  late final List<DailyTask> _tasks = [
-    const DailyTask(
-      id: 'task-1',
-      title: 'مسح المنشأة التعليمية #412',
-      location: 'حي المزة، دمشق',
-      distance: '1.2 كم',
-      time: '09:30 ص',
-      status: DailyTaskStatus.highPriority,
-      position: LatLng(33.5182, 36.2688),
-    ),
-    const DailyTask(
-      id: 'task-2',
-      title: 'معاينة المتجر التجاري #88',
-      location: 'شارع بغداد',
-      distance: '2.5 كم',
-      time: '11:15 ص',
-      status: DailyTaskStatus.scheduled,
-      position: LatLng(33.5089, 36.2915),
-    ),
-    const DailyTask(
-      id: 'task-3',
-      title: 'تفتيش المركز اللوجستي',
-      location: 'المنطقة الصناعية',
-      distance: '3.1 كم',
-      time: '08:00 ص',
-      status: DailyTaskStatus.completed,
-      position: LatLng(33.4998, 36.2542),
-    ),
-  ];
+  List<DailyTask> _tasksFromState(DelegateTasksState state) {
+    if (state is! DelegateTasksLoaded) {
+      return const [];
+    }
 
-  int get _totalTasks => _tasks.length;
-  int get _completedTasks => _tasks.where((task) => task.isCompleted).length;
+    return state.tasks
+        .asMap()
+        .entries
+        .map((entry) => DailyTask.fromDelegateTask(entry.value, entry.key))
+        .toList();
+  }
+
+  int _completedCount(List<DailyTask> tasks) =>
+      tasks.where((task) => task.isCompleted).length;
 
   @override
   void initState() {
@@ -169,8 +168,8 @@ class _DailyTasksScreenState extends State<DailyTasksScreen> {
     });
   }
 
-  Set<Marker> _buildMarkers() {
-    return _tasks.map((task) {
+  Set<Marker> _buildMarkers(List<DailyTask> tasks) {
+    return tasks.map((task) {
       final isSelected = task.id == _selectedTaskId;
       return Marker(
         markerId: MarkerId(task.id),
@@ -200,94 +199,123 @@ class _DailyTasksScreenState extends State<DailyTasksScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final achievement =
-        ((_completedTasks / _totalTasks) * 100).round().toString();
-    final horizontalPadding = context.isMobile ? 16.w(context) : 24.w(context);
-    final screenHeight = MediaQuery.sizeOf(context).height;
-    final sheetSize =
-        _sheetController.isAttached ? _sheetController.size : _sheetInitialSize;
-    final controlsBottom = (screenHeight * sheetSize) + 16.h(context);
+    return BlocConsumer<DelegateTasksCubit, DelegateTasksState>(
+      listener: (context, state) {
+        if (state is DelegateTasksFailure) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(state.message)),
+          );
+        }
+      },
+      builder: (context, state) {
+        final tasks = _tasksFromState(state);
+        final totalTasks = tasks.length;
+        final completedTasks = _completedCount(tasks);
+        final achievement = totalTasks == 0
+            ? '0'
+            : ((completedTasks / totalTasks) * 100).round().toString();
+        final horizontalPadding = ResponsiveHelper.horizontalPadding(context);
+        final screenHeight = MediaQuery.sizeOf(context).height;
+        final sheetSize = _sheetController.isAttached
+            ? _sheetController.size
+            : _sheetInitialSize;
+        final controlsBottom = (screenHeight * sheetSize) + 16.h(context);
 
-    return Scaffold(
-      body: Stack(
-        children: [
-          Positioned.fill(child: _buildMap()),
-          Positioned(
-            top: 0,
-            left: 0,
-            right: 0,
-            child: SafeArea(
-              bottom: false,
-              child: Padding(
-                padding: EdgeInsets.fromLTRB(
-                  horizontalPadding,
-                  8.h(context),
-                  horizontalPadding,
-                  12.h(context),
+        if (state is DelegateTasksLoading && tasks.isEmpty) {
+          return const Scaffold(
+            body: Center(child: CircularProgressIndicator()),
+          );
+        }
+
+        return Scaffold(
+          body: Stack(
+            children: [
+              Positioned.fill(child: _buildMap(tasks)),
+              Positioned(
+                top: 0,
+                left: 0,
+                right: 0,
+                child: SafeArea(
+                  bottom: false,
+                  child: Padding(
+                    padding: EdgeInsets.fromLTRB(
+                      horizontalPadding,
+                      8.h(context),
+                      horizontalPadding,
+                      12.h(context),
+                    ),
+                    child: _buildHeader(context, completedTasks, totalTasks),
+                  ),
                 ),
-                child: _buildHeader(context),
               ),
-            ),
-          ),
-          if (_locationMessage != null)
-            Positioned(
-              top: MediaQuery.paddingOf(context).top + 78.h(context),
-              left: horizontalPadding,
-              right: horizontalPadding,
-              child: _buildLocationBanner(context),
-            ),
-          AnimatedPositioned(
-            duration: const Duration(milliseconds: 220),
-            curve: Curves.easeOut,
-            left: horizontalPadding,
-            bottom: controlsBottom,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                _buildMapControlButton(
-                  context,
-                  icon: _isLocating ? null : Icons.my_location_rounded,
-                  isLoading: _isLocating,
-                  onTap: () => _moveToCurrentLocation(animate: true),
+              if (_locationMessage != null)
+                Positioned(
+                  top: MediaQuery.paddingOf(context).top + 78.h(context),
+                  left: horizontalPadding,
+                  right: horizontalPadding,
+                  child: _buildLocationBanner(context),
                 ),
-                SizedBox(height: 8.h(context)),
-                _buildMapControlButton(
-                  context,
-                  icon: Icons.layers_rounded,
-                  onTap: _toggleMapType,
+              AnimatedPositioned(
+                duration: const Duration(milliseconds: 220),
+                curve: Curves.easeOut,
+                left: horizontalPadding,
+                bottom: controlsBottom,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    _buildMapControlButton(
+                      context,
+                      icon: _isLocating ? null : Icons.my_location_rounded,
+                      isLoading: _isLocating,
+                      onTap: () => _moveToCurrentLocation(animate: true),
+                    ),
+                    SizedBox(height: 8.h(context)),
+                    _buildMapControlButton(
+                      context,
+                      icon: Icons.layers_rounded,
+                      onTap: _toggleMapType,
+                    ),
+                  ],
                 ),
-              ],
-            ),
+              ),
+              DraggableScrollableSheet(
+                controller: _sheetController,
+                initialChildSize: _sheetInitialSize,
+                minChildSize: _sheetMinSize,
+                maxChildSize: _sheetMaxSize,
+                snap: true,
+                snapSizes: const [
+                  _sheetMinSize,
+                  _sheetInitialSize,
+                  _sheetMaxSize,
+                ],
+                builder: (context, scrollController) {
+                  return _buildTasksSheet(
+                    context,
+                    scrollController: scrollController,
+                    achievement: achievement,
+                    horizontalPadding: horizontalPadding,
+                    tasks: tasks,
+                    totalTasks: totalTasks,
+                    completedTasks: completedTasks,
+                  );
+                },
+              ),
+            ],
           ),
-          DraggableScrollableSheet(
-            controller: _sheetController,
-            initialChildSize: _sheetInitialSize,
-            minChildSize: _sheetMinSize,
-            maxChildSize: _sheetMaxSize,
-            snap: true,
-            snapSizes: const [_sheetMinSize, _sheetInitialSize, _sheetMaxSize],
-            builder: (context, scrollController) {
-              return _buildTasksSheet(
-                context,
-                scrollController: scrollController,
-                achievement: achievement,
-                horizontalPadding: horizontalPadding,
-              );
-            },
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
 
-  Widget _buildMap() {
+  Widget _buildMap(List<DailyTask> tasks) {
     return GoogleMap(
       initialCameraPosition: const CameraPosition(
         target: _defaultCenter,
         zoom: 13.5,
       ),
       mapType: _mapType,
-      markers: _buildMarkers(),
+      markers: _buildMarkers(tasks),
       myLocationEnabled: true,
       myLocationButtonEnabled: false,
       zoomControlsEnabled: false,
@@ -306,7 +334,11 @@ class _DailyTasksScreenState extends State<DailyTasksScreen> {
     );
   }
 
-  Widget _buildHeader(BuildContext context) {
+  Widget _buildHeader(
+    BuildContext context,
+    int completedTasks,
+    int totalTasks,
+  ) {
     return DecoratedBox(
       decoration: BoxDecoration(
         color: Colors.white.withValues(alpha: 0.94),
@@ -389,7 +421,7 @@ class _DailyTasksScreenState extends State<DailyTasksScreen> {
                   ),
                   SizedBox(width: 6.w(context)),
                   Text(
-                    '$_completedTasks/$_totalTasks مكتمل',
+                    '$completedTasks/$totalTasks مكتمل',
                     style: TextStyle(
                       color: AppColors.primaryForest,
                       fontSize: 11.f(context),
@@ -494,6 +526,9 @@ class _DailyTasksScreenState extends State<DailyTasksScreen> {
     required ScrollController scrollController,
     required String achievement,
     required double horizontalPadding,
+    required List<DailyTask> tasks,
+    required int totalTasks,
+    required int completedTasks,
   }) {
     return DecoratedBox(
       decoration: BoxDecoration(
@@ -536,14 +571,14 @@ class _DailyTasksScreenState extends State<DailyTasksScreen> {
                   children: [
                     CustomTrackStatisticCard(
                       title: 'الإجمالي',
-                      value: '$_totalTasks',
+                      value: '$totalTasks',
                       backgroundColor: Colors.white,
                       textColor: AppColors.primaryForest,
                     ),
                     SizedBox(width: 10.w(context)),
                     CustomTrackStatisticCard(
                       title: 'مكتمل',
-                      value: '$_completedTasks',
+                      value: '$completedTasks',
                       backgroundColor:
                           AppColors.thirdGoldenWheat.withValues(alpha: 0.35),
                       textColor: AppColors.primaryForest,
@@ -594,7 +629,22 @@ class _DailyTasksScreenState extends State<DailyTasksScreen> {
                   ],
                 ),
                 SizedBox(height: 16.h(context)),
-                ..._tasks.map((task) {
+                if (tasks.isEmpty)
+                  Padding(
+                    padding: EdgeInsets.symmetric(vertical: 24.h(context)),
+                    child: Center(
+                      child: Text(
+                        'لا توجد مهام ميدانية حالياً',
+                        style: TextStyle(
+                          color: AppColors.secondaryCharcoal
+                              .withValues(alpha: 0.7),
+                          fontSize: 14.f(context),
+                        ),
+                      ),
+                    ),
+                  )
+                else
+                  ...tasks.map((task) {
                   return Padding(
                     padding: EdgeInsets.only(bottom: 14.h(context)),
                     child: CustomDailyTaskCard(
@@ -605,10 +655,23 @@ class _DailyTasksScreenState extends State<DailyTasksScreen> {
                       status: task.status,
                       isSelected: task.id == _selectedTaskId,
                       onTap: () => _focusTask(task),
-                      onStart: () {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('بدء مهمة: ${task.title}')),
-                        );
+                      onStart: () async {
+                        final taskId = task.delegateTaskId;
+                        if (taskId == null) return;
+
+                        final success = await context
+                            .read<DelegateTasksCubit>()
+                            .updateTaskStatus(
+                              id: taskId,
+                              status: 'in_progress',
+                            );
+
+                        if (!context.mounted) return;
+                        if (success) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text('بدء مهمة: ${task.title}')),
+                          );
+                        }
                       },
                       onNavigate: () => _focusTask(task),
                       onInfo: () {

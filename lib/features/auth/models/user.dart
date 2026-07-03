@@ -13,6 +13,7 @@ class User {
     this.identityImageUrl,
     this.verificationStatus,
     this.verificationStatusLabel,
+    this.rejectionReason,
     this.hasFcmToken,
   });
 
@@ -28,6 +29,7 @@ class User {
   final String? identityImageUrl;
   final String? verificationStatus;
   final String? verificationStatusLabel;
+  final String? rejectionReason;
   final bool? hasFcmToken;
 
   bool get isVerified => verificationStatus == 'approved';
@@ -55,6 +57,7 @@ class User {
       identityImageUrl: json['identity_image_url'] as String?,
       verificationStatus: json['verification_status'] as String?,
       verificationStatusLabel: json['verification_status_label'] as String?,
+      rejectionReason: json['rejection_reason'] as String?,
       hasFcmToken: json['has_fcm_token'] as bool?,
     );
   }
@@ -72,6 +75,7 @@ class User {
     String? identityImageUrl,
     String? verificationStatus,
     String? verificationStatusLabel,
+    String? rejectionReason,
     bool? hasFcmToken,
   }) {
     return User(
@@ -88,6 +92,7 @@ class User {
       verificationStatus: verificationStatus ?? this.verificationStatus,
       verificationStatusLabel:
           verificationStatusLabel ?? this.verificationStatusLabel,
+      rejectionReason: rejectionReason ?? this.rejectionReason,
       hasFcmToken: hasFcmToken ?? this.hasFcmToken,
     );
   }

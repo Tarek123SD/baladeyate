@@ -4,7 +4,7 @@ import 'package:baladeyate/features/auth/presentation/auth_screen.dart';
 import 'package:baladeyate/features/auth/presentation/signup_screen.dart';
 import 'package:baladeyate/features/auth/presentation/splash_screen.dart';
 import 'package:baladeyate/features/building/presentation/building_complex_screen.dart';
-import 'package:baladeyate/features/complaints/presentation/complaints_screen.dart';
+import 'package:baladeyate/features/complaints/presentation/complaints_guard_screen.dart';
 import 'package:baladeyate/features/complaints/presentation/track_complaints_screen.dart';
 import 'package:baladeyate/features/donations/presentation/donations_screen.dart';
 import 'package:baladeyate/features/floor/presentation/floor_screen.dart';
@@ -23,7 +23,7 @@ final GoRouter appRouter = _createAppRouter();
 
 GoRouter _createAppRouter() {
   final router = GoRouter(
-    initialLocation: '/tasks',
+    initialLocation: '/splash',
     debugLogDiagnostics: kDebugMode,
     observers: [appRouteObserver],
     routes: [
@@ -49,7 +49,7 @@ GoRouter _createAppRouter() {
       ),
       GoRoute(
         path: '/complains',
-        builder: (context, state) => const ComplaintsScreen(),
+        builder: (context, state) => const ComplaintsGuardScreen(),
       ),
       GoRoute(
         path: '/tasks',

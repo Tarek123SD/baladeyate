@@ -9,6 +9,10 @@ import 'package:baladeyate/features/auth/cubits/auth_cubit/auth_cubit.dart';
 import 'package:baladeyate/features/auth/repo/auth_repository.dart';
 import 'package:baladeyate/features/complaints/cubits/complaints_cubit/complaints_cubit.dart';
 import 'package:baladeyate/features/complaints/repo/complaints_repository.dart';
+import 'package:baladeyate/features/delegate/cubits/delegate_tasks_cubit/delegate_tasks_cubit.dart';
+import 'package:baladeyate/features/delegate/repo/delegate_repository.dart';
+import 'package:baladeyate/features/notifications/cubits/notifications_cubit/notifications_cubit.dart';
+import 'package:baladeyate/features/notifications/repo/notifications_repository.dart';
 import 'package:baladeyate/features/profile/cubits/profile_cubit/profile_cubit.dart';
 import 'package:baladeyate/features/profile/repo/citizen_repository.dart';
 
@@ -70,6 +74,14 @@ Future<void> setupServiceLocator() async {
     () => ComplaintsRepository(apiService: sl()),
   );
 
+  sl.registerLazySingleton<DelegateRepository>(
+    () => DelegateRepository(apiService: sl()),
+  );
+
+  sl.registerLazySingleton<NotificationsRepository>(
+    () => NotificationsRepository(apiService: sl()),
+  );
+
   sl.registerLazySingleton<FcmService>(
     () => FcmService(
       authRepository: sl<AuthRepository>(),
@@ -86,6 +98,16 @@ Future<void> setupServiceLocator() async {
 
   sl.registerFactory<ComplaintsCubit>(
     () => ComplaintsCubit(complaintsRepository: sl<ComplaintsRepository>()),
+  );
+
+  sl.registerFactory<DelegateTasksCubit>(
+    () => DelegateTasksCubit(delegateRepository: sl<DelegateRepository>()),
+  );
+
+  sl.registerFactory<NotificationsCubit>(
+    () => NotificationsCubit(
+      notificationsRepository: sl<NotificationsRepository>(),
+    ),
   );
 
   sl.registerFactory<ProfileCubit>(

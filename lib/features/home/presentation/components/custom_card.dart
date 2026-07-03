@@ -8,44 +8,53 @@ class CustomCard extends StatelessWidget {
     required this.icon,
     required this.iconColor,
     required this.title,
+    this.onTap,
   });
 
   final String title;
   final IconData icon;
   final Color? bgColor;
   final Color? iconColor;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: bgColor,
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
         borderRadius: BorderRadius.circular(16.r(context)),
-        border: Border.all(
-          color: Colors.black,
-          width: 0.5,
-        ),
-      ),
-      padding: EdgeInsets.symmetric(vertical: 20.s(context)),
-      child: Column(
-        children: [
-          Icon(
-            icon,
-            size: 32.s(context),
-            color: iconColor,
-          ),
-          SizedBox(height: 12.s(context)),
-          Text(
-            title,
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 14.s(context),
-              fontWeight: FontWeight.w500,
-              color: Colors.black87,
+        child: Container(
+          decoration: BoxDecoration(
+            color: bgColor,
+            borderRadius: BorderRadius.circular(16.r(context)),
+            border: Border.all(
+              color: Colors.black,
+              width: 0.5,
             ),
-            textDirection: TextDirection.rtl,
           ),
-        ],
+          padding: EdgeInsets.symmetric(vertical: 20.s(context)),
+          child: Column(
+            children: [
+              Icon(
+                icon,
+                size: 32.s(context),
+                color: iconColor,
+              ),
+              SizedBox(height: 12.s(context)),
+              Text(
+                title,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 14.s(context),
+                  fontWeight: FontWeight.w500,
+                  color: Colors.black87,
+                ),
+                textDirection: TextDirection.rtl,
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

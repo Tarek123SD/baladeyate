@@ -2,8 +2,8 @@
 
 /// Urban Services API endpoints (Postman: Urban Services API).
 class EndPoints {
-  /// Android emulator maps host localhost via 10.0.2.2
-  static const String baseUrl = 'http://10.0.2.2:8000/api/';
+  /// Production API host (Postman: Urban Services API).
+  static const String baseUrl = 'https://baladeyate.me/api/';
 
   // Auth
   static const String signup = 'v1/signup';
@@ -25,6 +25,10 @@ class EndPoints {
   static const String families = 'v1/families';
   static String familyById(int id) => 'v1/families/$id';
   static const String households = 'v1/households';
+  static const String delegateMyTasks = 'v1/delegate/my-tasks';
+  static String delegateMyTaskById(int id) => 'v1/delegate/my-tasks/$id';
+  static String delegateMyTaskStatus(int id) =>
+      'v1/delegate/my-tasks/$id/status';
 
   // Admin
   static const String shops = 'v1/shops';
@@ -32,6 +36,9 @@ class EndPoints {
   static const String graves = 'v1/graves';
   static String graveById(int id) => 'v1/graves/$id';
 
-  // Shared
+  // Shared (auth:sanctum)
+  static const String notifications = 'v1/notifications';
+  static String notificationRead(String id) => 'v1/notifications/$id/read';
+  static const String notificationsReadAll = 'v1/notifications/read-all';
   static const String fcmToken = 'v1/notifications/fcm-token';
 }
