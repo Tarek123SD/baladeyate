@@ -1,7 +1,14 @@
 import 'package:baladeyate/config/theme/app_colors.dart';
+import 'package:baladeyate/core/services/service_locator.dart';
 import 'package:baladeyate/core/widgets/custom_daily_task_card.dart';
 import 'package:baladeyate/core/widgets/custom_track_statistic_card.dart';
 import 'package:baladeyate/features/daily_tasks/models/daily_task.dart';
+import 'package:baladeyate/features/daily_tasks/widgets/start_survey_sheet.dart';
+import 'package:baladeyate/features/delegate/models/survey_location.dart';
+import 'package:baladeyate/features/delegate/models/survey_pin.dart';
+import 'package:baladeyate/features/delegate/models/survey_pin_status.dart';
+import 'package:baladeyate/features/delegate/repo/delegate_repository.dart';
+import 'package:baladeyate/routes/app_route_observer.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:go_router/go_router.dart';
@@ -15,7 +22,7 @@ class DailyTasksScreen extends StatefulWidget {
   State<DailyTasksScreen> createState() => _DailyTasksScreenState();
 }
 
-class _DailyTasksScreenState extends State<DailyTasksScreen> {
+class _DailyTasksScreenState extends State<DailyTasksScreen> with RouteAware {
   static const LatLng _defaultCenter = LatLng(33.5138, 36.2765);
 
   static const double _sheetMinSize = 0.24;
@@ -28,52 +35,49 @@ class _DailyTasksScreenState extends State<DailyTasksScreen> {
   GoogleMapController? _mapController;
   MapType _mapType = MapType.normal;
   LatLng? _currentPosition;
-  String? _selectedTaskId;
+  String? _selectedPinId;
   bool _isLocating = false;
+  bool _isLoadingPins = false;
+  bool _isAddPinMode = false;
   String? _locationMessage;
+  List<SurveyPin> _pins = [];
 
-  late final List<DailyTask> _tasks = [
-    const DailyTask(
-      id: 'task-1',
-      title: 'مسح المنشأة التعليمية #412',
-      location: 'حي المزة، دمشق',
-      distance: '1.2 كم',
-      time: '09:30 ص',
-      status: DailyTaskStatus.highPriority,
-      position: LatLng(33.5182, 36.2688),
-    ),
-    const DailyTask(
-      id: 'task-2',
-      title: 'معاينة المتجر التجاري #88',
-      location: 'شارع بغداد',
-      distance: '2.5 كم',
-      time: '11:15 ص',
-      status: DailyTaskStatus.scheduled,
-      position: LatLng(33.5089, 36.2915),
-    ),
-    const DailyTask(
-      id: 'task-3',
-      title: 'تفتيش المركز اللوجستي',
-      location: 'المنطقة الصناعية',
-      distance: '3.1 كم',
-      time: '08:00 ص',
-      status: DailyTaskStatus.completed,
-      position: LatLng(33.4998, 36.2542),
-    ),
-  ];
+  final DelegateRepository _delegateRepository = sl<DelegateRepository>();
 
-  int get _totalTasks => _tasks.length;
-  int get _completedTasks => _tasks.where((task) => task.isCompleted).length;
+  int get _totalTasks => _pins.length;
+  int get _completedTasks =>
+      _pins.where((pin) => pin.status == SurveyPinStatus.completed).length;
 
   @override
   void initState() {
     super.initState();
     _sheetController.addListener(_onSheetChanged);
     _initLocation();
+    _loadPins();
+  }
+
+  bool _routeSubscribed = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_routeSubscribed) return;
+    final route = ModalRoute.of(context);
+    if (route is PageRoute<void>) {
+      appRouteObserver.subscribe(this, route);
+      _routeSubscribed = true;
+    }
+  }
+
+  @override
+  void didPopNext() {
+    if (!mounted) return;
+    _loadPins();
   }
 
   @override
   void dispose() {
+    appRouteObserver.unsubscribe(this);
     _sheetController.removeListener(_onSheetChanged);
     _sheetController.dispose();
     _mapController?.dispose();
@@ -144,12 +148,70 @@ class _DailyTasksScreenState extends State<DailyTasksScreen> {
     }
   }
 
-  Future<void> _focusTask(DailyTask task, {bool expandSheet = false}) async {
-    setState(() => _selectedTaskId = task.id);
+  Future<void> _loadPins() async {
+    setState(() => _isLoadingPins = true);
+    try {
+      final pins = await _delegateRepository.getMapPins();
+      if (mounted) {
+        setState(() => _pins = pins);
+      }
+    } finally {
+      if (mounted) setState(() => _isLoadingPins = false);
+    }
+  }
+
+  Future<void> _handleMapLongPress(LatLng position) async {
+    if (!_isAddPinMode) return;
+
+    final confirmed = await showStartSurveySheet(context, position: position);
+    if (confirmed != true || !mounted) return;
+
+    final pinId = 'pin_${DateTime.now().millisecondsSinceEpoch}';
+    final draftPin = SurveyPin(
+      id: pinId,
+      latitude: position.latitude,
+      longitude: position.longitude,
+      status: SurveyPinStatus.inProgress,
+      title: 'مسح جديد',
+    );
+
+    await _delegateRepository.saveDraftPin(draftPin);
+    if (!mounted) return;
+
+    await context.push(
+      '/info',
+      extra: SurveyLocation(
+        pinId: pinId,
+        latitude: position.latitude,
+        longitude: position.longitude,
+      ),
+    );
+    await _loadPins();
+  }
+
+  Future<void> _resumeSurvey(SurveyPin pin) async {
+    if (pin.status == SurveyPinStatus.completed) {
+      await _focusPin(pin);
+      return;
+    }
+
+    await context.push(
+      '/info',
+      extra: SurveyLocation(
+        pinId: pin.id,
+        latitude: pin.latitude,
+        longitude: pin.longitude,
+      ),
+    );
+    await _loadPins();
+  }
+
+  Future<void> _focusPin(SurveyPin pin, {bool expandSheet = false}) async {
+    setState(() => _selectedPinId = pin.id);
 
     await _mapController?.animateCamera(
       CameraUpdate.newCameraPosition(
-        CameraPosition(target: task.position, zoom: 15.5),
+        CameraPosition(target: pin.position, zoom: 15.5),
       ),
     );
 
@@ -162,46 +224,73 @@ class _DailyTasksScreenState extends State<DailyTasksScreen> {
     }
   }
 
-  void _toggleMapType() {
-    setState(() {
-      _mapType =
-          _mapType == MapType.normal ? MapType.satellite : MapType.normal;
-    });
+  void _toggleAddPinMode() {
+    setState(() => _isAddPinMode = !_isAddPinMode);
+    if (_isAddPinMode) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('اضغط مطولاً على الخريطة لإضافة نقطة مسح'),
+        ),
+      );
+    }
   }
 
   Set<Marker> _buildMarkers() {
-    return _tasks.map((task) {
-      final isSelected = task.id == _selectedTaskId;
+    return _pins.map((pin) {
+      final isSelected = pin.id == _selectedPinId;
       return Marker(
-        markerId: MarkerId(task.id),
-        position: task.position,
-        icon: BitmapDescriptor.defaultMarkerWithHue(_markerHue(task.status)),
-        alpha: task.isCompleted ? 0.55 : 1,
+        markerId: MarkerId(pin.id),
+        position: pin.position,
+        icon: BitmapDescriptor.defaultMarkerWithHue(_markerHue(pin.status)),
+        alpha: pin.status == SurveyPinStatus.completed ? 0.85 : 1,
         zIndexInt: isSelected ? 2 : 1,
-        onTap: () => _focusTask(task, expandSheet: true),
+        onTap: () => _focusPin(pin, expandSheet: true),
         infoWindow: InfoWindow(
-          title: task.title,
-          snippet: task.location,
+          title: pin.displayTitle,
+          snippet: pin.displayLocation,
         ),
       );
     }).toSet();
   }
 
-  double _markerHue(DailyTaskStatus status) {
+  double _markerHue(SurveyPinStatus status) {
     switch (status) {
-      case DailyTaskStatus.highPriority:
+      case SurveyPinStatus.assigned:
         return BitmapDescriptor.hueRed;
-      case DailyTaskStatus.scheduled:
+      case SurveyPinStatus.inProgress:
         return BitmapDescriptor.hueOrange;
-      case DailyTaskStatus.completed:
+      case SurveyPinStatus.completed:
         return BitmapDescriptor.hueGreen;
+    }
+  }
+
+  DailyTaskStatus _cardStatusForPin(SurveyPin pin) {
+    switch (pin.status) {
+      case SurveyPinStatus.assigned:
+        return DailyTaskStatus.highPriority;
+      case SurveyPinStatus.inProgress:
+        return DailyTaskStatus.scheduled;
+      case SurveyPinStatus.completed:
+        return DailyTaskStatus.completed;
+    }
+  }
+
+  String _statusLabel(SurveyPin pin) {
+    switch (pin.status) {
+      case SurveyPinStatus.assigned:
+        return 'مهمة ميدانية';
+      case SurveyPinStatus.inProgress:
+        return 'قيد الإدخال';
+      case SurveyPinStatus.completed:
+        return 'مكتمل';
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final achievement =
-        ((_completedTasks / _totalTasks) * 100).round().toString();
+    final achievement = _totalTasks == 0
+        ? '0'
+        : ((_completedTasks / _totalTasks) * 100).round().toString();
     final horizontalPadding = context.isMobile ? 16.w(context) : 24.w(context);
     final screenHeight = MediaQuery.sizeOf(context).height;
     final sheetSize =
@@ -256,6 +345,13 @@ class _DailyTasksScreenState extends State<DailyTasksScreen> {
                   icon: Icons.layers_rounded,
                   onTap: _toggleMapType,
                 ),
+                SizedBox(height: 8.h(context)),
+                _buildMapControlButton(
+                  context,
+                  icon: Icons.add_location_alt_rounded,
+                  onTap: _toggleAddPinMode,
+                  isActive: _isAddPinMode,
+                ),
               ],
             ),
           ),
@@ -302,8 +398,16 @@ class _DailyTasksScreenState extends State<DailyTasksScreen> {
           );
         }
       },
-      onTap: (_) => setState(() => _selectedTaskId = null),
+      onTap: (_) => setState(() => _selectedPinId = null),
+      onLongPress: _handleMapLongPress,
     );
+  }
+
+  void _toggleMapType() {
+    setState(() {
+      _mapType =
+          _mapType == MapType.normal ? MapType.satellite : MapType.normal;
+    });
   }
 
   Widget _buildHeader(BuildContext context) {
@@ -461,10 +565,11 @@ class _DailyTasksScreenState extends State<DailyTasksScreen> {
     BuildContext context, {
     IconData? icon,
     bool isLoading = false,
+    bool isActive = false,
     required VoidCallback onTap,
   }) {
     return Material(
-      color: Colors.white,
+      color: isActive ? AppColors.primaryForest : Colors.white,
       elevation: 3,
       shadowColor: Colors.black.withValues(alpha: 0.14),
       shape: const CircleBorder(),
@@ -482,7 +587,8 @@ class _DailyTasksScreenState extends State<DailyTasksScreen> {
               : Icon(
                   icon,
                   size: 20.ic(context),
-                  color: AppColors.primaryForest,
+                  color:
+                      isActive ? Colors.white : AppColors.primaryForest,
                 ),
         ),
       ),
@@ -594,78 +700,92 @@ class _DailyTasksScreenState extends State<DailyTasksScreen> {
                   ],
                 ),
                 SizedBox(height: 16.h(context)),
-                ..._tasks.map((task) {
-                  return Padding(
-                    padding: EdgeInsets.only(bottom: 14.h(context)),
-                    child: CustomDailyTaskCard(
-                      title: task.title,
-                      location: task.location,
-                      distance: task.distance,
-                      time: task.time,
-                      status: task.status,
-                      isSelected: task.id == _selectedTaskId,
-                      onTap: () => _focusTask(task),
-                      onStart: () {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('بدء مهمة: ${task.title}')),
-                        );
-                      },
-                      onNavigate: () => _focusTask(task),
-                      onInfo: () {
-                        showModalBottomSheet<void>(
-                          context: context,
-                          showDragHandle: true,
-                          backgroundColor: Colors.white,
-                          builder: (sheetContext) {
-                            return Padding(
-                              padding: EdgeInsets.fromLTRB(
-                                20.w(context),
-                                8.h(context),
-                                20.w(context),
-                                24.h(context),
-                              ),
-                              child: Column(
-                                mainAxisSize: MainAxisSize.min,
-                                crossAxisAlignment: CrossAxisAlignment.end,
-                                children: [
-                                  Text(
-                                    task.title,
-                                    textDirection: TextDirection.rtl,
-                                    style: TextStyle(
-                                      color: AppColors.primaryForest,
-                                      fontSize: 17.f(context),
-                                      fontWeight: FontWeight.w700,
-                                    ),
-                                  ),
-                                  SizedBox(height: 8.h(context)),
-                                  Text(
-                                    task.location,
-                                    textDirection: TextDirection.rtl,
-                                    style: TextStyle(
-                                      color: AppColors.secondaryCharcoal
-                                          .withValues(alpha: 0.8),
-                                      fontSize: 14.f(context),
-                                    ),
-                                  ),
-                                  SizedBox(height: 8.h(context)),
-                                  Text(
-                                    'المسافة: ${task.distance} • الوقت: ${task.time}',
-                                    textDirection: TextDirection.rtl,
-                                    style: TextStyle(
-                                      color: AppColors.secondaryCharcoal
-                                          .withValues(alpha: 0.7),
-                                      fontSize: 13.f(context),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            );
-                          },
-                        );
-                      },
+                if (_isLoadingPins)
+                  const Center(child: CircularProgressIndicator())
+                else if (_pins.isEmpty)
+                  Padding(
+                    padding: EdgeInsets.symmetric(vertical: 24.h(context)),
+                    child: Text(
+                      'لا توجد نقاط مسح بعد. فعّل وضع الإضافة واضغط مطولاً على الخريطة.',
+                      textAlign: TextAlign.center,
+                      textDirection: TextDirection.rtl,
+                      style: TextStyle(
+                        color: AppColors.secondaryCharcoal.withValues(alpha: 0.7),
+                        fontSize: 14.f(context),
+                      ),
                     ),
-                  );
-                }),
+                  )
+                else
+                  ..._pins.map((pin) {
+                    return Padding(
+                      padding: EdgeInsets.only(bottom: 14.h(context)),
+                      child: CustomDailyTaskCard(
+                        title: pin.displayTitle,
+                        location: pin.displayLocation,
+                        distance: _statusLabel(pin),
+                        time: pin.status == SurveyPinStatus.completed
+                            ? 'محفوظ'
+                            : 'مفتوح',
+                        status: _cardStatusForPin(pin),
+                        isSelected: pin.id == _selectedPinId,
+                        onTap: () => _focusPin(pin),
+                        onStart: () => _resumeSurvey(pin),
+                        onNavigate: () => _focusPin(pin),
+                        onInfo: () {
+                          showModalBottomSheet<void>(
+                            context: context,
+                            showDragHandle: true,
+                            backgroundColor: Colors.white,
+                            builder: (sheetContext) {
+                              return Padding(
+                                padding: EdgeInsets.fromLTRB(
+                                  20.w(context),
+                                  8.h(context),
+                                  20.w(context),
+                                  24.h(context),
+                                ),
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  crossAxisAlignment: CrossAxisAlignment.end,
+                                  children: [
+                                    Text(
+                                      pin.displayTitle,
+                                      textDirection: TextDirection.rtl,
+                                      style: TextStyle(
+                                        color: AppColors.primaryForest,
+                                        fontSize: 17.f(context),
+                                        fontWeight: FontWeight.w700,
+                                      ),
+                                    ),
+                                    SizedBox(height: 8.h(context)),
+                                    Text(
+                                      pin.displayLocation,
+                                      textDirection: TextDirection.rtl,
+                                      style: TextStyle(
+                                        color: AppColors.secondaryCharcoal
+                                            .withValues(alpha: 0.8),
+                                        fontSize: 14.f(context),
+                                      ),
+                                    ),
+                                    SizedBox(height: 8.h(context)),
+                                    Text(
+                                      'الحالة: ${_statusLabel(pin)}',
+                                      textDirection: TextDirection.rtl,
+                                      style: TextStyle(
+                                        color: AppColors.secondaryCharcoal
+                                            .withValues(alpha: 0.7),
+                                        fontSize: 13.f(context),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            },
+                          );
+                        },
+                      ),
+                    );
+                  }),
               ],
             ),
           ),

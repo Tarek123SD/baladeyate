@@ -8,10 +8,12 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   const CustomAppBar({
     super.key,
     this.showSettings = true,
+    this.showNotifications = true,
     this.showBackButton = false,
   });
 
   final bool showSettings;
+  final bool showNotifications;
   final bool showBackButton;
 
   @override
@@ -20,12 +22,13 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   @override
   Widget build(BuildContext context) {
     final iconSize = 24.s(context);
-    final logoWidth = (220.w(context)).clamp(120.0, 260.0);
+    final logoHeight = kToolbarHeight - 16;
 
     return AppBar(
       backgroundColor: Colors.white,
       elevation: 4,
       automaticallyImplyLeading: false,
+      titleSpacing: 8.w(context),
       title: Row(
         textDirection: TextDirection.rtl,
         children: [
@@ -44,48 +47,54 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
                 size: 20.s(context),
               ),
               padding: EdgeInsets.zero,
+              constraints: BoxConstraints(
+                minWidth: 36.w(context),
+                minHeight: 36.w(context),
+              ),
             ),
-          SizedBox(
-            width: logoWidth,
-            height: kToolbarHeight - 12,
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(8.r(context)),
+          Expanded(
+            child: Align(
+              alignment: Alignment.centerRight,
               child: Image.asset(
                 AppAssets.logoHorizontalDarkGreen,
+                height: logoHeight,
                 fit: BoxFit.contain,
                 alignment: Alignment.centerRight,
               ),
             ),
           ),
-          const Spacer(),
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              IconButton(
-                onPressed: () {
-                  context.push('/notifications');
-                },
-                icon: Icon(
-                  Icons.notifications_none,
-                  color: Colors.black87,
-                  size: iconSize,
-                ),
-                padding: EdgeInsets.zero,
+          if (showNotifications)
+            IconButton(
+              onPressed: () {
+                context.push('/notifications');
+              },
+              icon: Icon(
+                Icons.notifications_none,
+                color: Colors.black87,
+                size: iconSize,
               ),
-              if (showSettings)
-                IconButton(
-                  onPressed: () {
-                    context.push('/settings');
-                  },
-                  icon: Icon(
-                    Icons.settings,
-                    color: Colors.black87,
-                    size: iconSize,
-                  ),
-                  padding: EdgeInsets.zero,
-                ),
-            ],
-          ),
+              padding: EdgeInsets.zero,
+              constraints: BoxConstraints(
+                minWidth: 36.w(context),
+                minHeight: 36.w(context),
+              ),
+            ),
+          if (showSettings)
+            IconButton(
+              onPressed: () {
+                context.push('/settings');
+              },
+              icon: Icon(
+                Icons.settings,
+                color: Colors.black87,
+                size: iconSize,
+              ),
+              padding: EdgeInsets.zero,
+              constraints: BoxConstraints(
+                minWidth: 36.w(context),
+                minHeight: 36.w(context),
+              ),
+            ),
         ],
       ),
     );

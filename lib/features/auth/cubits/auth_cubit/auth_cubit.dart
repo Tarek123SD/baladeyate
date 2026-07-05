@@ -63,6 +63,27 @@ class AuthCubit extends Cubit<AuthState> {
     }
   }
 
+  /// Restores a saved session when the app starts.
+  Future<void> restoreSession() async {
+    if (!_authRepository.hasStoredSession) {
+      emit(const AuthLoggedOut());
+      return;
+    }
+
+    emit(const AuthLoading());
+    try {
+      final user = await _authRepository.restoreSession();
+      if (user != null) {
+        emit(AuthSuccess(user: user));
+        await _fcmService.syncTokenWithBackend();
+      } else {
+        emit(const AuthLoggedOut());
+      }
+    } catch (_) {
+      emit(const AuthLoggedOut());
+    }
+  }
+
   /// Logout from the API and clear the local session.
   Future<void> logout() async {
     emit(const AuthLoading());
@@ -75,8 +96,9 @@ class AuthCubit extends Cubit<AuthState> {
   }
 
   /// Updates the in-memory user after profile or verification changes.
-  void updateUser(User user) {
+  Future<void> updateUser(User user) async {
     emit(AuthSuccess(user: user));
+    await _authRepository.persistUser(user);
   }
 
   /// Persists an FCM token for push notifications when available.

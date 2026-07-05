@@ -9,9 +9,12 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:responsive_x_toolkit/responsive_x.dart';
+import 'package:baladeyate/config/constants/storage_keys.dart';
 import 'package:baladeyate/config/theme/app_colors.dart';
 import 'package:baladeyate/config/validator/validator.dart';
 import 'package:baladeyate/core/constants/app_assets.dart';
+import 'package:baladeyate/core/services/cache_service.dart';
+import 'package:baladeyate/core/services/service_locator.dart';
 
 class SignupScreen extends StatefulWidget {
   const SignupScreen({super.key});
@@ -51,15 +54,24 @@ class _SignupScreenState extends State<SignupScreen> {
   @override
   Widget build(BuildContext context) {
     return BlocListener<AuthCubit, AuthState>(
-      listener: (context, state) {
+      listener: (context, state) async {
         if (state is AuthSuccess) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('تم إنشاء الحساب بنجاح!'),
-              backgroundColor: Colors.green,
-            ),
-          );
-          context.go('/main');
+          final cacheService = sl<CacheService>();
+          final noticeShown = cacheService.getData(
+                key: StorageKeys.signupVerificationNoticeShown,
+              ) ==
+              'true';
+
+          if (!noticeShown) {
+            await cacheService.saveData(
+              key: StorageKeys.pendingSignupVerificationNotice,
+              value: 'true',
+            );
+          }
+
+          if (context.mounted) {
+            context.go('/main');
+          }
         } else if (state is AuthFailure) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(

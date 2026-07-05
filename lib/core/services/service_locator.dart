@@ -9,6 +9,9 @@ import 'package:baladeyate/features/auth/cubits/auth_cubit/auth_cubit.dart';
 import 'package:baladeyate/features/auth/repo/auth_repository.dart';
 import 'package:baladeyate/features/complaints/cubits/complaints_cubit/complaints_cubit.dart';
 import 'package:baladeyate/features/complaints/repo/complaints_repository.dart';
+import 'package:baladeyate/features/delegate/cubits/delegate_survey_cubit/delegate_survey_cubit.dart';
+import 'package:baladeyate/features/delegate/data/local_survey_pin_store.dart';
+import 'package:baladeyate/features/delegate/repo/delegate_repository.dart';
 import 'package:baladeyate/features/profile/cubits/profile_cubit/profile_cubit.dart';
 import 'package:baladeyate/features/profile/repo/citizen_repository.dart';
 
@@ -68,6 +71,21 @@ Future<void> setupServiceLocator() async {
 
   sl.registerLazySingleton<ComplaintsRepository>(
     () => ComplaintsRepository(apiService: sl()),
+  );
+
+  sl.registerLazySingleton<LocalSurveyPinStore>(
+    () => LocalSurveyPinStore(cacheService: sl()),
+  );
+
+  sl.registerLazySingleton<DelegateRepository>(
+    () => DelegateRepository(
+      apiService: sl(),
+      localSurveyPinStore: sl(),
+    ),
+  );
+
+  sl.registerFactory<DelegateSurveyCubit>(
+    () => DelegateSurveyCubit(delegateRepository: sl()),
   );
 
   sl.registerLazySingleton<FcmService>(

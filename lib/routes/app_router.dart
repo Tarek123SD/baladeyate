@@ -1,4 +1,5 @@
 import 'package:baladeyate/core/navigation/main_navigation_screen.dart';
+import 'package:baladeyate/core/services/service_locator.dart';
 import 'package:baladeyate/features/apartment/presentation/apartment_screen.dart';
 import 'package:baladeyate/features/auth/presentation/auth_screen.dart';
 import 'package:baladeyate/features/auth/presentation/signup_screen.dart';
@@ -6,6 +7,8 @@ import 'package:baladeyate/features/auth/presentation/splash_screen.dart';
 import 'package:baladeyate/features/building/presentation/building_complex_screen.dart';
 import 'package:baladeyate/features/complaints/presentation/complaints_screen.dart';
 import 'package:baladeyate/features/complaints/presentation/track_complaints_screen.dart';
+import 'package:baladeyate/features/delegate/cubits/delegate_survey_cubit/delegate_survey_cubit.dart';
+import 'package:baladeyate/features/delegate/models/survey_location.dart';
 import 'package:baladeyate/features/donations/presentation/donations_screen.dart';
 import 'package:baladeyate/features/floor/presentation/floor_screen.dart';
 import 'package:baladeyate/features/home/presentation/home_screen.dart';
@@ -17,6 +20,7 @@ import 'package:baladeyate/features/daily_tasks/daily_tasks_screen.dart';
 import 'package:baladeyate/routes/app_route_observer.dart';
 import 'package:baladeyate/routes/navigation_logger.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 final GoRouter appRouter = _createAppRouter();
@@ -57,7 +61,20 @@ GoRouter _createAppRouter() {
       ),
       GoRoute(
         path: '/info',
-        builder: (context, state) => const BuildingComplexScreen(),
+        builder: (context, state) {
+          final location = state.extra is SurveyLocation
+              ? state.extra! as SurveyLocation
+              : null;
+          final cubit = sl<DelegateSurveyCubit>();
+          if (location != null) {
+            cubit.initSurvey(location);
+          }
+
+          return BlocProvider.value(
+            value: cubit,
+            child: BuildingComplexScreen(surveyLocation: location),
+          );
+        },
       ),
       GoRoute(
         path: '/floor',

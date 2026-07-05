@@ -59,6 +59,22 @@ class User {
     );
   }
 
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'name': name,
+        'email': email,
+        'first_name': firstName,
+        'last_name': lastName,
+        'national_number': nationalNumber,
+        'national_id': nationalId,
+        'phone_number': phoneNumber,
+        'role': role,
+        'identity_image_url': identityImageUrl,
+        'verification_status': verificationStatus,
+        'verification_status_label': verificationStatusLabel,
+        'has_fcm_token': hasFcmToken,
+      };
+
   User copyWith({
     int? id,
     String? name,

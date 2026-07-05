@@ -1,9 +1,11 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:baladeyate/config/constants/storage_keys.dart';
 import 'package:baladeyate/core/services/api_services.dart';
 import 'package:baladeyate/core/services/cache_service.dart';
 import 'package:baladeyate/core/services/end_points.dart';
+import 'package:baladeyate/core/utils/api_response_parser.dart';
 import 'package:baladeyate/features/auth/models/signup_response.dart';
 import 'package:baladeyate/features/auth/models/user.dart';
 import 'package:dio/dio.dart';
@@ -109,9 +111,69 @@ class AuthRepository {
     );
   }
 
+  String? get storedToken => _cacheService.getData(key: StorageKeys.token);
+
+  bool get hasStoredSession {
+    final token = storedToken;
+    return token != null && token.isNotEmpty;
+  }
+
+  /// Restores the session from SharedPreferences and refreshes the profile when possible.
+  Future<User?> restoreSession() async {
+    if (!hasStoredSession) return null;
+
+    final cachedUser = _readCachedUser();
+
+    try {
+      final user = await fetchCurrentUser();
+      await persistUser(user);
+      return user;
+    } catch (error) {
+      if (error is DioException &&
+          (error.response?.statusCode == 401 ||
+              error.response?.statusCode == 403)) {
+        await _clearSession();
+        return null;
+      }
+      return cachedUser;
+    }
+  }
+
+  Future<User> fetchCurrentUser() async {
+    final response = await _apiService.get(EndPoints.profile);
+    final payload = ApiResponseParser.expectData(response.data);
+
+    if (payload is! Map<String, dynamic>) {
+      throw Exception('استجابة غير صالحة من الخادم');
+    }
+
+    return User.fromJson(payload);
+  }
+
+  Future<void> persistUser(User user) async {
+    await _cacheService.saveData(
+      key: StorageKeys.user,
+      value: jsonEncode(user.toJson()),
+    );
+  }
+
+  User? _readCachedUser() {
+    final raw = _cacheService.getData(key: StorageKeys.user);
+    if (raw == null || raw.isEmpty) return null;
+
+    try {
+      final decoded = jsonDecode(raw);
+      if (decoded is! Map<String, dynamic>) return null;
+      return User.fromJson(decoded);
+    } catch (_) {
+      return null;
+    }
+  }
+
   Future<void> _clearSession() async {
     await _cacheService.removeData(key: StorageKeys.token);
     await _cacheService.removeData(key: StorageKeys.role);
+    await _cacheService.removeData(key: StorageKeys.user);
   }
 
   Future<User> _saveSessionFromResponse(dynamic data) async {
@@ -144,6 +206,8 @@ class AuthRepository {
         value: role,
       );
     }
+
+    await persistUser(authResponse.data.user);
 
     return authResponse.data.user;
   }

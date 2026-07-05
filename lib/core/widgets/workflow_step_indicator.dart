@@ -23,16 +23,20 @@ class WorkflowStepIndicator extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.sizeOf(context).width;
+    final stepSize = (screenWidth / (steps.length * 2.2)).clamp(32.0, 44.0);
+    final labelSize = screenWidth < 360 ? 10.0 : 11.0;
+
     return Container(
       padding: EdgeInsets.symmetric(
-        horizontal: 16.w(context),
-        vertical: 16.h(context),
+        horizontal: 12.w(context),
+        vertical: 12.h(context),
       ),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Colors.white.withValues(alpha: 0.94),
         border: Border(
           bottom: BorderSide(
-            color: const Color(0xFFE0E0E0),
+            color: AppColors.thirdGoldenWheat,
             width: 1.h(context),
           ),
         ),
@@ -48,11 +52,11 @@ class WorkflowStepIndicator extends StatelessWidget {
             return Expanded(
               child: Container(
                 height: 2.h(context),
-                margin: EdgeInsets.symmetric(horizontal: 8.w(context)),
+                margin: EdgeInsets.symmetric(horizontal: 4.w(context)),
                 decoration: BoxDecoration(
                   color: isCompleted
                       ? AppColors.primaryForest
-                      : const Color(0xFFE0E0E0),
+                      : AppColors.thirdGoldenWheat,
                   borderRadius: BorderRadius.circular(1),
                 ),
               ),
@@ -71,14 +75,14 @@ class WorkflowStepIndicator extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Container(
-                    width: 44.w(context),
-                    height: 44.w(context),
+                    width: stepSize,
+                    height: stepSize,
                     decoration: BoxDecoration(
                       color: isActive
                           ? AppColors.primaryForest
                           : isCompleted
                               ? AppColors.secondaryForest
-                              : const Color(0xFFE8E8E8),
+                              : AppColors.thirdGoldenWheat,
                       shape: BoxShape.circle,
                       boxShadow: isActive
                           ? [
@@ -95,7 +99,7 @@ class WorkflowStepIndicator extends StatelessWidget {
                       child: Text(
                         '${stepIndex + 1}',
                         style: TextStyle(
-                          fontSize: 16.s(context),
+                          fontSize: (stepSize * 0.38).clamp(13.0, 16.0),
                           fontWeight: FontWeight.w700,
                           color: isActive || isCompleted
                               ? Colors.white
@@ -104,13 +108,13 @@ class WorkflowStepIndicator extends StatelessWidget {
                       ),
                     ),
                   ),
-                  SizedBox(height: 8.h(context)),
+                  SizedBox(height: 6.h(context)),
                   Text(
                     steps[stepIndex],
                     textDirection: TextDirection.rtl,
                     textAlign: TextAlign.center,
                     style: TextStyle(
-                      fontSize: 11.s(context),
+                      fontSize: labelSize.s(context),
                       fontWeight: isActive ? FontWeight.w700 : FontWeight.w600,
                       color: isActive
                           ? AppColors.primaryForest

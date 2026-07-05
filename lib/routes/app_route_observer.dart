@@ -1,8 +1,8 @@
 import 'package:baladeyate/routes/navigation_logger.dart';
 import 'package:flutter/material.dart';
 
-/// Observes navigator stack changes and logs them to the terminal.
-class AppRouteObserver extends NavigatorObserver {
+/// Observes navigator stack changes, logs them, and supports [RouteAware] widgets.
+class AppRouteObserver extends RouteObserver<ModalRoute<void>> {
   @override
   void didPush(Route<dynamic> route, Route<dynamic>? previousRoute) {
     super.didPush(route, previousRoute);
