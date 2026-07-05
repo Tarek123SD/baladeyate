@@ -1,5 +1,8 @@
 import 'package:baladeyate/config/theme/app_colors.dart';
 import 'package:baladeyate/core/constants/app_assets.dart';
+import 'package:baladeyate/core/services/service_locator.dart';
+import 'package:baladeyate/features/auth/cubits/auth_cubit/auth_cubit.dart';
+import 'package:baladeyate/features/auth/cubits/auth_cubit/auth_state.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
@@ -16,11 +19,23 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   void initState() {
     super.initState();
-    Future.delayed(const Duration(seconds: 4), () {
-      if (mounted) {
-        context.go('/login');
-      }
-    });
+    _bootstrap();
+  }
+
+  Future<void> _bootstrap() async {
+    await Future.wait([
+      Future<void>.delayed(const Duration(seconds: 3)),
+      sl<AuthCubit>().restoreSession(),
+    ]);
+
+    if (!mounted) return;
+
+    final state = sl<AuthCubit>().state;
+    if (state is AuthSuccess) {
+      context.go('/main');
+    } else {
+      context.go('/login');
+    }
   }
 
   @override

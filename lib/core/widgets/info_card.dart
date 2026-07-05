@@ -30,6 +30,8 @@ class InfoCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final resolvedIconColor = iconColor ?? AppColors.primaryForest;
+
     return GestureDetector(
       onTap: onTap,
       child: Container(
@@ -39,15 +41,15 @@ class InfoCard extends StatelessWidget {
         ),
         padding: EdgeInsets.all(16.w(context)),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: Colors.white.withValues(alpha: 0.94),
           borderRadius: BorderRadius.circular(16.r(context)),
           border: Border.all(
-            color: const Color(0xFFE6E6E6),
+            color: AppColors.thirdGoldenWheat,
             width: 1,
           ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.04),
+              color: AppColors.primaryForest.withValues(alpha: 0.06),
               blurRadius: 12,
               offset: const Offset(0, 4),
             ),
@@ -92,12 +94,12 @@ class InfoCard extends StatelessWidget {
               width: 44.w(context),
               height: 44.w(context),
               decoration: BoxDecoration(
-                color: iconColor ?? AppColors.primaryForest.withValues(alpha: 0.1),
+                color: resolvedIconColor.withValues(alpha: 0.12),
                 shape: BoxShape.circle,
               ),
               child: Icon(
                 icon,
-                color: iconColor ?? AppColors.primaryForest,
+                color: resolvedIconColor,
                 size: 22.s(context),
               ),
             ),

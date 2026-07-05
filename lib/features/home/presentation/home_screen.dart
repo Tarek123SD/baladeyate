@@ -1,3 +1,4 @@
+import 'package:baladeyate/features/auth/presentation/widgets/signup_success_dialog.dart';
 import 'package:baladeyate/features/auth/cubits/auth_cubit/auth_cubit.dart';
 import 'package:baladeyate/features/auth/cubits/auth_cubit/auth_state.dart';
 import 'package:baladeyate/features/home/presentation/components/custom_card.dart';
@@ -14,8 +15,21 @@ import 'package:baladeyate/core/responsive/dimensions.dart';
 import 'package:baladeyate/core/widgets/custom_app_bar.dart';
 import 'package:baladeyate/config/theme/app_colors.dart';
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
+
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      maybeShowPendingSignupSuccessDialog(context);
+    });
+  }
 
   @override
   Widget build(BuildContext context) {

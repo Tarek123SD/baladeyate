@@ -38,7 +38,6 @@ class WorkflowNavigationButtons extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bool canGoNext = currentStep < totalSteps - 1;
     final bool canGoPrevious = currentStep > 0;
 
     return Container(
@@ -47,9 +46,10 @@ class WorkflowNavigationButtons extends StatelessWidget {
         vertical: 16.h(context),
       ),
       decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.94),
         border: Border(
           top: BorderSide(
-            color: const Color(0xFFE0E0E0),
+            color: AppColors.thirdGoldenWheat,
             width: 1.h(context),
           ),
         ),
@@ -59,16 +59,14 @@ class WorkflowNavigationButtons extends StatelessWidget {
         children: [
           Expanded(
             child: ElevatedButton.icon(
-              onPressed: canGoNext && !isNextLoading ? onNext : null,
+              onPressed: isNextLoading ? null : onNext,
               icon: isNextLoading
                   ? SizedBox(
                       width: 18.w(context),
                       height: 18.w(context),
-                      child: CircularProgressIndicator(
+                      child: const CircularProgressIndicator(
                         strokeWidth: 2,
-                        valueColor: AlwaysStoppedAnimation<Color>(
-                          canGoNext ? Colors.white : Colors.grey,
-                        ),
+                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                       ),
                     )
                   : Icon(Icons.arrow_back_rounded, size: 20.s(context)),
@@ -81,11 +79,11 @@ class WorkflowNavigationButtons extends StatelessWidget {
                 ),
               ),
               style: ElevatedButton.styleFrom(
-                backgroundColor:
-                    canGoNext ? AppColors.primaryForest : Colors.grey[300],
-                disabledBackgroundColor: Colors.grey[300],
-                foregroundColor: canGoNext ? Colors.white : Colors.grey[600],
-                disabledForegroundColor: Colors.grey[600],
+                backgroundColor: AppColors.primaryForest,
+                disabledBackgroundColor:
+                    AppColors.primaryForest.withValues(alpha: 0.6),
+                foregroundColor: Colors.white,
+                disabledForegroundColor: Colors.white,
                 padding: EdgeInsets.symmetric(
                   horizontal: 16.w(context),
                   vertical: 12.h(context),
@@ -111,13 +109,14 @@ class WorkflowNavigationButtons extends StatelessWidget {
               ),
               style: OutlinedButton.styleFrom(
                 foregroundColor: canGoPrevious
-                    ? AppColors.secondaryCharcoal
-                    : Colors.grey[400],
-                disabledForegroundColor: Colors.grey[400],
+                    ? AppColors.primaryForest
+                    : AppColors.secondaryCharcoal.withValues(alpha: 0.4),
+                disabledForegroundColor:
+                    AppColors.secondaryCharcoal.withValues(alpha: 0.4),
                 side: BorderSide(
                   color: canGoPrevious
-                      ? const Color(0xFFD0D0D0)
-                      : Colors.grey[300]!,
+                      ? AppColors.primaryForest
+                      : AppColors.thirdGoldenWheat,
                   width: 1.5,
                 ),
                 padding: EdgeInsets.symmetric(

@@ -33,15 +33,15 @@ class FormSectionCard extends StatelessWidget {
       ),
       padding: EdgeInsets.all(24.w(context)),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Colors.white.withValues(alpha: 0.96),
         borderRadius: BorderRadius.circular(24.r(context)),
         border: Border.all(
-          color: const Color(0xFFE6E6E6),
+          color: AppColors.thirdGoldenWheat,
           width: 1,
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
+            color: AppColors.primaryForest.withValues(alpha: 0.06),
             blurRadius: 16,
             offset: const Offset(0, 8),
           ),

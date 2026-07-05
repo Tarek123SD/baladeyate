@@ -1,34 +1,78 @@
+import 'package:baladeyate/features/delegate/cubits/delegate_survey_cubit/delegate_survey_cubit.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:responsive_x_toolkit/responsive_x.dart';
 import 'package:baladeyate/config/theme/app_colors.dart';
+import 'package:baladeyate/core/constants/app_assets.dart';
 import 'package:baladeyate/core/widgets/form_input_field.dart';
 import 'package:baladeyate/core/widgets/form_section_card.dart';
 import 'package:baladeyate/core/widgets/image_section_card.dart';
 import 'package:baladeyate/core/widgets/info_card.dart';
 
 class ApartmentScreen extends StatefulWidget {
-  const ApartmentScreen({super.key});
+  const ApartmentScreen({super.key, this.surveyMode = false});
+
+  final bool surveyMode;
 
   @override
-  State<ApartmentScreen> createState() => _ApartmentScreenState();
+  State<ApartmentScreen> createState() => ApartmentScreenState();
 }
 
-class _ApartmentScreenState extends State<ApartmentScreen> {
+class ApartmentScreenState extends State<ApartmentScreen> {
   late TextEditingController _apartmentNumberController;
   late TextEditingController _apartmentTypeController;
 
+  DelegateSurveyCubit? _surveyCubit;
   String? _selectedOccupancyStatus = 'مسكون'; // Default selected
   int _selectedRoomCount = 3; // Default selected
 
   @override
   void initState() {
     super.initState();
-    _apartmentNumberController = TextEditingController(text: '402');
-    _apartmentTypeController = TextEditingController(text: 'مكتبية - عائلية');
+    if (widget.surveyMode) {
+      _surveyCubit = context.read<DelegateSurveyCubit>();
+    }
+    final draft = _readDraft();
+    _apartmentNumberController =
+        TextEditingController(text: draft?.apartmentNumber ?? '402');
+    _apartmentTypeController =
+        TextEditingController(text: draft?.apartmentType ?? 'مكتبية - عائلية');
+    _selectedOccupancyStatus = draft?.occupancyStatus ?? 'مسكون';
+    _selectedRoomCount = draft?.roomCount ?? 3;
+
+    if (widget.surveyMode) {
+      _apartmentNumberController.addListener(_syncToCubit);
+      _apartmentTypeController.addListener(_syncToCubit);
+      _syncToCubit();
+    }
+  }
+
+  void syncSurveyForm() => _syncToCubit();
+
+  dynamic _readDraft() {
+    if (_surveyCubit == null) return null;
+    final state = _surveyCubit!.state;
+    if (state is DelegateSurveyEditing) return state.draft;
+    if (state is DelegateSurveyFailure) return state.draft;
+    return null;
+  }
+
+  void _syncToCubit() {
+    if (_surveyCubit == null) return;
+    _surveyCubit!.updateApartment(
+          apartmentNumber: _apartmentNumberController.text.trim(),
+          apartmentType: _apartmentTypeController.text.trim(),
+          occupancyStatus: _selectedOccupancyStatus,
+          roomCount: _selectedRoomCount,
+        );
   }
 
   @override
   void dispose() {
+    if (widget.surveyMode) {
+      _apartmentNumberController.removeListener(_syncToCubit);
+      _apartmentTypeController.removeListener(_syncToCubit);
+    }
     _apartmentNumberController.dispose();
     _apartmentTypeController.dispose();
     super.dispose();
@@ -36,43 +80,47 @@ class _ApartmentScreenState extends State<ApartmentScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      physics: const BouncingScrollPhysics(),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          // References Row (Floor + Building)
-          Padding(
-            padding: EdgeInsets.symmetric(horizontal: 16.w(context)),
-            child: Row(
-              children: [
-                Expanded(
-                  child: InfoCard(
-                    icon: Icons.layers_outlined,
-                    title: 'الطابق',
-                    subtitle: 'الطابق الرابع',
-                    iconColor:
-                        AppColors.primaryGoldenWheat.withValues(alpha: 0.2),
-                  ),
-                ),
-                SizedBox(width: 12.w(context)),
-                Expanded(
-                  child: InfoCard(
-                    icon: Icons.apartment_outlined,
-                    title: 'المبنى',
-                    subtitle: 'برج البياسمين A1',
-                    iconColor:
-                        AppColors.primaryGoldenWheat.withValues(alpha: 0.2),
-                  ),
-                ),
-              ],
+    return Stack(
+      children: [
+        const Positioned.fill(
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              image: DecorationImage(
+                image: AssetImage(AppAssets.backgroundWhite),
+                fit: BoxFit.cover,
+              ),
             ),
           ),
-          // Unit Details Card
-          FormSectionCard(
-            title: 'تفاصيل الوحدة',
-            badge: 'قيد الإدخال',
-            badgeColor: AppColors.primaryGoldenWheat,
+        ),
+        SingleChildScrollView(
+          physics: const BouncingScrollPhysics(),
+          child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            InfoCard(
+              icon: Icons.layers_outlined,
+              title: 'الطابق',
+              subtitle: widget.surveyMode
+                  ? (_readDraft()?.floorNumber?.isNotEmpty == true
+                      ? 'الطابق ${_readDraft()!.floorNumber}'
+                      : 'الطابق الحالي')
+                  : 'الطابق الرابع',
+              iconColor: AppColors.primaryForest,
+            ),
+            InfoCard(
+              icon: Icons.apartment_outlined,
+              title: 'المبنى',
+              subtitle: widget.surveyMode
+                  ? (_readDraft()?.buildingName?.isNotEmpty == true
+                      ? _readDraft()!.buildingName!
+                      : 'مسح ميداني')
+                  : 'برج البياسمين A1',
+              iconColor: AppColors.primaryForest,
+            ),
+            FormSectionCard(
+              title: 'تفاصيل الوحدة',
+              badge: widget.surveyMode ? 'مسح ميداني' : 'قيد الإدخال',
+              badgeColor: AppColors.primaryGoldenWheat,
             child: Column(
               children: [
                 // Apartment Number
@@ -160,9 +208,11 @@ class _ApartmentScreenState extends State<ApartmentScreen> {
               ],
             ),
           ),
-          SizedBox(height: 20.h(context)),
-        ],
-      ),
+            SizedBox(height: 20.h(context)),
+          ],
+        ),
+        ),
+      ],
     );
   }
 
@@ -170,19 +220,24 @@ class _ApartmentScreenState extends State<ApartmentScreen> {
     final isSelected = _selectedOccupancyStatus == label;
     return Expanded(
       child: GestureDetector(
-        onTap: () => setState(() => _selectedOccupancyStatus = label),
+        onTap: () {
+          setState(() => _selectedOccupancyStatus = label);
+          _syncToCubit();
+        },
         child: Container(
           padding: EdgeInsets.symmetric(
             horizontal: 12.w(context),
             vertical: 10.h(context),
           ),
           decoration: BoxDecoration(
-            color: isSelected ? AppColors.primaryForest : Colors.white,
+            color: isSelected
+                ? AppColors.primaryForest
+                : AppColors.thirdGoldenWheat.withValues(alpha: 0.5),
             borderRadius: BorderRadius.circular(20.r(context)),
             border: Border.all(
               color: isSelected
                   ? AppColors.primaryForest
-                  : const Color(0xFFD9D9D9),
+                  : AppColors.secondaryGoldenWheat.withValues(alpha: 0.5),
               width: 1.5,
             ),
           ),
@@ -228,13 +283,20 @@ class _ApartmentScreenState extends State<ApartmentScreen> {
               _selectedRoomCount = int.parse(label);
             }
           });
+          _syncToCubit();
         },
         child: Container(
           padding: EdgeInsets.symmetric(vertical: 12.h(context)),
           decoration: BoxDecoration(
-            color:
-                isSelected ? AppColors.primaryForest : const Color(0xFFE8E8E8),
+            color: isSelected
+                ? AppColors.primaryForest
+                : AppColors.thirdGoldenWheat.withValues(alpha: 0.6),
             borderRadius: BorderRadius.circular(16.r(context)),
+            border: Border.all(
+              color: isSelected
+                  ? AppColors.primaryForest
+                  : AppColors.secondaryGoldenWheat.withValues(alpha: 0.4),
+            ),
           ),
           child: Text(
             label,
@@ -242,7 +304,9 @@ class _ApartmentScreenState extends State<ApartmentScreen> {
             style: TextStyle(
               fontSize: 14.s(context),
               fontWeight: FontWeight.w600,
-              color: isSelected ? Colors.white : const Color(0xFF999999),
+              color: isSelected
+                  ? Colors.white
+                  : AppColors.secondaryCharcoal,
             ),
           ),
         ),
