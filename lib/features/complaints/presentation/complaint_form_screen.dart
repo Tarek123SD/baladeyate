@@ -1,4 +1,3 @@
-import 'package:baladeyate/core/services/service_locator.dart';
 import 'package:baladeyate/core/widgets/custom_complaint_input_field.dart';
 import 'package:baladeyate/core/widgets/custom_complaint_map_box.dart';
 import 'package:baladeyate/core/widgets/custom_complaint_priority_button.dart';
@@ -23,7 +22,6 @@ class ComplaintFormScreen extends StatefulWidget {
 class _ComplaintFormScreenState extends State<ComplaintFormScreen> {
   final TextEditingController _subjectController = TextEditingController();
   final TextEditingController _detailsController = TextEditingController();
-  bool _isUrgent = false;
 
   @override
   void dispose() {
@@ -34,9 +32,7 @@ class _ComplaintFormScreenState extends State<ComplaintFormScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (_) => sl<ComplaintsCubit>(),
-      child: BlocConsumer<ComplaintsCubit, ComplaintsState>(
+    return BlocConsumer<ComplaintsCubit, ComplaintsState>(
         listener: (context, state) {
           if (state is ComplaintCreated) {
             ScaffoldMessenger.of(context).showSnackBar(
@@ -54,6 +50,7 @@ class _ComplaintFormScreenState extends State<ComplaintFormScreen> {
           final isSubmitting = state is ComplaintsLoading;
           final errorMessage =
               state is ComplaintsFailure ? state.message : null;
+          final isUrgent = state is ComplaintsLoaded ? state.isUrgent : false;
 
           return Container(
             decoration: const BoxDecoration(
@@ -80,6 +77,7 @@ class _ComplaintFormScreenState extends State<ComplaintFormScreen> {
                               context,
                               isSubmitting,
                               errorMessage,
+                              isUrgent,
                             ),
                           ),
                         ),
@@ -91,8 +89,7 @@ class _ComplaintFormScreenState extends State<ComplaintFormScreen> {
             ),
           );
         },
-      ),
-    );
+      );
   }
 
   PreferredSizeWidget _buildAppBar(BuildContext context) {
@@ -139,6 +136,7 @@ class _ComplaintFormScreenState extends State<ComplaintFormScreen> {
     BuildContext context,
     bool isSubmitting,
     String? errorMessage,
+    bool isUrgent,
   ) {
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: 8.s(context)),
@@ -176,16 +174,18 @@ class _ComplaintFormScreenState extends State<ComplaintFormScreen> {
                 Expanded(
                   child: CustomComplaintPriorityButton(
                     text: 'طارئ / مستعجل',
-                    isActive: _isUrgent,
-                    onTap: () => setState(() => _isUrgent = true),
+                    isActive: isUrgent,
+                    onTap: () =>
+                        context.read<ComplaintsCubit>().setIsUrgent(true),
                   ),
                 ),
                 SizedBox(width: 10.s(context)),
                 Expanded(
                   child: CustomComplaintPriorityButton(
                     text: 'اعتيادي',
-                    isActive: !_isUrgent,
-                    onTap: () => setState(() => _isUrgent = false),
+                    isActive: !isUrgent,
+                    onTap: () =>
+                        context.read<ComplaintsCubit>().setIsUrgent(false),
                   ),
                 ),
               ],
@@ -287,7 +287,7 @@ class _ComplaintFormScreenState extends State<ComplaintFormScreen> {
 
     context.read<ComplaintsCubit>().createComplaint(
           description: description,
-          isUrgent: _isUrgent,
+          isUrgent: context.read<ComplaintsCubit>().isUrgent,
         );
   }
 

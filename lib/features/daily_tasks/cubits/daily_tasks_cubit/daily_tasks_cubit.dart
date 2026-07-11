@@ -1,0 +1,164 @@
+import 'package:baladeyate/features/daily_tasks/cubits/daily_tasks_cubit/daily_tasks_state.dart';
+import 'package:baladeyate/features/delegate/models/survey_pin.dart';
+import 'package:baladeyate/features/delegate/models/survey_pin_status.dart';
+import 'package:baladeyate/features/delegate/repo/delegate_repository.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
+
+class DailyTasksCubit extends Cubit<DailyTasksState> {
+  DailyTasksCubit({required DelegateRepository delegateRepository})
+      : _delegateRepository = delegateRepository,
+        super(const DailyTasksState());
+
+  final DelegateRepository _delegateRepository;
+
+  Future<void> initialize() async {
+    await Future.wait([loadPins(), loadTasks(), initLocation()]);
+  }
+
+  Future<void> loadPins() async {
+    emit(state.copyWith(isLoadingPins: true, clearErrorMessage: true));
+    try {
+      final pins = await _delegateRepository.getMapPins();
+      emit(state.copyWith(pins: pins, isLoadingPins: false));
+    } catch (error) {
+      emit(state.copyWith(
+        isLoadingPins: false,
+        errorMessage: _messageFromError(error),
+      ));
+    }
+  }
+
+  Future<void> loadTasks() async {
+    emit(state.copyWith(isLoadingTasks: true, clearErrorMessage: true));
+    try {
+      final tasks = await _delegateRepository.getMyTasks();
+      emit(state.copyWith(delegateTasks: tasks, isLoadingTasks: false));
+    } catch (error) {
+      emit(state.copyWith(
+        isLoadingTasks: false,
+        errorMessage: _messageFromError(error),
+      ));
+    }
+  }
+
+  Future<bool> updateTaskStatus({
+    required int id,
+    required String status,
+  }) async {
+    emit(state.copyWith(isUpdatingTask: true, clearErrorMessage: true));
+    try {
+      final updated = await _delegateRepository.updateMyTaskStatus(
+        id: id,
+        status: status,
+      );
+      final tasks = state.delegateTasks
+          .map((task) => task.id == id ? updated : task)
+          .toList();
+      emit(state.copyWith(
+        delegateTasks: tasks,
+        isUpdatingTask: false,
+      ));
+      return true;
+    } catch (error) {
+      emit(state.copyWith(
+        isUpdatingTask: false,
+        errorMessage: _messageFromError(error),
+      ));
+      return false;
+    }
+  }
+
+  Future<void> initLocation() async {
+    final serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) {
+      emit(state.copyWith(locationMessage: 'يرجى تفعيل خدمة الموقع'));
+      return;
+    }
+
+    var permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+    }
+
+    if (permission == LocationPermission.denied ||
+        permission == LocationPermission.deniedForever) {
+      emit(state.copyWith(locationMessage: 'لم يتم منح إذن الموقع'));
+      return;
+    }
+
+    await moveToCurrentLocation();
+  }
+
+  Future<LatLng?> moveToCurrentLocation() async {
+    emit(state.copyWith(isLocating: true));
+    try {
+      final position = await Geolocator.getCurrentPosition(
+        locationSettings: const LocationSettings(
+          accuracy: LocationAccuracy.high,
+        ),
+      );
+      final latLng = LatLng(position.latitude, position.longitude);
+      emit(state.copyWith(
+        currentPosition: latLng,
+        isLocating: false,
+        clearLocationMessage: true,
+      ));
+      return latLng;
+    } catch (_) {
+      emit(state.copyWith(
+        isLocating: false,
+        locationMessage: 'تعذر تحديد موقعك الحالي',
+      ));
+      return null;
+    }
+  }
+
+  void selectPin(String? pinId) {
+    emit(
+      pinId == null
+          ? state.copyWith(clearSelectedPinId: true)
+          : state.copyWith(selectedPinId: pinId),
+    );
+  }
+
+  void toggleAddPinMode() {
+    emit(state.copyWith(isAddPinMode: !state.isAddPinMode));
+  }
+
+  void enableAddPinMode() {
+    if (!state.isAddPinMode) {
+      emit(state.copyWith(isAddPinMode: true));
+    }
+  }
+
+  void toggleMapType() {
+    emit(state.copyWith(
+      mapType: state.mapType == MapType.normal
+          ? MapType.satellite
+          : MapType.normal,
+    ));
+  }
+
+  Future<SurveyPin> saveDraftPin({
+    required String pinId,
+    required double latitude,
+    required double longitude,
+  }) async {
+    final draftPin = SurveyPin(
+      id: pinId,
+      latitude: latitude,
+      longitude: longitude,
+      status: SurveyPinStatus.inProgress,
+      title: 'مسح جديد',
+    );
+    await _delegateRepository.saveDraftPin(draftPin);
+    return draftPin;
+  }
+
+  String _messageFromError(Object error) {
+    final message = error.toString().replaceFirst('Exception: ', '');
+    return message.isNotEmpty ? message : 'حدث خطأ غير متوقع';
+  }
+}

@@ -5,18 +5,21 @@ import 'package:baladeyate/core/widgets/form_dropdown_field.dart';
 import 'package:baladeyate/core/widgets/form_input_field.dart';
 import 'package:baladeyate/core/widgets/form_section_card.dart';
 import 'package:baladeyate/core/widgets/image_section_card.dart';
-import 'package:baladeyate/core/widgets/info_card.dart';
-import 'package:baladeyate/core/widgets/workflow_navigation_buttons.dart';
-import 'package:baladeyate/core/widgets/workflow_step_indicator.dart';
-import 'package:baladeyate/features/apartment/presentation/apartment_screen.dart';
-import 'package:baladeyate/features/delegate/cubits/delegate_survey_cubit/delegate_survey_cubit.dart';
+import 'package:baladeyate/features/delegate/cubits/building_survey_cubit/building_survey_cubit.dart';
+import 'package:baladeyate/features/delegate/models/building_survey.dart';
 import 'package:baladeyate/features/delegate/models/survey_location.dart';
-import 'package:baladeyate/features/floor/presentation/floor_screen.dart';
-import 'package:baladeyate/features/people/presentation/people_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:responsive_x_toolkit/responsive_x.dart';
+
+/// Ownership type Arabic label -> API value (`ownership_type`).
+const Map<String, String> _ownershipTypes = {
+  'ملكية خاصة': 'private',
+  'حكومي': 'government',
+  'وقف': 'endowment',
+};
 
 class BuildingComplexScreen extends StatefulWidget {
   const BuildingComplexScreen({super.key, this.surveyLocation});
@@ -28,25 +31,16 @@ class BuildingComplexScreen extends StatefulWidget {
 }
 
 class _BuildingComplexScreenState extends State<BuildingComplexScreen> {
-  final List<String> _stepLabelsAr = ['المبنى', 'الطابق', 'الشقة', 'السكان'];
-  int _currentStep = 0;
-
-  final TextEditingController _buildingNumberController =
-      TextEditingController();
   final TextEditingController _buildingNameController = TextEditingController();
-  final TextEditingController _buildingAddressController =
+  final TextEditingController _realEstateNumberController =
+      TextEditingController();
+  final TextEditingController _licenseNumberController =
       TextEditingController();
   final TextEditingController _floorCountController = TextEditingController();
   TextEditingController? _coordinatesController;
-  String? _buildingTypeValue;
+  final ImagePicker _imagePicker = ImagePicker();
 
-  final GlobalKey<FloorScreenState> _floorKey = GlobalKey<FloorScreenState>();
-  final GlobalKey<ApartmentScreenState> _apartmentKey =
-      GlobalKey<ApartmentScreenState>();
-  final GlobalKey<PeopleScreenState> _peopleKey =
-      GlobalKey<PeopleScreenState>();
-
-  DelegateSurveyCubit? _surveyCubit;
+  bool _hydratedFromSurvey = false;
 
   bool get _isSurveyMode => widget.surveyLocation != null;
 
@@ -60,119 +54,118 @@ class _BuildingComplexScreenState extends State<BuildingComplexScreen> {
         text:
             '${location.latitude.toStringAsFixed(5)}, ${location.longitude.toStringAsFixed(5)}',
       );
-    }
-
-    if (_isSurveyMode) {
-      _surveyCubit = context.read<DelegateSurveyCubit>();
       WidgetsBinding.instance.addPostFrameCallback((_) => _loadDraftIntoForm());
     }
   }
 
-  void _loadDraftIntoForm() {
-    if (!mounted || _surveyCubit == null) return;
-    final state = _surveyCubit!.state;
-    final draft = switch (state) {
-      DelegateSurveyEditing(:final draft) => draft,
-      DelegateSurveyFailure(:final draft) => draft,
+  BuildingSurvey? _surveyFromState(BuildingSurveyState state) {
+    return switch (state) {
+      BuildingSurveyLoaded(:final survey) => survey,
+      BuildingSurveyFailure(:final survey) => survey,
+      BuildingSurveySaving(:final survey) => survey,
       _ => null,
     };
-    if (draft == null) return;
+  }
 
-    _buildingNumberController.text = draft.buildingNumber;
-    _buildingNameController.text = draft.buildingName;
-    _buildingAddressController.text = draft.buildingAddress;
-    _floorCountController.text = draft.floorCount;
-    setState(() => _buildingTypeValue = draft.buildingType);
+  void _loadDraftIntoForm() {
+    if (!mounted || _hydratedFromSurvey) return;
+    final survey = _surveyFromState(context.read<BuildingSurveyCubit>().state);
+    if (survey == null) return;
+
+    final building = survey.building;
+    _buildingNameController.text = building.name;
+    _realEstateNumberController.text = building.realEstateNumber;
+    _licenseNumberController.text = building.licenseNumber;
+    _floorCountController.text = building.totalFloors;
+    _hydratedFromSurvey = true;
   }
 
   @override
   void dispose() {
     _coordinatesController?.dispose();
-    _buildingNumberController.dispose();
     _buildingNameController.dispose();
-    _buildingAddressController.dispose();
+    _realEstateNumberController.dispose();
+    _licenseNumberController.dispose();
     _floorCountController.dispose();
     super.dispose();
   }
 
-  void _goToStep(int index) {
-    if (index < 0 || index >= _stepLabelsAr.length || index == _currentStep) {
-      return;
-    }
-    if (_isSurveyMode) {
-      _syncAllSurveySteps();
-    }
-    setState(() => _currentStep = index);
+  void _syncText() {
+    context.read<BuildingSurveyCubit>().updateBuilding(
+          name: _buildingNameController.text.trim(),
+          realEstateNumber: _realEstateNumberController.text.trim(),
+          licenseNumber: _licenseNumberController.text.trim(),
+          totalFloors: _floorCountController.text.trim(),
+        );
   }
 
-  void _syncBuildingStep() {
-    if (_surveyCubit == null) return;
-    _surveyCubit!.updateBuilding(
-      buildingNumber: _buildingNumberController.text.trim(),
-      buildingName: _buildingNameController.text.trim(),
-      buildingAddress: _buildingAddressController.text.trim(),
-      floorCount: _floorCountController.text.trim(),
-      buildingType: _buildingTypeValue,
-    );
-  }
+  Future<void> _captureBuildingPhoto() async {
+    try {
+      final picked = await _imagePicker.pickImage(
+        source: ImageSource.camera,
+        maxWidth: 1280,
+        maxHeight: 1280,
+        imageQuality: 70,
+      );
+      if (picked == null || !mounted) return;
 
-  void _syncAllSurveySteps() {
-    if (!_isSurveyMode) return;
-    _syncBuildingStep();
-    _floorKey.currentState?.syncSurveyForm();
-    _apartmentKey.currentState?.syncSurveyForm();
-    _peopleKey.currentState?.syncSurveyForm();
-  }
-
-  Future<void> _handleNext() async {
-    if (_currentStep < _stepLabelsAr.length - 1) {
-      _goToStep(_currentStep + 1);
-      return;
-    }
-
-    if (_isSurveyMode) {
-      _syncAllSurveySteps();
-      await _submitSurvey();
+      context
+          .read<BuildingSurveyCubit>()
+          .updateBuilding(buildingImagePath: picked.path);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('تم التقاط صورة المبنى')),
+      );
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('تعذر فتح الكاميرا: $error')),
+      );
     }
   }
 
-  void _handlePrevious() {
-    if (_currentStep > 0) {
-      _goToStep(_currentStep - 1);
-    }
-  }
-
-  Future<void> _submitSurvey() async {
-    final cubit = _surveyCubit;
-    if (cubit == null) return;
-
-    final result = await cubit.submitSurvey();
+  Future<void> _saveBuilding() async {
+    _syncText();
+    final cubit = context.read<BuildingSurveyCubit>();
+    final success = await cubit.saveBuilding();
 
     if (!mounted) return;
 
-    if (result != null) {
+    if (success) {
+      final pinId = widget.surveyLocation!.pinId;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('تم حفظ بيانات المسح بنجاح')),
+        const SnackBar(content: Text('تم حفظ بيانات المبنى بنجاح')),
       );
-      context.go('/tasks');
+      context.go('/building/$pinId');
       return;
     }
 
     final state = cubit.state;
-    if (state is DelegateSurveyFailure) {
+    if (state is BuildingSurveyFailure) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(state.message)),
       );
     }
   }
 
-  Widget _buildBuildingFormContent(BuildContext context) {
+  Widget _buildBuildingFormContent(
+    BuildContext context,
+    BuildingSurvey? survey,
+  ) {
+    final building = survey?.building;
+    final ownershipLabel = _ownershipTypes.entries
+        .firstWhere(
+          (entry) => entry.value == building?.ownershipType,
+          orElse: () => const MapEntry('', ''),
+        )
+        .key;
+
     return Column(
       children: [
         if (_coordinatesController != null) ...[
           FormInputField(
             label: 'إحداثيات النقطة',
-            hint: _coordinatesController!.text,
+            hint: 'خط العرض، خط الطول',
             controller: _coordinatesController,
             prefixIcon: Icons.pin_drop_outlined,
             readOnly: true,
@@ -180,24 +173,26 @@ class _BuildingComplexScreenState extends State<BuildingComplexScreen> {
           SizedBox(height: 18.h(context)),
         ],
         FormInputField(
-          label: 'رقم المبنى',
-          hint: 'أدخل رقم المبنى',
-          controller: _buildingNumberController,
-          prefixIcon: Icons.lock_outline_rounded,
-          readOnly: !_isSurveyMode,
-        ),
-        SizedBox(height: 18.h(context)),
-        FormInputField(
           label: 'اسم المبنى',
           hint: 'أدخل اسم المبنى',
           controller: _buildingNameController,
+          onChanged: (_) => _syncText(),
         ),
         SizedBox(height: 18.h(context)),
         FormInputField(
-          label: 'عنوان المبنى',
-          hint: 'أدخل اسم الشارع المنطقة...',
-          controller: _buildingAddressController,
-          prefixIcon: Icons.location_on_outlined,
+          label: 'الرقم العقاري',
+          hint: 'أدخل الرقم العقاري للمبنى',
+          controller: _realEstateNumberController,
+          prefixIcon: Icons.numbers_outlined,
+          onChanged: (_) => _syncText(),
+        ),
+        SizedBox(height: 18.h(context)),
+        FormInputField(
+          label: 'رقم الرخصة',
+          hint: 'أدخل رقم رخصة البناء',
+          controller: _licenseNumberController,
+          prefixIcon: Icons.assignment_outlined,
+          onChanged: (_) => _syncText(),
         ),
         SizedBox(height: 18.h(context)),
         FormInputField(
@@ -205,36 +200,89 @@ class _BuildingComplexScreenState extends State<BuildingComplexScreen> {
           hint: 'مثال: 12',
           controller: _floorCountController,
           keyboardType: TextInputType.number,
+          onChanged: (_) => _syncText(),
         ),
         SizedBox(height: 18.h(context)),
         FormDropdownField(
-          label: 'نوع البناء',
-          items: const ['سكني', 'تجاري', 'مختلط', 'صناعي', 'آخر'],
-          value: _buildingTypeValue,
-          onChanged: (value) => setState(() => _buildingTypeValue = value),
+          label: 'نوع الملكية',
+          items: _ownershipTypes.keys.toList(),
+          value: ownershipLabel.isEmpty ? null : ownershipLabel,
+          onChanged: (label) {
+            if (label == null) return;
+            context.read<BuildingSurveyCubit>().updateBuilding(
+                  ownershipType: _ownershipTypes[label],
+                );
+          },
+        ),
+        SizedBox(height: 8.h(context)),
+        _buildSwitch(
+          context,
+          label: 'يوجد قبو',
+          value: building?.hasBasement ?? false,
+          onChanged: (value) => context
+              .read<BuildingSurveyCubit>()
+              .updateBuilding(hasBasement: value),
+        ),
+        _buildSwitch(
+          context,
+          label: 'يوجد كراج',
+          value: building?.hasGarage ?? false,
+          onChanged: (value) => context
+              .read<BuildingSurveyCubit>()
+              .updateBuilding(hasGarage: value),
+        ),
+        _buildSwitch(
+          context,
+          label: 'مبنى مخالف / غير مرخّص',
+          value: building?.isIllegal ?? false,
+          onChanged: (value) => context
+              .read<BuildingSurveyCubit>()
+              .updateBuilding(isIllegal: value),
         ),
         SizedBox(height: 18.h(context)),
         ImageSectionCard(
-          label: 'الصورة الجوية',
-          onAddImage: () {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: const Text('سيتم إضافة خاصية اختيار الصور قريباً'),
-                backgroundColor: AppColors.primaryForest,
-              ),
-            );
-          },
+          label: 'صورة المبنى',
+          localImagePath: building?.buildingImagePath,
+          placeholderText: 'التقط صورة للمبنى من الكاميرا',
+          onAddImage: _captureBuildingPhoto,
+          onViewImage: _captureBuildingPhoto,
         ),
       ],
     );
   }
 
+  Widget _buildSwitch(
+    BuildContext context, {
+    required String label,
+    required bool value,
+    required ValueChanged<bool> onChanged,
+  }) {
+    return SwitchListTile.adaptive(
+      value: value,
+      onChanged: onChanged,
+      activeThumbColor: AppColors.primaryForest,
+      contentPadding: EdgeInsets.zero,
+      title: Text(
+        label,
+        textDirection: TextDirection.rtl,
+        textAlign: TextAlign.right,
+        style: TextStyle(
+          fontSize: 13.s(context),
+          fontWeight: FontWeight.w600,
+          color: AppColors.secondaryCharcoal,
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    final isLastStep = _currentStep == _stepLabelsAr.length - 1;
-
-    return BlocListener<DelegateSurveyCubit, DelegateSurveyState>(
-      listener: (context, state) {},
+    return BlocListener<BuildingSurveyCubit, BuildingSurveyState>(
+      listener: (context, state) {
+        if (state is BuildingSurveyLoaded) {
+          _loadDraftIntoForm();
+        }
+      },
       child: Container(
         decoration: const BoxDecoration(
           image: DecorationImage(
@@ -247,47 +295,67 @@ class _BuildingComplexScreenState extends State<BuildingComplexScreen> {
           appBar: const CustomAppBar(
             showBackButton: true,
             showSettings: false,
+            showNotifications: false,
           ),
           body: SafeArea(
             child: Column(
               children: [
-                WorkflowStepIndicator(
-                  steps: _stepLabelsAr,
-                  currentStep: _currentStep,
-                  onStepTapped: _goToStep,
-                ),
                 Expanded(
-                  child: IndexedStack(
-                    index: _currentStep,
-                    children: [
-                      _buildBuildingStepContent(context),
-                      FloorScreen(
-                        key: _floorKey,
-                        surveyMode: _isSurveyMode,
-                      ),
-                      ApartmentScreen(
-                        key: _apartmentKey,
-                        surveyMode: _isSurveyMode,
-                      ),
-                      PeopleScreen(
-                        key: _peopleKey,
-                        surveyMode: _isSurveyMode,
-                      ),
-                    ],
+                  child: SingleChildScrollView(
+                    physics: const BouncingScrollPhysics(),
+                    child:
+                        BlocBuilder<BuildingSurveyCubit, BuildingSurveyState>(
+                      buildWhen: (previous, current) {
+                        final prevSurvey = _surveyFromState(previous);
+                        final currSurvey = _surveyFromState(current);
+                        return previous.runtimeType != current.runtimeType ||
+                            prevSurvey?.building != currSurvey?.building;
+                      },
+                      builder: (context, state) {
+                        final survey = _surveyFromState(state);
+                        return FormSectionCard(
+                          title: 'ملف المبنى',
+                          badge: _isSurveyMode ? 'مسح ميداني' : 'قيد التفقيش',
+                          badgeColor: AppColors.primaryGoldenWheat,
+                          child: _buildBuildingFormContent(context, survey),
+                        );
+                      },
+                    ),
                   ),
                 ),
-                BlocBuilder<DelegateSurveyCubit, DelegateSurveyState>(
+                BlocBuilder<BuildingSurveyCubit, BuildingSurveyState>(
                   builder: (context, state) {
-                    final isSubmitting = state is DelegateSurveySubmitting;
-                    return WorkflowNavigationButtons(
-                      currentStep: _currentStep,
-                      totalSteps: _stepLabelsAr.length,
-                      onNext: _handleNext,
-                      onPrevious: _handlePrevious,
-                      isNextLoading: isSubmitting,
-                      nextLabel: isLastStep && _isSurveyMode
-                          ? 'حفظ وإنهاء'
-                          : 'التالي',
+                    final isSaving = state is BuildingSurveySaving;
+                    return Padding(
+                      padding: EdgeInsets.all(16.w(context)),
+                      child: SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton(
+                          onPressed:
+                              _isSurveyMode && !isSaving ? _saveBuilding : null,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.green,
+                            foregroundColor: Colors.white,
+                            padding: EdgeInsets.symmetric(
+                              vertical: 14.h(context),
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius:
+                                  BorderRadius.circular(14.r(context)),
+                            ),
+                          ),
+                          child: isSaving
+                              ? const SizedBox(
+                                  height: 22,
+                                  width: 22,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color: Colors.white,
+                                  ),
+                                )
+                              : const Text('حفظ المبنى'),
+                        ),
+                      ),
                     );
                   },
                 ),
@@ -295,35 +363,6 @@ class _BuildingComplexScreenState extends State<BuildingComplexScreen> {
             ),
           ),
         ),
-      ),
-    );
-  }
-
-  Widget _buildBuildingStepContent(BuildContext context) {
-    return SingleChildScrollView(
-      physics: const BouncingScrollPhysics(),
-      child: Column(
-        children: [
-          FormSectionCard(
-            title: 'ملف المبنى',
-            badge: _isSurveyMode ? 'مسح ميداني' : 'قيد التفقيش',
-            badgeColor: AppColors.primaryGoldenWheat,
-            child: _buildBuildingFormContent(context),
-          ),
-          InfoCard(
-            icon: Icons.access_time_rounded,
-            title: 'آخر تفقيش',
-            subtitle: '12 مايو 2023',
-            iconColor: AppColors.primaryForest,
-          ),
-          InfoCard(
-            icon: Icons.settings_rounded,
-            title: 'حالة الترخيص',
-            subtitle: 'سارى المفعول',
-            iconColor: AppColors.primaryForest,
-          ),
-          SizedBox(height: 16.h(context)),
-        ],
       ),
     );
   }

@@ -3,6 +3,7 @@ import 'package:baladeyate/core/services/end_points.dart';
 import 'package:baladeyate/core/utils/api_response_parser.dart';
 import 'package:baladeyate/features/delegate/models/apartment.dart';
 import 'package:baladeyate/features/delegate/models/building.dart';
+import 'package:baladeyate/features/delegate/models/building_survey.dart';
 import 'package:baladeyate/features/delegate/models/delegate_task.dart';
 import 'package:baladeyate/features/delegate/models/family.dart';
 import 'package:baladeyate/features/delegate/models/registered_household.dart';
@@ -452,6 +453,83 @@ class DelegateRepository {
 
   Future<void> saveDraftPin(SurveyPin pin) {
     return _localSurveyPinStore.saveDraftPin(pin);
+  }
+
+  Future<void> updateDraftPin(SurveyPin pin) => saveDraftPin(pin);
+
+  Future<int> createSurveyBuildingOnly({
+    required BuildingDraft building,
+    required double latitude,
+    required double longitude,
+  }) async {
+    try {
+      final response = await _apiService.post(
+        EndPoints.buildings,
+        data: {
+          'name': building.name,
+          'real_estate_number': building.realEstateNumber,
+          'license_number': building.licenseNumber,
+          'total_floors':
+              int.tryParse(building.totalFloors) ?? building.totalFloors,
+          'has_basement': building.hasBasement,
+          'has_garage': building.hasGarage,
+          'is_illegal': building.isIllegal,
+          if (building.ownershipType != null)
+            'ownership_type': building.ownershipType,
+          'coordinates': {'lat': latitude, 'lng': longitude},
+        },
+      );
+      return _readEntityId(response.data, 'building');
+    } catch (error) {
+      throw ApiResponseParser.mapError(
+        error,
+        fallback: 'فشل حفظ بيانات المبنى',
+      );
+    }
+  }
+
+  Future<({int apartmentId, int familyId})> createSurveyApartmentAndFamily({
+    required int buildingId,
+    required ApartmentUnitDraft unit,
+  }) async {
+    try {
+      final apartmentResponse = await _apiService.post(
+        EndPoints.apartments,
+        data: {
+          'building_id': buildingId,
+          'floor_type': unit.floorType,
+          'water_meter': unit.waterMeter,
+          'electricity_meter': unit.electricityMeter,
+          'landline': unit.landline,
+          'is_sealed': unit.isSealed,
+        },
+      );
+      final apartmentId = _readEntityId(apartmentResponse.data, 'apartment');
+
+      final familyResponse = await _apiService.post(
+        EndPoints.families,
+        data: {
+          'apartment_id': apartmentId,
+          'family_book': unit.familyBook,
+          'health_status': unit.healthStatus,
+          'living_status': unit.livingStatus,
+          if (unit.lastAidDate.isNotEmpty) 'last_aid_date': unit.lastAidDate,
+          'unemployed_count':
+              int.tryParse(unit.unemployedCount) ?? unit.unemployedCount,
+          'students_count':
+              int.tryParse(unit.studentsCount) ?? unit.studentsCount,
+          'occupancy_type': unit.occupancyType,
+        },
+      );
+      final familyId = _readEntityId(familyResponse.data, 'family');
+
+      return (apartmentId: apartmentId, familyId: familyId);
+    } catch (error) {
+      throw ApiResponseParser.mapError(
+        error,
+        fallback: 'فشل حفظ بيانات الشقة',
+      );
+    }
   }
 
   Future<List<SurveyPin>> _fetchCompletedPins() async {

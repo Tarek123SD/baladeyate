@@ -1,16 +1,22 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:baladeyate/core/services/cache_service.dart';
 import 'package:baladeyate/core/services/end_points.dart';
 import 'package:baladeyate/core/services/interceptors/auth_interceptor.dart';
 
 import 'package:baladeyate/core/services/fcm/fcm_service.dart';
+import 'package:baladeyate/features/admin/cubits/graves_cubit/graves_cubit.dart';
+import 'package:baladeyate/features/admin/repo/admin_repository.dart';
 import 'package:baladeyate/features/auth/cubits/auth_cubit/auth_cubit.dart';
+import 'package:baladeyate/features/auth/cubits/auth_form_cubit/auth_form_cubit.dart';
+import 'package:baladeyate/features/auth/cubits/password_reset_cubit/password_reset_cubit.dart';
+import 'package:baladeyate/features/daily_tasks/cubits/daily_tasks_cubit/daily_tasks_cubit.dart';
 import 'package:baladeyate/features/auth/repo/auth_repository.dart';
 import 'package:baladeyate/features/complaints/cubits/complaints_cubit/complaints_cubit.dart';
 import 'package:baladeyate/features/complaints/repo/complaints_repository.dart';
-import 'package:baladeyate/features/delegate/cubits/delegate_survey_cubit/delegate_survey_cubit.dart';
-import 'package:baladeyate/features/delegate/cubits/delegate_tasks_cubit/delegate_tasks_cubit.dart';
+import 'package:baladeyate/features/delegate/cubits/building_survey_cubit/building_survey_cubit.dart';
+import 'package:baladeyate/features/delegate/data/local_building_survey_store.dart';
 import 'package:baladeyate/features/delegate/data/local_survey_pin_store.dart';
 import 'package:baladeyate/features/delegate/repo/delegate_repository.dart';
 import 'package:baladeyate/features/notifications/cubits/notifications_cubit/notifications_cubit.dart';
@@ -46,15 +52,17 @@ Future<void> setupServiceLocator() async {
       ),
     );
     dio.interceptors.add(sl<AuthInterceptor>());
-    dio.interceptors.add(
-      LogInterceptor(
-        requestBody: true,
-        responseBody: true,
-        requestHeader: true,
-        responseHeader: false,
-        error: true,
-      ),
-    );
+    if (kDebugMode) {
+      dio.interceptors.add(
+        LogInterceptor(
+          requestBody: true,
+          responseBody: true,
+          requestHeader: true,
+          responseHeader: false,
+          error: true,
+        ),
+      );
+    }
 
     return dio;
   });
@@ -80,11 +88,19 @@ Future<void> setupServiceLocator() async {
     () => LocalSurveyPinStore(cacheService: sl()),
   );
 
+  sl.registerLazySingleton<LocalBuildingSurveyStore>(
+    () => LocalBuildingSurveyStore(cacheService: sl()),
+  );
+
   sl.registerLazySingleton<DelegateRepository>(
     () => DelegateRepository(
       apiService: sl(),
       localSurveyPinStore: sl(),
     ),
+  );
+
+  sl.registerLazySingleton<AdminRepository>(
+    () => AdminRepository(apiService: sl()),
   );
 
   sl.registerLazySingleton<NotificationsRepository>(
@@ -101,6 +117,7 @@ Future<void> setupServiceLocator() async {
   sl.registerLazySingleton<AuthCubit>(
     () => AuthCubit(
       authRepository: sl<AuthRepository>(),
+      citizenRepository: sl<CitizenRepository>(),
       fcmService: sl<FcmService>(),
     ),
   );
@@ -109,15 +126,28 @@ Future<void> setupServiceLocator() async {
     () => ComplaintsCubit(complaintsRepository: sl<ComplaintsRepository>()),
   );
 
-  sl.registerFactory<DelegateTasksCubit>(
-    () => DelegateTasksCubit(delegateRepository: sl<DelegateRepository>()),
+  sl.registerFactory<GravesCubit>(
+    () => GravesCubit(adminRepository: sl<AdminRepository>()),
   );
 
-  sl.registerFactory<DelegateSurveyCubit>(
-    () => DelegateSurveyCubit(delegateRepository: sl()),
+  sl.registerFactory<DailyTasksCubit>(
+    () => DailyTasksCubit(delegateRepository: sl<DelegateRepository>()),
   );
 
-  sl.registerFactory<NotificationsCubit>(
+  sl.registerFactory<AuthFormCubit>(() => AuthFormCubit());
+
+  sl.registerFactory<PasswordResetCubit>(
+    () => PasswordResetCubit(authRepository: sl<AuthRepository>()),
+  );
+
+  sl.registerFactory<BuildingSurveyCubit>(
+    () => BuildingSurveyCubit(
+      delegateRepository: sl(),
+      localSurveyStore: sl(),
+    ),
+  );
+
+  sl.registerLazySingleton<NotificationsCubit>(
     () => NotificationsCubit(
       notificationsRepository: sl<NotificationsRepository>(),
     ),

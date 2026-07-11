@@ -19,6 +19,7 @@ class CitizenRepository {
         data: {
           if (phoneNumber != null) 'phone_number': phoneNumber,
         },
+        options: Options(contentType: Headers.formUrlEncodedContentType),
       );
 
       final payload = ApiResponseParser.expectData(response.data);
@@ -32,7 +33,12 @@ class CitizenRepository {
     }
   }
 
-  Future<User> verifyIdentity({
+  /// Submits the identity for verification.
+  ///
+  /// The API responds with only the new `verification_status` (no user
+  /// profile), so we return that string and let callers merge it onto the
+  /// existing user instead of replacing it.
+  Future<String> verifyIdentity({
     required String nationalId,
     required File identityImage,
   }) async {
@@ -51,11 +57,12 @@ class CitizenRepository {
       );
 
       final payload = ApiResponseParser.expectData(response.data);
-      if (payload is! Map<String, dynamic>) {
-        throw Exception('استجابة غير صالحة من الخادم');
+      if (payload is Map<String, dynamic> &&
+          payload['verification_status'] is String) {
+        return payload['verification_status'] as String;
       }
 
-      return User.fromJson(payload);
+      return 'pending';
     } catch (error) {
       throw ApiResponseParser.mapError(error, fallback: 'فشل إرسال طلب التوثيق');
     }

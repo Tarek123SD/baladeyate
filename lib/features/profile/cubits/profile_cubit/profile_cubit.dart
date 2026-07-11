@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:baladeyate/features/auth/cubits/auth_cubit/auth_cubit.dart';
 import 'package:baladeyate/features/profile/cubits/profile_cubit/profile_state.dart';
+import 'package:baladeyate/features/profile/models/household.dart';
 import 'package:baladeyate/features/profile/repo/citizen_repository.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -16,15 +17,77 @@ class ProfileCubit extends Cubit<ProfileState> {
   final CitizenRepository _citizenRepository;
   final AuthCubit _authCubit;
 
+  int get selectedTab {
+    final current = state;
+    if (current is ProfileLoaded) return current.selectedTab;
+    return 0;
+  }
+
+  File? get identityImage {
+    final current = state;
+    if (current is ProfileLoaded) return current.identityImage;
+    if (current is ProfileVerificationDraft) return current.identityImage;
+    return null;
+  }
+
+  bool get showResubmitForm {
+    final current = state;
+    if (current is ProfileLoaded) return current.showResubmitForm;
+    return false;
+  }
+
   Future<void> loadHousehold() async {
+    final previousTab = selectedTab;
+    final previousImage = identityImage;
     emit(const ProfileLoading());
     try {
       final household = await _citizenRepository.getMyHousehold();
-      emit(ProfileLoaded(household: household));
+      emit(ProfileLoaded(
+        household: household,
+        selectedTab: previousTab,
+        identityImage: previousImage,
+      ));
     } catch (error) {
       emit(ProfileFailure(message: _messageFromError(error)));
     }
   }
+
+  void selectTab(int index) {
+    final current = state;
+    if (current is ProfileLoaded) {
+      emit(current.copyWith(selectedTab: index));
+    }
+  }
+
+  void setIdentityImage(File? image) {
+    final current = state;
+    if (current is ProfileLoaded) {
+      emit(current.copyWith(identityImage: image, clearIdentityImage: image == null));
+    } else if (current is ProfileVerificationDraft) {
+      emit(current.copyWith(identityImage: image, clearIdentityImage: image == null));
+    } else {
+      emit(ProfileVerificationDraft(identityImage: image));
+    }
+  }
+
+  void setShowResubmitForm(bool value) {
+    final current = state;
+    if (current is ProfileLoaded) {
+      emit(current.copyWith(showResubmitForm: value));
+    } else {
+      emit(ProfileLoaded(
+        household: _emptyHousehold,
+        showResubmitForm: value,
+      ));
+    }
+  }
+
+  static const _emptyHousehold = Household(
+    familyBook: '—',
+    buildingName: '—',
+    address: '—',
+    members: [],
+  );
 
   Future<void> updatePhone(String phoneNumber) async {
     emit(const ProfileLoading());
@@ -43,11 +106,11 @@ class ProfileCubit extends Cubit<ProfileState> {
   }) async {
     emit(const ProfileLoading());
     try {
-      final user = await _citizenRepository.verifyIdentity(
+      final status = await _citizenRepository.verifyIdentity(
         nationalId: nationalId,
         identityImage: identityImage,
       );
-      _authCubit.updateUser(user);
+      await _authCubit.applyVerificationStatus(status);
       emit(const ProfileVerificationSubmitted());
     } catch (error) {
       emit(ProfileFailure(message: _messageFromError(error)));

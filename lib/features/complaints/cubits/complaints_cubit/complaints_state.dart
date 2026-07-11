@@ -20,10 +20,14 @@ final class ComplaintsLoaded extends ComplaintsState {
   const ComplaintsLoaded({
     required this.complaints,
     this.isSubmitting = false,
+    this.selectedFilterIndex = 0,
+    this.isUrgent = false,
   });
 
   final List<Complaint> complaints;
   final bool isSubmitting;
+  final int selectedFilterIndex;
+  final bool isUrgent;
 
   int get totalCount => complaints.length;
 
@@ -33,7 +37,9 @@ final class ComplaintsLoaded extends ComplaintsState {
   int get resolvedCount =>
       complaints.where((complaint) => complaint.isResolved).length;
 
-  List<Complaint> filtered(int filterIndex) {
+  List<Complaint> filtered() => filteredBy(selectedFilterIndex);
+
+  List<Complaint> filteredBy(int filterIndex) {
     switch (filterIndex) {
       case 1:
         return complaints.where((complaint) => complaint.isPending).toList();
@@ -47,15 +53,20 @@ final class ComplaintsLoaded extends ComplaintsState {
   ComplaintsLoaded copyWith({
     List<Complaint>? complaints,
     bool? isSubmitting,
+    int? selectedFilterIndex,
+    bool? isUrgent,
   }) {
     return ComplaintsLoaded(
       complaints: complaints ?? this.complaints,
       isSubmitting: isSubmitting ?? this.isSubmitting,
+      selectedFilterIndex: selectedFilterIndex ?? this.selectedFilterIndex,
+      isUrgent: isUrgent ?? this.isUrgent,
     );
   }
 
   @override
-  List<Object?> get props => [complaints, isSubmitting];
+  List<Object?> get props =>
+      [complaints, isSubmitting, selectedFilterIndex, isUrgent];
 }
 
 final class ComplaintsFailure extends ComplaintsState {

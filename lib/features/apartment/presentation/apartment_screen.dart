@@ -1,316 +1,271 @@
-import 'package:baladeyate/features/delegate/cubits/delegate_survey_cubit/delegate_survey_cubit.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:responsive_x_toolkit/responsive_x.dart';
 import 'package:baladeyate/config/theme/app_colors.dart';
 import 'package:baladeyate/core/constants/app_assets.dart';
+import 'package:baladeyate/core/widgets/custom_app_bar.dart';
+import 'package:baladeyate/core/widgets/form_dropdown_field.dart';
 import 'package:baladeyate/core/widgets/form_input_field.dart';
 import 'package:baladeyate/core/widgets/form_section_card.dart';
-import 'package:baladeyate/core/widgets/image_section_card.dart';
 import 'package:baladeyate/core/widgets/info_card.dart';
+import 'package:baladeyate/features/delegate/cubits/building_survey_cubit/building_survey_cubit.dart';
+import 'package:baladeyate/features/delegate/models/building_survey.dart';
+import 'package:baladeyate/features/delegate/models/survey_navigation_context.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
+import 'package:responsive_x_toolkit/responsive_x.dart';
+
+/// Floor type Arabic label -> API value (`floor_type`).
+const Map<String, String> _floorTypes = {
+  'سكني': 'residential',
+  'تجاري': 'commercial',
+  'مختلط': 'mixed',
+};
 
 class ApartmentScreen extends StatefulWidget {
-  const ApartmentScreen({super.key, this.surveyMode = false});
+  const ApartmentScreen({super.key, this.navigationContext});
 
-  final bool surveyMode;
+  final SurveyNavigationContext? navigationContext;
 
   @override
   State<ApartmentScreen> createState() => ApartmentScreenState();
 }
 
 class ApartmentScreenState extends State<ApartmentScreen> {
-  late TextEditingController _apartmentNumberController;
-  late TextEditingController _apartmentTypeController;
+  late TextEditingController _waterMeterController;
+  late TextEditingController _electricityMeterController;
+  late TextEditingController _landlineController;
 
-  DelegateSurveyCubit? _surveyCubit;
-  String? _selectedOccupancyStatus = 'مسكون'; // Default selected
-  int _selectedRoomCount = 3; // Default selected
+  bool get _isStandalone => widget.navigationContext != null;
 
   @override
   void initState() {
     super.initState();
-    if (widget.surveyMode) {
-      _surveyCubit = context.read<DelegateSurveyCubit>();
-    }
-    final draft = _readDraft();
-    _apartmentNumberController =
-        TextEditingController(text: draft?.apartmentNumber ?? '402');
-    _apartmentTypeController =
-        TextEditingController(text: draft?.apartmentType ?? 'مكتبية - عائلية');
-    _selectedOccupancyStatus = draft?.occupancyStatus ?? 'مسكون';
-    _selectedRoomCount = draft?.roomCount ?? 3;
-
-    if (widget.surveyMode) {
-      _apartmentNumberController.addListener(_syncToCubit);
-      _apartmentTypeController.addListener(_syncToCubit);
-      _syncToCubit();
-    }
+    final unit = _readCurrentUnit();
+    _waterMeterController =
+        TextEditingController(text: unit?.waterMeter ?? '');
+    _electricityMeterController =
+        TextEditingController(text: unit?.electricityMeter ?? '');
+    _landlineController = TextEditingController(text: unit?.landline ?? '');
   }
 
-  void syncSurveyForm() => _syncToCubit();
-
-  dynamic _readDraft() {
-    if (_surveyCubit == null) return null;
-    final state = _surveyCubit!.state;
-    if (state is DelegateSurveyEditing) return state.draft;
-    if (state is DelegateSurveyFailure) return state.draft;
-    return null;
+  ApartmentUnitDraft? _readCurrentUnit() {
+    if (!_isStandalone) return null;
+    final state = context.read<BuildingSurveyCubit>().state;
+    return switch (state) {
+      BuildingSurveyLoaded(:final survey) => survey.currentApartment,
+      BuildingSurveyFailure(:final survey) => survey.currentApartment,
+      BuildingSurveySaving(:final survey) => survey.currentApartment,
+      _ => null,
+    };
   }
 
-  void _syncToCubit() {
-    if (_surveyCubit == null) return;
-    _surveyCubit!.updateApartment(
-          apartmentNumber: _apartmentNumberController.text.trim(),
-          apartmentType: _apartmentTypeController.text.trim(),
-          occupancyStatus: _selectedOccupancyStatus,
-          roomCount: _selectedRoomCount,
+  BuildingSurvey? _readSurvey() {
+    final state = context.read<BuildingSurveyCubit>().state;
+    return switch (state) {
+      BuildingSurveyLoaded(:final survey) => survey,
+      BuildingSurveyFailure(:final survey) => survey,
+      BuildingSurveySaving(:final survey) => survey,
+      _ => null,
+    };
+  }
+
+  void _syncText() {
+    if (!_isStandalone) return;
+    context.read<BuildingSurveyCubit>().updateCurrentApartment(
+          waterMeter: _waterMeterController.text.trim(),
+          electricityMeter: _electricityMeterController.text.trim(),
+          landline: _landlineController.text.trim(),
         );
+  }
+
+  Future<void> _goToPeople() async {
+    _syncText();
+    final nav = widget.navigationContext!;
+    await context.push(
+      '/people',
+      extra: nav,
+    );
   }
 
   @override
   void dispose() {
-    if (widget.surveyMode) {
-      _apartmentNumberController.removeListener(_syncToCubit);
-      _apartmentTypeController.removeListener(_syncToCubit);
-    }
-    _apartmentNumberController.dispose();
-    _apartmentTypeController.dispose();
+    _waterMeterController.dispose();
+    _electricityMeterController.dispose();
+    _landlineController.dispose();
     super.dispose();
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Stack(
-      children: [
-        const Positioned.fill(
-          child: DecoratedBox(
-            decoration: BoxDecoration(
-              image: DecorationImage(
-                image: AssetImage(AppAssets.backgroundWhite),
-                fit: BoxFit.cover,
-              ),
-            ),
-          ),
-        ),
-        SingleChildScrollView(
-          physics: const BouncingScrollPhysics(),
-          child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
+  Widget _buildForm(BuildContext context) {
+    final survey = _readSurvey();
+    final unit = _readCurrentUnit();
+    final floorLocalId = widget.navigationContext?.floorLocalId;
+    final floor = floorLocalId != null && survey != null
+        ? survey.floorByLocalId(floorLocalId)
+        : null;
+
+    final floorTypeLabel = _floorTypes.entries
+        .firstWhere(
+          (entry) => entry.value == unit?.floorType,
+          orElse: () => const MapEntry('سكني', 'residential'),
+        )
+        .key;
+
+    return SingleChildScrollView(
+      physics: const BouncingScrollPhysics(),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          if (_isStandalone) ...[
             InfoCard(
               icon: Icons.layers_outlined,
               title: 'الطابق',
-              subtitle: widget.surveyMode
-                  ? (_readDraft()?.floorNumber?.isNotEmpty == true
-                      ? 'الطابق ${_readDraft()!.floorNumber}'
-                      : 'الطابق الحالي')
-                  : 'الطابق الرابع',
+              subtitle: floor != null
+                  ? (floor.floorName.isNotEmpty
+                      ? floor.floorName
+                      : 'الطابق ${floor.floorNumber}')
+                  : 'الطابق الحالي',
               iconColor: AppColors.primaryForest,
             ),
             InfoCard(
               icon: Icons.apartment_outlined,
               title: 'المبنى',
-              subtitle: widget.surveyMode
-                  ? (_readDraft()?.buildingName?.isNotEmpty == true
-                      ? _readDraft()!.buildingName!
-                      : 'مسح ميداني')
-                  : 'برج البياسمين A1',
+              subtitle: survey?.building.name.isNotEmpty == true
+                  ? survey!.building.name
+                  : 'مسح ميداني',
               iconColor: AppColors.primaryForest,
             ),
-            FormSectionCard(
-              title: 'تفاصيل الوحدة',
-              badge: widget.surveyMode ? 'مسح ميداني' : 'قيد الإدخال',
-              badgeColor: AppColors.primaryGoldenWheat,
+          ],
+          FormSectionCard(
+            title: 'تفاصيل الوحدة',
+            badge: _isStandalone ? 'مسح ميداني' : 'قيد الإدخال',
+            badgeColor: AppColors.primaryGoldenWheat,
             child: Column(
               children: [
-                // Apartment Number
-                FormInputField(
-                  label: 'رقم الشقة',
-                  hint: 'أدخل رقم الوحدة',
-                  controller: _apartmentNumberController,
-                  keyboardType: TextInputType.number,
+                FormDropdownField(
+                  label: 'نوع الوحدة',
+                  items: _floorTypes.keys.toList(),
+                  value: floorTypeLabel,
+                  onChanged: (label) {
+                    if (label == null) return;
+                    context
+                        .read<BuildingSurveyCubit>()
+                        .updateCurrentApartment(floorType: _floorTypes[label]);
+                  },
                 ),
                 SizedBox(height: 18.h(context)),
-                // Apartment Type
                 FormInputField(
-                  label: 'نوع الشقة',
-                  hint: 'مثال: مكتبية - عائلية',
-                  controller: _apartmentTypeController,
+                  label: 'رقم عداد المياه',
+                  hint: 'أدخل رقم عداد المياه',
+                  controller: _waterMeterController,
+                  prefixIcon: Icons.water_drop_outlined,
+                  onChanged: (_) => _syncText(),
                 ),
-                SizedBox(height: 24.h(context)),
-                // Occupancy Status
-                Align(
-                  alignment: Alignment.centerRight,
-                  child: Text(
-                    'حالة الاشغال',
+                SizedBox(height: 18.h(context)),
+                FormInputField(
+                  label: 'رقم عداد الكهرباء',
+                  hint: 'أدخل رقم عداد الكهرباء',
+                  controller: _electricityMeterController,
+                  prefixIcon: Icons.electric_bolt_outlined,
+                  onChanged: (_) => _syncText(),
+                ),
+                SizedBox(height: 18.h(context)),
+                FormInputField(
+                  label: 'الهاتف الأرضي (اختياري)',
+                  hint: 'أدخل رقم الهاتف الأرضي',
+                  controller: _landlineController,
+                  prefixIcon: Icons.call_outlined,
+                  keyboardType: TextInputType.phone,
+                  onChanged: (_) => _syncText(),
+                ),
+                SizedBox(height: 8.h(context)),
+                SwitchListTile.adaptive(
+                  value: unit?.isSealed ?? false,
+                  onChanged: (value) => context
+                      .read<BuildingSurveyCubit>()
+                      .updateCurrentApartment(isSealed: value),
+                  activeThumbColor: AppColors.primaryForest,
+                  contentPadding: EdgeInsets.zero,
+                  title: Text(
+                    'الوحدة مغلقة / مختومة',
                     textDirection: TextDirection.rtl,
+                    textAlign: TextAlign.right,
                     style: TextStyle(
-                      fontSize: 14.s(context),
+                      fontSize: 13.s(context),
                       fontWeight: FontWeight.w600,
                       color: AppColors.secondaryCharcoal,
                     ),
                   ),
-                ),
-                SizedBox(height: 12.h(context)),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    _buildOccupancyButton(context, 'قيد الترميم'),
-                    SizedBox(width: 8.w(context)),
-                    _buildOccupancyButton(context, 'شاغر'),
-                    SizedBox(width: 8.w(context)),
-                    _buildOccupancyButton(context, 'مسكون'),
-                  ],
-                ),
-                SizedBox(height: 24.h(context)),
-                // Room Count
-                Align(
-                  alignment: Alignment.centerRight,
-                  child: Text(
-                    'عدد الغرف',
-                    textDirection: TextDirection.rtl,
-                    style: TextStyle(
-                      fontSize: 14.s(context),
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.secondaryCharcoal,
-                    ),
-                  ),
-                ),
-                SizedBox(height: 12.h(context)),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    _buildRoomCountButton(context, '+5'),
-                    SizedBox(width: 8.w(context)),
-                    _buildRoomCountButton(context, '4'),
-                    SizedBox(width: 8.w(context)),
-                    _buildRoomCountButton(context, '3'),
-                    SizedBox(width: 8.w(context)),
-                    _buildRoomCountButton(context, '2'),
-                    SizedBox(width: 8.w(context)),
-                    _buildRoomCountButton(context, '1'),
-                  ],
-                ),
-                SizedBox(height: 24.h(context)),
-                // Image Upload Section
-                ImageSectionCard(
-                  label: 'إضافة صورة للوحدة',
-                  onAddImage: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content:
-                            const Text('سيتم إضافة خاصية اختيار الصور قريباً'),
-                        backgroundColor: AppColors.primaryForest,
-                      ),
-                    );
-                  },
                 ),
               ],
             ),
           ),
-            SizedBox(height: 20.h(context)),
-          ],
-        ),
-        ),
-      ],
+          SizedBox(height: 20.h(context)),
+        ],
+      ),
     );
   }
 
-  Widget _buildOccupancyButton(BuildContext context, String label) {
-    final isSelected = _selectedOccupancyStatus == label;
-    return Expanded(
-      child: GestureDetector(
-        onTap: () {
-          setState(() => _selectedOccupancyStatus = label);
-          _syncToCubit();
-        },
-        child: Container(
-          padding: EdgeInsets.symmetric(
-            horizontal: 12.w(context),
-            vertical: 10.h(context),
-          ),
-          decoration: BoxDecoration(
-            color: isSelected
-                ? AppColors.primaryForest
-                : AppColors.thirdGoldenWheat.withValues(alpha: 0.5),
-            borderRadius: BorderRadius.circular(20.r(context)),
-            border: Border.all(
-              color: isSelected
-                  ? AppColors.primaryForest
-                  : AppColors.secondaryGoldenWheat.withValues(alpha: 0.5),
-              width: 1.5,
-            ),
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
+  @override
+  Widget build(BuildContext context) {
+    return BlocBuilder<BuildingSurveyCubit, BuildingSurveyState>(
+      buildWhen: (previous, current) => previous != current,
+      builder: (context, state) {
+        if (!_isStandalone) {
+          return Stack(
             children: [
-              if (isSelected)
-                Padding(
-                  padding: EdgeInsets.only(left: 6.w(context)),
-                  child: Icon(
-                    Icons.check,
-                    size: 16.s(context),
-                    color: Colors.white,
+              const Positioned.fill(
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    image: DecorationImage(
+                      image: AssetImage(AppAssets.backgroundWhite),
+                      fit: BoxFit.cover,
+                    ),
                   ),
                 ),
-              Text(
-                label,
-                textDirection: TextDirection.rtl,
-                style: TextStyle(
-                  fontSize: 12.s(context),
-                  fontWeight: FontWeight.w600,
-                  color:
-                      isSelected ? Colors.white : AppColors.secondaryCharcoal,
-                ),
               ),
+              _buildForm(context),
             ],
-          ),
-        ),
-      ),
-    );
-  }
+          );
+        }
 
-  Widget _buildRoomCountButton(BuildContext context, String label) {
-    final isSelected = (_selectedRoomCount == int.tryParse(label) ||
-        (_selectedRoomCount == 5 && label == '+5'));
-    return Expanded(
-      child: GestureDetector(
-        onTap: () {
-          setState(() {
-            if (label == '+5') {
-              _selectedRoomCount = 5;
-            } else {
-              _selectedRoomCount = int.parse(label);
-            }
-          });
-          _syncToCubit();
-        },
-        child: Container(
-          padding: EdgeInsets.symmetric(vertical: 12.h(context)),
-          decoration: BoxDecoration(
-            color: isSelected
-                ? AppColors.primaryForest
-                : AppColors.thirdGoldenWheat.withValues(alpha: 0.6),
-            borderRadius: BorderRadius.circular(16.r(context)),
-            border: Border.all(
-              color: isSelected
-                  ? AppColors.primaryForest
-                  : AppColors.secondaryGoldenWheat.withValues(alpha: 0.4),
+        return Container(
+          decoration: const BoxDecoration(
+            image: DecorationImage(
+              image: AssetImage(AppAssets.backgroundWhite),
+              fit: BoxFit.cover,
             ),
           ),
-          child: Text(
-            label,
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 14.s(context),
-              fontWeight: FontWeight.w600,
-              color: isSelected
-                  ? Colors.white
-                  : AppColors.secondaryCharcoal,
+          child: Scaffold(
+            backgroundColor: Colors.transparent,
+            appBar: const CustomAppBar(
+              showBackButton: true,
+              showSettings: false,
+              showNotifications: false,
+            ),
+            body: SafeArea(
+              child: Column(
+                children: [
+                  Expanded(child: _buildForm(context)),
+                  Padding(
+                    padding: EdgeInsets.all(16.w(context)),
+                    child: SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: _goToPeople,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.primaryForest,
+                          foregroundColor: Colors.white,
+                          padding: EdgeInsets.symmetric(vertical: 14.h(context)),
+                        ),
+                        child: const Text('التالي: بيانات الأسرة'),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 }

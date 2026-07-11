@@ -37,12 +37,18 @@ class CustomDonationAmountButton extends StatelessWidget {
           ],
         ),
         alignment: Alignment.center,
-        child: Text(
-          '${amount.toString().replaceAllMapped(RegExp(r"\B(?=(\d{3})+(?!\d))"), (match) => ",")} ل.س',
-          style: TextStyle(
-            color: AppColors.primaryForest,
-            fontWeight: FontWeight.bold,
-            fontSize: 14.f(context),
+        child: FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Padding(
+            padding: EdgeInsets.symmetric(horizontal: 8.w(context)),
+            child: Text(
+              '${amount.toString().replaceAllMapped(RegExp(r"\B(?=(\d{3})+(?!\d))"), (match) => ",")} ل.س',
+              style: TextStyle(
+                color: AppColors.primaryForest,
+                fontWeight: FontWeight.bold,
+                fontSize: 14.f(context),
+              ),
+            ),
           ),
         ),
       ),

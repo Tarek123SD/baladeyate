@@ -16,6 +16,9 @@ abstract final class AppAssets {
   /// Decorative pattern asset.
   static const String patternExact = '$_images/pattern_exact.svg';
 
+  /// Primary app logo (icon + wordmark).
+  static const String appLogo = '$_images/app_logo.png';
+
   /// Gold emblem shown on auth and splash screens.
   static const String logoGold = '$_images/Syrian_logo_icon_gold.png';
 

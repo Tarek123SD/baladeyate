@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:baladeyate/features/profile/models/household.dart';
 import 'package:equatable/equatable.dart';
 
@@ -17,12 +19,56 @@ final class ProfileLoading extends ProfileState {
 }
 
 final class ProfileLoaded extends ProfileState {
-  const ProfileLoaded({required this.household});
+  const ProfileLoaded({
+    required this.household,
+    this.selectedTab = 0,
+    this.identityImage,
+    this.showResubmitForm = false,
+  });
 
   final Household household;
+  final int selectedTab;
+  final File? identityImage;
+  final bool showResubmitForm;
+
+  ProfileLoaded copyWith({
+    Household? household,
+    int? selectedTab,
+    File? identityImage,
+    bool clearIdentityImage = false,
+    bool? showResubmitForm,
+  }) {
+    return ProfileLoaded(
+      household: household ?? this.household,
+      selectedTab: selectedTab ?? this.selectedTab,
+      identityImage:
+          clearIdentityImage ? null : (identityImage ?? this.identityImage),
+      showResubmitForm: showResubmitForm ?? this.showResubmitForm,
+    );
+  }
 
   @override
-  List<Object?> get props => [household];
+  List<Object?> get props =>
+      [household, selectedTab, identityImage, showResubmitForm];
+}
+
+final class ProfileVerificationDraft extends ProfileState {
+  const ProfileVerificationDraft({this.identityImage});
+
+  final File? identityImage;
+
+  ProfileVerificationDraft copyWith({
+    File? identityImage,
+    bool clearIdentityImage = false,
+  }) {
+    return ProfileVerificationDraft(
+      identityImage:
+          clearIdentityImage ? null : (identityImage ?? this.identityImage),
+    );
+  }
+
+  @override
+  List<Object?> get props => [identityImage];
 }
 
 final class ProfileFailure extends ProfileState {

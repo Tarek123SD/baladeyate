@@ -1,464 +1,455 @@
-import 'package:baladeyate/features/delegate/cubits/delegate_survey_cubit/delegate_survey_cubit.dart';
-import 'package:baladeyate/features/delegate/models/survey_resident.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:responsive_x_toolkit/responsive_x.dart';
 import 'package:baladeyate/config/theme/app_colors.dart';
 import 'package:baladeyate/core/constants/app_assets.dart';
+import 'package:baladeyate/core/widgets/custom_app_bar.dart';
+import 'package:baladeyate/core/widgets/form_dropdown_field.dart';
 import 'package:baladeyate/core/widgets/form_input_field.dart';
 import 'package:baladeyate/core/widgets/form_section_card.dart';
 import 'package:baladeyate/core/widgets/info_card.dart';
+import 'package:baladeyate/features/delegate/cubits/building_survey_cubit/building_survey_cubit.dart';
+import 'package:baladeyate/features/delegate/models/building_survey.dart';
+import 'package:baladeyate/features/delegate/models/survey_navigation_context.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
+import 'package:responsive_x_toolkit/responsive_x.dart';
 
-class Resident {
-  String name;
-  String role;
+/// Health status Arabic label -> API value (`health_status`).
+const Map<String, String> _healthStatuses = {
+  'جيدة': 'good',
+  'متوسطة': 'medium',
+  'سيئة': 'poor',
+};
 
-  Resident({required this.name, required this.role});
-}
+/// Living/economic status Arabic label -> API value (`living_status`).
+const Map<String, String> _livingStatuses = {
+  'جيدة': 'good',
+  'متوسطة': 'medium',
+  'منخفضة': 'poor',
+};
+
+/// Occupancy type Arabic label -> API value (`occupancy_type`).
+const Map<String, String> _occupancyTypes = {
+  'ملك': 'owner',
+  'إيجار': 'rent',
+};
 
 class PeopleScreen extends StatefulWidget {
-  const PeopleScreen({super.key, this.surveyMode = false});
+  const PeopleScreen({super.key, this.navigationContext});
 
-  final bool surveyMode;
+  final SurveyNavigationContext? navigationContext;
 
   @override
   State<PeopleScreen> createState() => PeopleScreenState();
 }
 
 class PeopleScreenState extends State<PeopleScreen> {
-  late TextEditingController _residentCountController;
-  late TextEditingController _phoneController;
-  late TextEditingController _residentNameController;
-  late TextEditingController _residentRoleController;
+  late TextEditingController _familyBookController;
+  late TextEditingController _unemployedCountController;
+  late TextEditingController _studentsCountController;
 
-  DelegateSurveyCubit? _surveyCubit;
-  List<Resident> residents = [];
-  bool _isDataVerified = false;
+  bool get _isStandalone => widget.navigationContext != null;
 
   @override
   void initState() {
     super.initState();
-    if (widget.surveyMode) {
-      _surveyCubit = context.read<DelegateSurveyCubit>();
-    }
-    final draft = _readDraft();
-    _residentCountController =
-        TextEditingController(text: draft?.residentCount ?? '4');
-    _phoneController = TextEditingController(text: draft?.phone ?? '');
-    _residentNameController = TextEditingController();
-    _residentRoleController = TextEditingController();
-    _isDataVerified = draft?.isDataVerified ?? false;
-
-    residents = widget.surveyMode && draft != null && draft.residents.isNotEmpty
-        ? draft.residents
-            .map((item) => Resident(name: item.name, role: item.role))
-            .toList()
-        : [
-            Resident(name: 'أحمد محمد العتيبي', role: 'رئيس الأسرة'),
-            Resident(name: 'سارة خالد الشمري', role: 'تابع'),
-          ];
-
-    if (widget.surveyMode) {
-      _residentCountController.addListener(_syncToCubit);
-      _phoneController.addListener(_syncToCubit);
-      _syncToCubit();
-    }
+    final unit = _readCurrentUnit();
+    _familyBookController = TextEditingController(text: unit?.familyBook ?? '');
+    _unemployedCountController =
+        TextEditingController(text: unit?.unemployedCount ?? '');
+    _studentsCountController =
+        TextEditingController(text: unit?.studentsCount ?? '');
   }
 
-  void syncSurveyForm() => _syncToCubit();
-
-  dynamic _readDraft() {
-    if (_surveyCubit == null) return null;
-    final state = _surveyCubit!.state;
-    if (state is DelegateSurveyEditing) return state.draft;
-    if (state is DelegateSurveyFailure) return state.draft;
-    return null;
+  ApartmentUnitDraft? _readCurrentUnit() {
+    if (!_isStandalone) return null;
+    final state = context.read<BuildingSurveyCubit>().state;
+    return switch (state) {
+      BuildingSurveyLoaded(:final survey) => survey.currentApartment,
+      BuildingSurveyFailure(:final survey) => survey.currentApartment,
+      BuildingSurveySaving(:final survey) => survey.currentApartment,
+      _ => null,
+    };
   }
 
-  void _syncToCubit() {
-    if (_surveyCubit == null) return;
-    _surveyCubit!.updateFamily(
-          residentCount: _residentCountController.text.trim(),
-          phone: _phoneController.text.trim(),
-          residents: residents
-              .map((resident) => SurveyResident(
-                    name: resident.name,
-                    role: resident.role,
-                  ))
-              .toList(),
-          isDataVerified: _isDataVerified,
+  BuildingSurvey? _readSurvey() {
+    final state = context.read<BuildingSurveyCubit>().state;
+    return switch (state) {
+      BuildingSurveyLoaded(:final survey) => survey,
+      BuildingSurveyFailure(:final survey) => survey,
+      BuildingSurveySaving(:final survey) => survey,
+      _ => null,
+    };
+  }
+
+  bool get _isDataVerified => _readCurrentUnit()?.isDataVerified ?? false;
+
+  void _syncText() {
+    if (!_isStandalone) return;
+    context.read<BuildingSurveyCubit>().updateCurrentFamily(
+          familyBook: _familyBookController.text.trim(),
+          unemployedCount: _unemployedCountController.text.trim(),
+          studentsCount: _studentsCountController.text.trim(),
         );
+  }
+
+  Future<void> _pickAidDate() async {
+    final now = DateTime.now();
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: now,
+      firstDate: DateTime(now.year - 20),
+      lastDate: now,
+    );
+    if (picked == null || !mounted) return;
+    final formatted =
+        '${picked.year.toString().padLeft(4, '0')}-${picked.month.toString().padLeft(2, '0')}-${picked.day.toString().padLeft(2, '0')}';
+    context.read<BuildingSurveyCubit>().updateCurrentFamily(
+          lastAidDate: formatted,
+        );
+  }
+
+  Future<void> _saveUnit() async {
+    _syncText();
+    final cubit = context.read<BuildingSurveyCubit>();
+    final success = await cubit.saveApartmentUnit();
+
+    if (!mounted) return;
+
+    if (success) {
+      final nav = widget.navigationContext!;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('تم حفظ الشقة وبيانات الأسرة بنجاح')),
+      );
+      context.go('/building/${nav.pinId}/floor/${nav.floorLocalId}');
+      return;
+    }
+
+    final state = cubit.state;
+    if (state is BuildingSurveyFailure) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(state.message)),
+      );
+    }
   }
 
   @override
   void dispose() {
-    if (widget.surveyMode) {
-      _residentCountController.removeListener(_syncToCubit);
-      _phoneController.removeListener(_syncToCubit);
-    }
-    _residentCountController.dispose();
-    _phoneController.dispose();
-    _residentNameController.dispose();
-    _residentRoleController.dispose();
+    _familyBookController.dispose();
+    _unemployedCountController.dispose();
+    _studentsCountController.dispose();
     super.dispose();
   }
 
-  void _addResident() {
-    if (_residentNameController.text.isNotEmpty) {
-      setState(() {
-        residents.add(
-          Resident(
-            name: _residentNameController.text,
-            role: _residentRoleController.text.isEmpty
-                ? 'تابع'
-                : _residentRoleController.text,
-          ),
-        );
-        _residentNameController.clear();
-        _residentRoleController.clear();
-      });
-      _syncToCubit();
-    }
+  String _labelForValue(Map<String, String> map, String? value, String fallback) {
+    return map.entries
+        .firstWhere(
+          (entry) => entry.value == value,
+          orElse: () => MapEntry(fallback, map[fallback] ?? ''),
+        )
+        .key;
   }
 
-  void _removeResident(int index) {
-    setState(() {
-      residents.removeAt(index);
-    });
-    _syncToCubit();
-  }
+  Widget _buildForm(BuildContext context) {
+    final survey = _readSurvey();
+    final unit = _readCurrentUnit();
+    final floorLocalId = widget.navigationContext?.floorLocalId;
+    final floor = floorLocalId != null && survey != null
+        ? survey.floorByLocalId(floorLocalId)
+        : null;
 
-  @override
-  Widget build(BuildContext context) {
-    return Stack(
-      children: [
-        const Positioned.fill(
-          child: DecoratedBox(
-            decoration: BoxDecoration(
-              image: DecorationImage(
-                image: AssetImage(AppAssets.backgroundWhite),
-                fit: BoxFit.cover,
-              ),
-            ),
-          ),
-        ),
-        SingleChildScrollView(
-          physics: const BouncingScrollPhysics(),
-          child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
+    return SingleChildScrollView(
+      physics: const BouncingScrollPhysics(),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          if (_isStandalone) ...[
             InfoCard(
               icon: Icons.apartment_outlined,
               title: 'المبنى',
-              subtitle: widget.surveyMode
-                  ? (_readDraft()?.buildingName ?? 'مسح ميداني')
-                  : 'A-102',
+              subtitle: survey?.building.name.isNotEmpty == true
+                  ? survey!.building.name
+                  : 'مسح ميداني',
               iconColor: AppColors.primaryForest,
             ),
             InfoCard(
               icon: Icons.layers_outlined,
               title: 'الطابق',
-              subtitle: widget.surveyMode
-                  ? (_readDraft()?.floorNumber ?? '—')
-                  : 'الثالث',
+              subtitle: floor != null
+                  ? (floor.floorName.isNotEmpty
+                      ? floor.floorName
+                      : 'الطابق ${floor.floorNumber}')
+                  : '—',
               iconColor: AppColors.primaryForest,
             ),
-            InfoCard(
-              icon: Icons.door_front_door_outlined,
-              title: 'الشقة',
-              subtitle: widget.surveyMode
-                  ? (_readDraft()?.apartmentNumber ?? '—')
-                  : '304',
-              iconColor: AppColors.primaryForest,
-            ),
-            FormSectionCard(
-              title: 'سجل القاطنين',
-              badge: 'الخطوة الأخيرة',
-              badgeColor: AppColors.primaryGoldenWheat,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  FormInputField(
-                    label: 'عدد السكان',
-                    hint: 'أدخل عدد السكان',
-                    controller: _residentCountController,
-                    prefixIcon: Icons.people_outline,
-                    keyboardType: TextInputType.number,
-                  ),
-                  SizedBox(height: 18.h(context)),
-                  FormInputField(
-                    label: 'رقم التواصل الرئيسي',
-                    hint: 'أدخل رقم الهاتف',
-                    controller: _phoneController,
-                    prefixIcon: Icons.phone_outlined,
-                    keyboardType: TextInputType.phone,
-                  ),
-                  SizedBox(height: 24.h(context)),
-                // Residents List Header
-                SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  physics: const BouncingScrollPhysics(),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      GestureDetector(
-                        onTap: () {
-                          _showAddResidentDialog(context);
-                        },
-                        child: Row(
-                          children: [
-                            Icon(
-                              Icons.add_circle_outline,
-                              size: 18.s(context),
-                              color: AppColors.primaryForest,
-                            ),
-                            SizedBox(width: 8.w(context)),
-                            Text(
-                              'اضف ساكن',
-                              textDirection: TextDirection.rtl,
-                              style: TextStyle(
-                                fontSize: 12.s(context),
-                                fontWeight: FontWeight.w600,
-                                color: AppColors.primaryForest,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      SizedBox(width: 16.w(context)),
-                      Text(
-                        'قائمة الاسماء',
-                        textDirection: TextDirection.rtl,
-                        style: TextStyle(
-                          fontSize: 14.s(context),
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.secondaryCharcoal,
-                        ),
-                      ),
-                    ],
-                  ),
+          ],
+          FormSectionCard(
+            title: 'بيانات الأسرة',
+            badge: 'تسجيل الوحدة',
+            badgeColor: AppColors.primaryGoldenWheat,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                FormInputField(
+                  label: 'رقم دفتر العائلة',
+                  hint: 'أدخل رقم دفتر العائلة',
+                  controller: _familyBookController,
+                  prefixIcon: Icons.menu_book_outlined,
+                  onChanged: (_) => _syncText(),
                 ),
-                SizedBox(height: 16.h(context)),
-                // Residents List
-                ...List.generate(
-                  residents.length,
-                  (index) => _buildResidentCard(context, index),
+                SizedBox(height: 18.h(context)),
+                FormDropdownField(
+                  label: 'الحالة الصحية',
+                  items: _healthStatuses.keys.toList(),
+                  value: _labelForValue(
+                    _healthStatuses,
+                    unit?.healthStatus,
+                    'جيدة',
+                  ),
+                  onChanged: (label) {
+                    if (label == null) return;
+                    context.read<BuildingSurveyCubit>().updateCurrentFamily(
+                          healthStatus: _healthStatuses[label],
+                        );
+                  },
                 ),
+                SizedBox(height: 18.h(context)),
+                FormDropdownField(
+                  label: 'الحالة المعيشية',
+                  items: _livingStatuses.keys.toList(),
+                  value: _labelForValue(
+                    _livingStatuses,
+                    unit?.livingStatus,
+                    'متوسطة',
+                  ),
+                  onChanged: (label) {
+                    if (label == null) return;
+                    context.read<BuildingSurveyCubit>().updateCurrentFamily(
+                          livingStatus: _livingStatuses[label],
+                        );
+                  },
+                ),
+                SizedBox(height: 18.h(context)),
+                FormDropdownField(
+                  label: 'نوع الإشغال',
+                  items: _occupancyTypes.keys.toList(),
+                  value: _labelForValue(
+                    _occupancyTypes,
+                    unit?.occupancyType,
+                    'ملك',
+                  ),
+                  onChanged: (label) {
+                    if (label == null) return;
+                    context.read<BuildingSurveyCubit>().updateCurrentFamily(
+                          occupancyType: _occupancyTypes[label],
+                        );
+                  },
+                ),
+                SizedBox(height: 18.h(context)),
+                FormInputField(
+                  label: 'عدد العاطلين عن العمل',
+                  hint: 'مثال: 1',
+                  controller: _unemployedCountController,
+                  prefixIcon: Icons.work_off_outlined,
+                  keyboardType: TextInputType.number,
+                  onChanged: (_) => _syncText(),
+                ),
+                SizedBox(height: 18.h(context)),
+                FormInputField(
+                  label: 'عدد الطلاب',
+                  hint: 'مثال: 2',
+                  controller: _studentsCountController,
+                  prefixIcon: Icons.school_outlined,
+                  keyboardType: TextInputType.number,
+                  onChanged: (_) => _syncText(),
+                ),
+                SizedBox(height: 18.h(context)),
+                _buildAidDateField(context, unit?.lastAidDate ?? ''),
                 SizedBox(height: 24.h(context)),
-                Container(
-                  padding: EdgeInsets.all(12.w(context)),
-                  decoration: BoxDecoration(
-                    color: AppColors.thirdGoldenWheat.withValues(alpha: 0.55),
-                    borderRadius: BorderRadius.circular(12.r(context)),
-                    border: Border.all(
-                      color: AppColors.secondaryGoldenWheat
-                          .withValues(alpha: 0.45),
-                      width: 1,
-                    ),
-                  ),
-                  child: Row(
+                _buildVerificationBox(context),
+              ],
+            ),
+          ),
+          SizedBox(height: 20.h(context)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAidDateField(BuildContext context, String value) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.end,
+      children: [
+        Text(
+          'تاريخ آخر مساعدة (اختياري)',
+          textDirection: TextDirection.rtl,
+          style: TextStyle(
+            fontSize: 13.s(context),
+            fontWeight: FontWeight.w600,
+            color: AppColors.secondaryCharcoal,
+          ),
+        ),
+        SizedBox(height: 10.h(context)),
+        InkWell(
+          onTap: _pickAidDate,
+          borderRadius: BorderRadius.circular(12.r(context)),
+          child: Container(
+            width: double.infinity,
+            padding: EdgeInsets.symmetric(
+              horizontal: 16.w(context),
+              vertical: 16.h(context),
+            ),
+            decoration: BoxDecoration(
+              color: Colors.grey[100],
+              borderRadius: BorderRadius.circular(12.r(context)),
+              border: Border.all(color: Colors.black, width: 1.5),
+            ),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.calendar_today_outlined,
+                  size: 20.s(context),
+                  color: Colors.grey[600],
+                ),
+                SizedBox(width: 12.w(context)),
+                Expanded(
+                  child: Text(
+                    value.isEmpty ? 'اختر التاريخ' : value,
                     textDirection: TextDirection.rtl,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Transform.scale(
-                        scale: 1.2,
-                        child: Checkbox(
-                          value: _isDataVerified,
-                          onChanged: (value) {
-                            setState(() => _isDataVerified = value ?? false);
-                            _syncToCubit();
-                          },
-                          activeColor: AppColors.primaryForest,
-                          side: BorderSide(
-                            color: AppColors.primaryForest,
-                            width: 1.5,
-                          ),
-                        ),
-                      ),
-                      SizedBox(width: 12.w(context)),
-                      Expanded(
-                        child: Text(
-                          'أقر بصحة البيانات المسجلة أعلاه وبأن كافة المعلومات تعكس الواقع الفعلي للسكان في الوحدة السكنية المحددة.',
-                          textDirection: TextDirection.rtl,
-                          style: TextStyle(
-                            fontSize: 12.s(context),
-                            color: AppColors.primaryForest,
-                            height: 1.5,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ),
-                    ],
+                    textAlign: TextAlign.right,
+                    style: TextStyle(
+                      fontSize: 14.f(context),
+                      color: value.isEmpty ? Colors.grey[600] : Colors.black,
+                      fontWeight: FontWeight.w500,
+                    ),
                   ),
                 ),
               ],
             ),
           ),
-            SizedBox(height: 20.h(context)),
-          ],
-        ),
         ),
       ],
     );
   }
 
-  Widget _buildResidentCard(BuildContext context, int index) {
-    final resident = residents[index];
-    final isHeadOfFamily = resident.role == 'رئيس الأسرة';
-
-    return Padding(
-      padding: EdgeInsets.only(bottom: 12.h(context)),
-      child: Container(
-        padding: EdgeInsets.symmetric(
-          horizontal: 16.w(context),
-          vertical: 14.h(context),
+  Widget _buildVerificationBox(BuildContext context) {
+    return Container(
+      padding: EdgeInsets.all(12.w(context)),
+      decoration: BoxDecoration(
+        color: AppColors.thirdGoldenWheat.withValues(alpha: 0.55),
+        borderRadius: BorderRadius.circular(12.r(context)),
+        border: Border.all(
+          color: AppColors.secondaryGoldenWheat.withValues(alpha: 0.45),
         ),
-        decoration: BoxDecoration(
-          color: AppColors.thirdGoldenWheat.withValues(alpha: 0.35),
-          borderRadius: BorderRadius.circular(16.r(context)),
-          border: Border.all(
-            color: isHeadOfFamily
-                ? AppColors.primaryForest.withValues(alpha: 0.25)
-                : AppColors.secondaryGoldenWheat.withValues(alpha: 0.4),
-            width: 1,
-          ),
-        ),
-        child: Row(
-          textDirection: TextDirection.rtl,
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            Container(
-              width: 40.w(context),
-              height: 40.w(context),
-              decoration: BoxDecoration(
-                color: isHeadOfFamily
-                    ? AppColors.primaryForest
-                    : AppColors.secondaryForest.withValues(alpha: 0.15),
-                shape: BoxShape.circle,
+      ),
+      child: Row(
+        textDirection: TextDirection.rtl,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Transform.scale(
+            scale: 1.2,
+            child: Checkbox(
+              value: _isDataVerified,
+              onChanged: (value) => context
+                  .read<BuildingSurveyCubit>()
+                  .updateCurrentFamily(isDataVerified: value ?? false),
+              activeColor: AppColors.primaryForest,
+              side: BorderSide(
+                color: AppColors.primaryForest,
+                width: 1.5,
               ),
-              child: Center(
-                child: Text(
-                  '${index + 1}',
-                  style: TextStyle(
-                    fontSize: 16.s(context),
-                    fontWeight: FontWeight.w600,
-                    color: isHeadOfFamily
-                        ? Colors.white
-                        : AppColors.primaryForest,
+            ),
+          ),
+          SizedBox(width: 12.w(context)),
+          Expanded(
+            child: Text(
+              'أقر بصحة البيانات المسجلة أعلاه وبأن كافة المعلومات تعكس الواقع الفعلي للأسرة في الوحدة السكنية المحددة.',
+              textDirection: TextDirection.rtl,
+              style: TextStyle(
+                fontSize: 12.s(context),
+                color: AppColors.primaryForest,
+                height: 1.5,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocBuilder<BuildingSurveyCubit, BuildingSurveyState>(
+      buildWhen: (previous, current) => previous != current,
+      builder: (context, state) {
+        if (!_isStandalone) {
+          return Stack(
+            children: [
+              const Positioned.fill(
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    image: DecorationImage(
+                      image: AssetImage(AppAssets.backgroundWhite),
+                      fit: BoxFit.cover,
+                    ),
                   ),
                 ),
               ),
+              _buildForm(context),
+            ],
+          );
+        }
+
+        final isSaving = state is BuildingSurveySaving;
+        return Container(
+          decoration: const BoxDecoration(
+            image: DecorationImage(
+              image: AssetImage(AppAssets.backgroundWhite),
+              fit: BoxFit.cover,
             ),
-            SizedBox(width: 12.w(context)),
-            // Resident Info
-            Expanded(
+          ),
+          child: Scaffold(
+            backgroundColor: Colors.transparent,
+            appBar: const CustomAppBar(
+              showBackButton: true,
+              showSettings: false,
+              showNotifications: false,
+            ),
+            body: SafeArea(
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
-                  Text(
-                    resident.name,
-                    textDirection: TextDirection.rtl,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      fontSize: 14.s(context),
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.secondaryCharcoal,
-                    ),
-                  ),
-                  SizedBox(height: 4.h(context)),
-                  Text(
-                    resident.role,
-                    textDirection: TextDirection.rtl,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      fontSize: 12.s(context),
-                      color: AppColors.primaryGoldenWheat,
-                      fontWeight: FontWeight.w600,
+                  Expanded(child: _buildForm(context)),
+                  Padding(
+                    padding: EdgeInsets.all(16.w(context)),
+                    child: SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: isSaving ? null : _saveUnit,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.primaryForest,
+                          foregroundColor: Colors.white,
+                          padding:
+                              EdgeInsets.symmetric(vertical: 14.h(context)),
+                        ),
+                        child: isSaving
+                            ? const SizedBox(
+                                height: 22,
+                                width: 22,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: Colors.white,
+                                ),
+                              )
+                            : const Text('حفظ الشقة وبيانات الأسرة'),
+                      ),
                     ),
                   ),
                 ],
               ),
             ),
-            SizedBox(width: 12.w(context)),
-            // Delete Button
-            GestureDetector(
-              onTap: () => _removeResident(index),
-              child: Icon(
-                Icons.delete_outline,
-                size: 20.s(context),
-                color: const Color(0xFFE74C3C),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  void _showAddResidentDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        backgroundColor: Colors.white,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20.r(context)),
-        ),
-        title: Text(
-          'أضف ساكن جديد',
-          textDirection: TextDirection.rtl,
-          style: TextStyle(
-            fontSize: 16.s(context),
-            fontWeight: FontWeight.w700,
-            color: AppColors.primaryForest,
           ),
-        ),
-        content: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              FormInputField(
-                label: 'الاسم',
-                hint: 'أدخل اسم الساكن',
-                controller: _residentNameController,
-                prefixIcon: Icons.person_outline,
-              ),
-              SizedBox(height: 12.h(context)),
-              FormInputField(
-                label: 'الصلة (اختياري)',
-                hint: 'مثال: رئيس الأسرة',
-                controller: _residentRoleController,
-                prefixIcon: Icons.badge_outlined,
-              ),
-            ],
-          ),
-        ),
-        actionsAlignment: MainAxisAlignment.spaceBetween,
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext),
-            child: Text(
-              'إلغاء',
-              style: TextStyle(color: AppColors.secondaryCharcoal),
-            ),
-          ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.primaryForest,
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12.r(context)),
-              ),
-            ),
-            onPressed: () {
-              _addResident();
-              Navigator.pop(dialogContext);
-            },
-            child: const Text('إضافة'),
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
 }

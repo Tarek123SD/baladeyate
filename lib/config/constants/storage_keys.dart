@@ -10,4 +10,5 @@ class StorageKeys {
   static const String pendingSignupVerificationNotice =
       'pending_signup_verification_notice';
   static const String delegateDraftPins = 'delegate_draft_pins';
+  static const String delegateBuildingSurveys = 'delegate_building_surveys';
 }

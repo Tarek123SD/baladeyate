@@ -8,6 +8,9 @@ import 'package:baladeyate/features/profile/cubits/profile_cubit/profile_cubit.d
 import 'package:baladeyate/features/profile/cubits/profile_cubit/profile_state.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:baladeyate/features/auth/cubits/auth_cubit/auth_cubit.dart';
+import 'package:baladeyate/features/auth/cubits/auth_cubit/auth_state.dart';
+import 'package:baladeyate/routes/auth_navigation.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:responsive_x_toolkit/responsive_x.dart';
@@ -34,7 +37,6 @@ class IdentityVerificationScreen extends StatefulWidget {
 class _IdentityVerificationScreenState
     extends State<IdentityVerificationScreen> {
   late final TextEditingController _nationalIdController;
-  File? _identityImage;
   final _picker = ImagePicker();
 
   @override
@@ -53,9 +55,7 @@ class _IdentityVerificationScreenState
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (_) => sl<ProfileCubit>(),
-      child: BlocListener<ProfileCubit, ProfileState>(
+    return BlocListener<ProfileCubit, ProfileState>(
         listener: (context, state) {
           if (state is ProfileFailure) {
             ScaffoldMessenger.of(context).showSnackBar(
@@ -87,15 +87,29 @@ class _IdentityVerificationScreenState
             appBar: widget.showAppBar ? _buildAppBar(context) : null,
             body: SafeArea(
               child: BlocBuilder<ProfileCubit, ProfileState>(
+                buildWhen: (previous, current) =>
+                    previous.runtimeType != current.runtimeType ||
+                    (previous is ProfileLoaded &&
+                        current is ProfileLoaded &&
+                        previous.identityImage != current.identityImage) ||
+                    (previous is ProfileVerificationDraft &&
+                        current is ProfileVerificationDraft &&
+                        previous.identityImage != current.identityImage),
                 builder: (context, state) {
                   final isSubmitting = state is ProfileLoading;
+                  final identityImage =
+                      context.read<ProfileCubit>().identityImage;
 
                   return SingleChildScrollView(
                     padding: EdgeInsets.all(20.s(context)),
                     child: Center(
                       child: ConstrainedBox(
                         constraints: BoxConstraints(maxWidth: 560.w(context)),
-                        child: _buildForm(context, isSubmitting),
+                        child: _buildForm(
+                          context,
+                          isSubmitting,
+                          identityImage,
+                        ),
                       ),
                     ),
                   );
@@ -104,8 +118,7 @@ class _IdentityVerificationScreenState
             ),
           ),
         ),
-      ),
-    );
+      );
   }
 
   PreferredSizeWidget _buildAppBar(BuildContext context) {
@@ -121,7 +134,11 @@ class _IdentityVerificationScreenState
               if (context.canPop()) {
                 context.pop();
               } else {
-                context.go('/main');
+                final authState = sl<AuthCubit>().state;
+                final home = authState is AuthSuccess
+                    ? homeRouteFor(authState.user)
+                    : '/login';
+                context.go(home);
               }
             },
             icon: Icon(
@@ -148,7 +165,11 @@ class _IdentityVerificationScreenState
     );
   }
 
-  Widget _buildForm(BuildContext context, bool isSubmitting) {
+  Widget _buildForm(
+    BuildContext context,
+    bool isSubmitting,
+    File? identityImage,
+  ) {
     return Container(
       padding: EdgeInsets.all(20.s(context)),
       decoration: BoxDecoration(
@@ -214,12 +235,12 @@ class _IdentityVerificationScreenState
           ),
           SizedBox(height: 8.h(context)),
           _buildImagePicker(context),
-          if (_identityImage != null) ...[
+          if (identityImage != null) ...[
             SizedBox(height: 12.h(context)),
             ClipRRect(
               borderRadius: BorderRadius.circular(12.r(context)),
               child: Image.file(
-                _identityImage!,
+                identityImage,
                 height: 160.h(context),
                 width: double.infinity,
                 fit: BoxFit.cover,
@@ -323,15 +344,19 @@ class _IdentityVerificationScreenState
   Future<void> _pickImage(ImageSource source) async {
     final picked = await _picker.pickImage(
       source: source,
-      imageQuality: 85,
+      maxWidth: 1280,
+      maxHeight: 1280,
+      imageQuality: 70,
     );
     if (picked != null) {
-      setState(() => _identityImage = File(picked.path));
+      if (!mounted) return;
+      context.read<ProfileCubit>().setIdentityImage(File(picked.path));
     }
   }
 
   Future<void> _submit(BuildContext context) async {
     final nationalId = _nationalIdController.text.trim();
+    final identityImage = context.read<ProfileCubit>().identityImage;
 
     if (nationalId.length != 11) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -340,7 +365,7 @@ class _IdentityVerificationScreenState
       return;
     }
 
-    if (_identityImage == null) {
+    if (identityImage == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('يرجى إرفاق صورة الهوية')),
       );
@@ -349,7 +374,7 @@ class _IdentityVerificationScreenState
 
     await context.read<ProfileCubit>().verifyIdentity(
           nationalId: nationalId,
-          identityImage: _identityImage!,
+          identityImage: identityImage,
         );
   }
 }

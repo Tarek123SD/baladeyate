@@ -60,6 +60,16 @@ class Validator {
     return null;
   }
 
+  static String? otp(String? value) {
+    if (value == null || value.isEmpty) {
+      return 'رمز التحقق مطلوب';
+    }
+    if (!RegExp(r'^\d{6}$').hasMatch(value)) {
+      return 'يجب أن يتكون رمز التحقق من 6 أرقام';
+    }
+    return null;
+  }
+
   static String? confirmPassword(String? value, String password) {
     final passwordError = signupPassword(value);
     if (passwordError != null) {

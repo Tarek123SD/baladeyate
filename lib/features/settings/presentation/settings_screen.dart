@@ -1,10 +1,8 @@
-import 'dart:io';
-
+import 'package:baladeyate/core/auth/app_role.dart';
 import 'package:baladeyate/config/theme/app_colors.dart';
 import 'package:baladeyate/core/constants/app_assets.dart';
 import 'package:baladeyate/core/responsive/dimensions.dart';
 import 'package:baladeyate/core/responsive/responsive_helper.dart';
-import 'package:baladeyate/core/services/service_locator.dart';
 import 'package:baladeyate/core/widgets/custom_app_bar.dart';
 import 'package:baladeyate/core/widgets/custom_settings_option_card.dart';
 import 'package:baladeyate/features/auth/cubits/auth_cubit/auth_cubit.dart';
@@ -15,7 +13,6 @@ import 'package:baladeyate/features/profile/cubits/profile_cubit/profile_state.d
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:responsive_x_toolkit/responsive_x.dart';
 
 class SettingsScreen extends StatelessWidget {
@@ -25,9 +22,7 @@ class SettingsScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final horizontalPadding = ResponsiveHelper.horizontalPadding(context);
 
-    return BlocProvider(
-      create: (_) => sl<ProfileCubit>(),
-      child: BlocListener<ProfileCubit, ProfileState>(
+    return BlocListener<ProfileCubit, ProfileState>(
         listener: (context, state) {
           if (state is ProfileFailure) {
             ScaffoldMessenger.of(context).showSnackBar(
@@ -96,9 +91,10 @@ class SettingsScreen extends StatelessWidget {
                         leadingIcon: Icons.language_rounded,
                       ),
                       SizedBox(height: 10.h(context)),
-                      const CustomSettingsOptionCard(
+                      CustomSettingsOptionCard(
                         title: 'تغيير كلمة المرور',
                         leadingIcon: Icons.lock_outline_rounded,
+                        onTap: () => _openResetPassword(context),
                       ),
                       SizedBox(height: 24.h(context)),
                       _buildSectionTitle(context, 'القانونية والمعلومات'),
@@ -125,7 +121,6 @@ class SettingsScreen extends StatelessWidget {
         ),
       ),
     ),
-    ),
     );
   }
 
@@ -146,12 +141,14 @@ class SettingsScreen extends StatelessWidget {
     return BlocBuilder<AuthCubit, AuthState>(
       builder: (context, state) {
         final user = state is AuthSuccess ? state.user : null;
-        final name = user?.name ?? 'مواطن';
+        final isDelegate = user?.isDelegateLike ?? false;
+        final name = user?.name ?? (isDelegate ? 'مندوب' : 'مواطن');
         final nationalId =
             user?.nationalId ?? user?.nationalNumber ?? 'غير متوفر';
-        final statusLabel =
-            user?.verificationStatusLabel ?? 'غير موثّق';
-        final isApproved = user?.isVerified ?? false;
+        final statusLabel = isDelegate
+            ? 'مندوب ميداني'
+            : (user?.verificationStatusLabel ?? 'غير موثّق');
+        final isApproved = isDelegate ? true : (user?.isVerified ?? false);
 
         return Container(
           padding: EdgeInsets.all(16.s(context)),
@@ -261,18 +258,43 @@ class SettingsScreen extends StatelessWidget {
               leadingIcon: Icons.phone_outlined,
               onTap: () => _showPhoneDialog(context, user),
             ),
-            if (user.canSubmitVerification) ...[
+            if (!user.isDelegateLike && !user.isVerified) ...[
               SizedBox(height: 10.h(context)),
               CustomSettingsOptionCard(
-                title: 'توثيق الهوية',
-                subtitle: 'إرسال الهوية للمراجعة الحكومية',
+                title: user.verificationStatus == 'pending'
+                    ? 'إعادة إرسال طلب التوثيق'
+                    : 'توثيق الهوية',
+                subtitle: _verificationSubtitle(user),
                 leadingIcon: Icons.verified_user_outlined,
-                onTap: () => _showVerifyIdentityDialog(context, user),
+                onTap: () => context.push('/verify-identity'),
               ),
             ],
           ],
         );
       },
+    );
+  }
+
+  String _verificationSubtitle(User user) {
+    switch (user.verificationStatus) {
+      case 'pending':
+        return 'طلبك قيد المراجعة — يمكنك إعادة الإرسال إذا تأخر القبول';
+      case 'rejected':
+        final reason = user.rejectionReason;
+        return reason != null && reason.isNotEmpty
+            ? 'تم رفض الطلب: $reason — أعد الإرسال'
+            : 'تم رفض الطلب — أعد إرسال الهوية';
+      default:
+        return 'إرسال الهوية للمراجعة الحكومية';
+    }
+  }
+
+  Future<void> _openResetPassword(BuildContext context) async {
+    final authState = context.read<AuthCubit>().state;
+    if (authState is! AuthSuccess) return;
+
+    await context.push(
+      '/reset-password?email=${Uri.encodeComponent(authState.user.email)}&fromSettings=1',
     );
   }
 
@@ -303,84 +325,6 @@ class SettingsScreen extends StatelessWidget {
 
     if (result == null || result.isEmpty || !context.mounted) return;
     await context.read<ProfileCubit>().updatePhone(result);
-  }
-
-  Future<void> _showVerifyIdentityDialog(BuildContext context, User user) async {
-    final nationalIdController = TextEditingController(
-      text: user.nationalId ?? user.nationalNumber ?? '',
-    );
-    File? imageFile;
-    final picker = ImagePicker();
-
-    final submitted = await showDialog<bool>(
-      context: context,
-      builder: (dialogContext) => StatefulBuilder(
-        builder: (context, setState) => AlertDialog(
-          title: const Text('توثيق الهوية'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: nationalIdController,
-                keyboardType: TextInputType.number,
-                maxLength: 11,
-                decoration: const InputDecoration(
-                  labelText: 'الرقم الوطني (11 رقم)',
-                ),
-              ),
-              SizedBox(height: 8.h(context)),
-              OutlinedButton.icon(
-                onPressed: () async {
-                  final picked = await picker.pickImage(
-                    source: ImageSource.gallery,
-                    imageQuality: 85,
-                  );
-                  if (picked != null) {
-                    setState(() => imageFile = File(picked.path));
-                  }
-                },
-                icon: const Icon(Icons.upload_file),
-                label: Text(
-                  imageFile == null ? 'اختيار صورة الهوية' : 'تم اختيار الصورة',
-                ),
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(dialogContext, false),
-              child: const Text('إلغاء'),
-            ),
-            TextButton(
-              onPressed: () => Navigator.pop(dialogContext, true),
-              child: const Text('إرسال'),
-            ),
-          ],
-        ),
-      ),
-    );
-
-    final nationalId = nationalIdController.text.trim();
-    nationalIdController.dispose();
-
-    if (submitted != true ||
-        nationalId.length != 11 ||
-        imageFile == null ||
-        !context.mounted) {
-      if (submitted == true && context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('يرجى إدخال الرقم الوطني وصورة الهوية'),
-          ),
-        );
-      }
-      return;
-    }
-
-    await context.read<ProfileCubit>().verifyIdentity(
-          nationalId: nationalId,
-          identityImage: imageFile!,
-        );
   }
 
   Widget _buildSectionTitle(BuildContext context, String title) {

@@ -3,6 +3,7 @@ import 'package:responsive_x_toolkit/responsive_x.dart';
 import 'package:baladeyate/config/theme/app_colors.dart';
 
 /// Reusable form input field with RTL support, label, and optional icon.
+/// Styled to match the auth screen text fields for consistent visible input text.
 class FormInputField extends StatelessWidget {
   const FormInputField({
     super.key,
@@ -58,6 +59,8 @@ class FormInputField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final radius = 12.r(context);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.end,
       children: [
@@ -73,10 +76,10 @@ class FormInputField extends StatelessWidget {
         SizedBox(height: 10.h(context)),
         Container(
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(12.r(context)),
+            borderRadius: BorderRadius.circular(radius),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha: 0.04),
+                color: Colors.black.withValues(alpha: 0.08),
                 blurRadius: 8,
                 offset: const Offset(0, 2),
               ),
@@ -92,47 +95,51 @@ class FormInputField extends StatelessWidget {
             onChanged: onChanged,
             obscureText: obscureText,
             maxLines: obscureText ? 1 : maxLines,
+            cursorColor: AppColors.primaryForest,
+            style: TextStyle(
+              fontSize: 14.f(context),
+              color: Colors.black,
+              fontWeight: FontWeight.w500,
+            ),
             decoration: InputDecoration(
               hintText: hint,
               hintTextDirection: TextDirection.rtl,
               hintStyle: TextStyle(
-                color: Colors.grey[400],
-                fontSize: 13.s(context),
+                color: Colors.grey[600],
+                fontSize: 13.f(context),
               ),
               filled: true,
-              fillColor: enabled ? Colors.white : Colors.grey[50],
+              fillColor: enabled ? Colors.grey[100] : Colors.grey[200],
               border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12.r(context)),
-                borderSide: const BorderSide(
-                  color: Color(0xFFE0E0E0),
-                  width: 1,
-                ),
+                borderRadius: BorderRadius.circular(radius),
+                borderSide: const BorderSide(color: Colors.black, width: 1.5),
               ),
               enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12.r(context)),
-                borderSide: const BorderSide(
-                  color: Color(0xFFE0E0E0),
-                  width: 1,
-                ),
+                borderRadius: BorderRadius.circular(radius),
+                borderSide: const BorderSide(color: Colors.black, width: 1.5),
               ),
               focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12.r(context)),
+                borderRadius: BorderRadius.circular(radius),
+                borderSide: const BorderSide(color: Colors.black, width: 2),
+              ),
+              disabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(radius),
                 borderSide: BorderSide(
-                  color: AppColors.primaryForest,
-                  width: 2,
+                  color: Colors.grey.shade400,
+                  width: 1.5,
                 ),
               ),
               prefixIcon: prefixIcon != null
                   ? Icon(
                       prefixIcon,
-                      color: AppColors.secondaryCharcoal.withValues(alpha: 0.6),
+                      color: Colors.grey[600],
                       size: 20.s(context),
                     )
                   : null,
               suffixIcon: suffixIcon != null
                   ? Icon(
                       suffixIcon,
-                      color: AppColors.secondaryCharcoal.withValues(alpha: 0.6),
+                      color: Colors.grey[600],
                       size: 20.s(context),
                     )
                   : null,
@@ -140,10 +147,6 @@ class FormInputField extends StatelessWidget {
                 horizontal: 16.w(context),
                 vertical: 14.h(context),
               ),
-            ),
-            style: TextStyle(
-              fontSize: 14.s(context),
-              color: AppColors.secondaryCharcoal,
             ),
           ),
         ),

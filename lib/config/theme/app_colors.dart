@@ -24,4 +24,7 @@ class AppColors {
   static const Color primaryCharcoal = Color(0xFF161616);
   static const Color secondaryCharcoal = Color(0xFF3D3A3B);
   static const Color thirdCharcoal = Color(0xFFFFFFFF);
+
+  // Feedback Colors
+  static const Color alertRed = Color(0xFFD32F2F);
 }

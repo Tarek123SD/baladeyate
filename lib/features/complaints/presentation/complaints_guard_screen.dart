@@ -5,14 +5,31 @@ import 'package:baladeyate/features/auth/cubits/auth_cubit/auth_state.dart';
 import 'package:baladeyate/features/auth/models/user.dart';
 import 'package:baladeyate/features/complaints/presentation/complaint_form_screen.dart';
 import 'package:baladeyate/features/complaints/presentation/identity_verification_screen.dart';
+import 'package:baladeyate/features/profile/cubits/profile_cubit/profile_cubit.dart';
+import 'package:baladeyate/features/profile/cubits/profile_cubit/profile_state.dart';
+import 'package:baladeyate/routes/auth_navigation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:responsive_x_toolkit/responsive_x.dart';
 
 /// Routes users to the correct complaints experience based on KYC status.
-class ComplaintsGuardScreen extends StatelessWidget {
+class ComplaintsGuardScreen extends StatefulWidget {
   const ComplaintsGuardScreen({super.key});
+
+  @override
+  State<ComplaintsGuardScreen> createState() => _ComplaintsGuardScreenState();
+}
+
+class _ComplaintsGuardScreenState extends State<ComplaintsGuardScreen> {
+  @override
+  void initState() {
+    super.initState();
+    // Pick up a fresh verification status (e.g. an admin just approved it).
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) context.read<AuthCubit>().refreshUser();
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -85,47 +102,52 @@ class _VerificationPendingView extends StatelessWidget {
       iconColor: Colors.amber.shade700,
       message:
           'بياناتك قيد المراجعة. ستتمكن من رفع الشكاوى فور اعتماد هويتك من الإدارة.',
+      actionLabel: 'تحديث الحالة',
+      actionIcon: Icons.refresh_rounded,
+      onAction: () => context.read<AuthCubit>().refreshUser(),
     );
   }
 }
 
-class _VerificationRejectedView extends StatefulWidget {
+class _VerificationRejectedView extends StatelessWidget {
   const _VerificationRejectedView({required this.user});
 
   final User user;
 
   @override
-  State<_VerificationRejectedView> createState() =>
-      _VerificationRejectedViewState();
-}
-
-class _VerificationRejectedViewState extends State<_VerificationRejectedView> {
-  bool _showResubmitForm = false;
-
-  @override
   Widget build(BuildContext context) {
-    if (_showResubmitForm) {
-      return IdentityVerificationScreen(
-        promptText: 'أعد رفع هويتك الوطنية لإتمام التوثيق.',
-        preferCamera: true,
-        initialNationalId:
-            widget.user.nationalId ?? widget.user.nationalNumber,
-      );
-    }
+    return BlocBuilder<ProfileCubit, ProfileState>(
+      buildWhen: (previous, current) =>
+          previous is ProfileLoaded &&
+              current is ProfileLoaded &&
+              previous.showResubmitForm != current.showResubmitForm ||
+          previous is! ProfileLoaded && current is ProfileLoaded,
+      builder: (context, state) {
+        final showResubmitForm = context.read<ProfileCubit>().showResubmitForm;
 
-    final rejectionReason =
-        widget.user.rejectionReason?.trim().isNotEmpty == true
-            ? widget.user.rejectionReason!.trim()
+        if (showResubmitForm) {
+          return IdentityVerificationScreen(
+            promptText: 'أعد رفع هويتك الوطنية لإتمام التوثيق.',
+            preferCamera: true,
+            initialNationalId: user.nationalId ?? user.nationalNumber,
+          );
+        }
+
+        final rejectionReason = user.rejectionReason?.trim().isNotEmpty == true
+            ? user.rejectionReason!.trim()
             : 'لم يتم تحديد السبب';
 
-    return _GuardMessageView(
-      icon: Icons.error_outline_rounded,
-      iconColor: Colors.red.shade700,
-      message:
-          'تم رفض التوثيق: $rejectionReason. يرجى إعادة رفع الهوية.',
-      actionLabel: 'إعادة رفع الهوية بالكاميرا',
-      actionIcon: Icons.camera_alt_outlined,
-      onAction: () => setState(() => _showResubmitForm = true),
+        return _GuardMessageView(
+          icon: Icons.error_outline_rounded,
+          iconColor: Colors.red.shade700,
+          message:
+              'تم رفض التوثيق: $rejectionReason. يرجى إعادة رفع الهوية.',
+          actionLabel: 'إعادة رفع الهوية بالكاميرا',
+          actionIcon: Icons.camera_alt_outlined,
+          onAction: () =>
+              context.read<ProfileCubit>().setShowResubmitForm(true),
+        );
+      },
     );
   }
 }
@@ -170,7 +192,10 @@ class _GuardMessageView extends StatelessWidget {
                   if (context.canPop()) {
                     context.pop();
                   } else {
-                    context.go('/main');
+                    final home = homeRouteFor(
+                      (context.read<AuthCubit>().state as AuthSuccess).user,
+                    );
+                    context.go(home);
                   }
                 },
                 icon: Icon(

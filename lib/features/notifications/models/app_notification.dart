@@ -15,6 +15,22 @@ class AppNotification {
 
   bool get isRead => readAt != null && readAt!.isNotEmpty;
 
+  AppNotification copyWith({
+    String? id,
+    String? type,
+    Map<String, dynamic>? data,
+    String? readAt,
+    String? createdAt,
+  }) {
+    return AppNotification(
+      id: id ?? this.id,
+      type: type ?? this.type,
+      data: data ?? this.data,
+      readAt: readAt ?? this.readAt,
+      createdAt: createdAt ?? this.createdAt,
+    );
+  }
+
   String get title {
     final title = data['title'];
     if (title is String && title.isNotEmpty) {

@@ -8,10 +8,11 @@ class CustomDonationAmountField extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.end,
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         Text(
           'مبلغ مخصص (ل.س)',
+          textAlign: TextAlign.center,
           style: TextStyle(
             color: AppColors.primaryForest,
             fontSize: 14.f(context),
@@ -21,6 +22,7 @@ class CustomDonationAmountField extends StatelessWidget {
         SizedBox(height: 8.h(context)),
         TextField(
           keyboardType: TextInputType.number,
+          textAlign: TextAlign.center,
           style: TextStyle(fontSize: 14.f(context)),
           decoration: InputDecoration(
             filled: true,

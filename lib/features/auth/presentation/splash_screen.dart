@@ -3,6 +3,7 @@ import 'package:baladeyate/core/constants/app_assets.dart';
 import 'package:baladeyate/core/services/service_locator.dart';
 import 'package:baladeyate/features/auth/cubits/auth_cubit/auth_cubit.dart';
 import 'package:baladeyate/features/auth/cubits/auth_cubit/auth_state.dart';
+import 'package:baladeyate/routes/auth_navigation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
@@ -32,7 +33,7 @@ class _SplashScreenState extends State<SplashScreen> {
 
     final state = sl<AuthCubit>().state;
     if (state is AuthSuccess) {
-      context.go('/main');
+      context.go(homeRouteFor(state.user));
     } else {
       context.go('/login');
     }
@@ -79,7 +80,7 @@ class _SplashScreenState extends State<SplashScreen> {
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   Text(
-                    'الديوان الرقمي',
+                    'بلديتي ',
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 28.f(context),
@@ -96,7 +97,7 @@ class _SplashScreenState extends State<SplashScreen> {
                   ),
                   SizedBox(height: 10.h(context)),
                   Text(
-                    'المنصة الوطنية لخدمات المواطنة',
+                    'المنصة المحلية لخدمات المواطنة',
                     style: TextStyle(
                       color: AppColors.thirdGoldenWheat,
                       fontSize: 18.f(context),

@@ -11,13 +11,42 @@ class ComplaintsCubit extends Cubit<ComplaintsState> {
   final ComplaintsRepository _complaintsRepository;
 
   Future<void> loadComplaints() async {
+    final previousFilter = switch (state) {
+      ComplaintsLoaded(:final selectedFilterIndex) => selectedFilterIndex,
+      _ => 0,
+    };
     emit(const ComplaintsLoading());
     try {
       final complaints = await _complaintsRepository.getComplaints();
-      emit(ComplaintsLoaded(complaints: complaints));
+      emit(ComplaintsLoaded(
+        complaints: complaints,
+        selectedFilterIndex: previousFilter,
+      ));
     } catch (error) {
       emit(ComplaintsFailure(message: _messageFromError(error)));
     }
+  }
+
+  void setFilter(int index) {
+    final current = state;
+    if (current is ComplaintsLoaded) {
+      emit(current.copyWith(selectedFilterIndex: index));
+    }
+  }
+
+  void setIsUrgent(bool value) {
+    final current = state;
+    if (current is ComplaintsLoaded) {
+      emit(current.copyWith(isUrgent: value));
+    } else {
+      emit(ComplaintsLoaded(complaints: const [], isUrgent: value));
+    }
+  }
+
+  bool get isUrgent {
+    final current = state;
+    if (current is ComplaintsLoaded) return current.isUrgent;
+    return false;
   }
 
   Future<Complaint?> loadComplaintDetail(int id) async {

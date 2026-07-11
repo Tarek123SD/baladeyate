@@ -58,8 +58,8 @@ class AuthRepository {
     }
   }
 
-  /// Login delegate via POST /api/v1/login (email + password).
-  Future<User> loginDelegate(
+  /// Login via POST /api/v1/login. Accepts any role and saves the session.
+  Future<User> login(
     String email,
     String password, {
     String? fcmToken,
@@ -74,53 +74,10 @@ class AuthRepository {
         },
       );
 
-      final user = await _saveSessionFromResponse(response.data);
-      final role = _cacheService.getData(key: StorageKeys.role);
-
-      if (role != null && role != 'Delegate' && role != 'Admin') {
-        await _clearSession();
-        throw Exception('هذا الحساب غير مخصص للمندوبين');
-      }
-
-      return user;
+      return _saveSessionFromResponse(response.data);
     } catch (error) {
       throw _mapToAuthException(error, fallback: 'فشل تسجيل الدخول');
     }
-  }
-
-  /// Login citizen via POST /api/v1/login (email + password).
-  Future<User> loginCitizen(
-    String email,
-    String password, {
-    String? fcmToken,
-  }) async {
-    try {
-      final response = await _apiService.post(
-        EndPoints.login,
-        data: {
-          'email': email,
-          'password': password,
-          if (fcmToken != null && fcmToken.isNotEmpty) 'fcm_token': fcmToken,
-        },
-      );
-
-      final user = await _saveSessionFromResponse(response.data);
-      final role = _cacheService.getData(key: StorageKeys.role);
-
-      if (role != null && role != 'Citizen') {
-        await _clearSession();
-        throw Exception('هذا التطبيق مخصص للمواطنين فقط');
-      }
-
-      return user;
-    } catch (error) {
-      throw _mapToAuthException(error, fallback: 'فشل تسجيل الدخول');
-    }
-  }
-
-  /// Login with email and password. Returns a [User] on success and saves the session.
-  Future<User> login(String email, String password) {
-    return loginCitizen(email, password);
   }
 
   /// Invalidates the server session and clears local auth data.
@@ -141,6 +98,54 @@ class AuthRepository {
     );
   }
 
+  /// Sends a 6-digit OTP to the user's email.
+  Future<String> forgotPassword({required String email}) async {
+    try {
+      final response = await _apiService.post(
+        EndPoints.forgotPassword,
+        data: {'email': email},
+      );
+      return _readSuccessMessage(
+        response.data,
+        fallback: 'تم إرسال رمز التحقق إلى بريدك الإلكتروني',
+      );
+    } catch (error) {
+      throw _mapToAuthException(
+        error,
+        fallback: 'فشل إرسال رمز التحقق',
+      );
+    }
+  }
+
+  /// Resets the password using the OTP from [forgotPassword].
+  Future<String> resetPassword({
+    required String email,
+    required String otp,
+    required String password,
+    required String passwordConfirmation,
+  }) async {
+    try {
+      final response = await _apiService.post(
+        EndPoints.resetPassword,
+        data: {
+          'email': email,
+          'otp': otp,
+          'password': password,
+          'password_confirmation': passwordConfirmation,
+        },
+      );
+      return _readSuccessMessage(
+        response.data,
+        fallback: 'تم تغيير كلمة المرور بنجاح',
+      );
+    } catch (error) {
+      throw _mapToAuthException(
+        error,
+        fallback: 'فشل تغيير كلمة المرور',
+      );
+    }
+  }
+
   String? get storedToken => _cacheService.getData(key: StorageKeys.token);
 
   bool get hasStoredSession {
@@ -154,9 +159,22 @@ class AuthRepository {
 
     final cachedUser = _readCachedUser();
 
+    // The backend exposes no GET route for the current user, so we can only
+    // refresh through the PATCH profile endpoint, which needs the phone number.
+    final phoneNumber = cachedUser?.phoneNumber;
+    if (phoneNumber == null || phoneNumber.isEmpty) {
+      return cachedUser;
+    }
+
     try {
-      final user = await fetchCurrentUser();
+      final user = await refreshCurrentUser(phoneNumber: phoneNumber);
       await persistUser(user);
+      if (user.role != null && user.role!.isNotEmpty) {
+        await _cacheService.saveData(
+          key: StorageKeys.role,
+          value: user.role!,
+        );
+      }
       return user;
     } catch (error) {
       if (error is DioException &&
@@ -169,8 +187,17 @@ class AuthRepository {
     }
   }
 
-  Future<User> fetchCurrentUser() async {
-    final response = await _apiService.get(EndPoints.profile);
+  /// Fetches the latest user by issuing a no-op profile update.
+  ///
+  /// The API has no GET endpoint for the current user; `PATCH /v1/profile`
+  /// returns the full user (including verification status) and only accepts
+  /// form-encoded bodies, so we resend the current phone number unchanged.
+  Future<User> refreshCurrentUser({required String phoneNumber}) async {
+    final response = await _apiService.patch(
+      EndPoints.profile,
+      data: {'phone_number': phoneNumber},
+      options: Options(contentType: Headers.formUrlEncodedContentType),
+    );
     final payload = ApiResponseParser.expectData(response.data);
 
     if (payload is! Map<String, dynamic>) {
@@ -255,6 +282,25 @@ class AuthRepository {
     }
 
     return Exception(fallback);
+  }
+
+  String _readSuccessMessage(dynamic data, {required String fallback}) {
+    if (data is Map<String, dynamic>) {
+      final success = data['success'];
+      if (success == false) {
+        final message = data['message'];
+        throw Exception(
+          message is String && message.isNotEmpty ? message : fallback,
+        );
+      }
+
+      final message = data['message'];
+      if (message is String && message.isNotEmpty) {
+        return message;
+      }
+    }
+
+    return fallback;
   }
 
   String? _extractApiMessage(DioException exception) {

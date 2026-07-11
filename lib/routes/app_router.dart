@@ -1,137 +1,692 @@
+import 'package:baladeyate/core/auth/app_role.dart';
+
+import 'package:baladeyate/core/navigation/delegate_navigation_screen.dart';
 import 'package:baladeyate/core/navigation/main_navigation_screen.dart';
+
 import 'package:baladeyate/core/services/service_locator.dart';
+
+import 'package:baladeyate/features/admin/presentation/graves_search_screen.dart';
 import 'package:baladeyate/features/apartment/presentation/apartment_screen.dart';
+
+import 'package:baladeyate/features/admin/cubits/graves_cubit/graves_cubit.dart';
+import 'package:baladeyate/features/auth/cubits/auth_cubit/auth_cubit.dart';
+
+import 'package:baladeyate/features/auth/cubits/auth_cubit/auth_state.dart';
+
+import 'package:baladeyate/features/auth/presentation/forgot_password_screen.dart';
+import 'package:baladeyate/features/auth/presentation/reset_password_screen.dart';
+import 'package:baladeyate/features/auth/cubits/auth_form_cubit/auth_form_cubit.dart';
+import 'package:baladeyate/features/auth/cubits/password_reset_cubit/password_reset_cubit.dart';
+
 import 'package:baladeyate/features/auth/presentation/auth_screen.dart';
+
 import 'package:baladeyate/features/auth/presentation/signup_screen.dart';
+
 import 'package:baladeyate/features/auth/presentation/splash_screen.dart';
+
 import 'package:baladeyate/features/building/presentation/building_complex_screen.dart';
+
+import 'package:baladeyate/features/building/presentation/building_hub_screen.dart';
+
+import 'package:baladeyate/features/building/presentation/floor_hub_screen.dart';
+
+import 'package:baladeyate/features/complaints/cubits/complaints_cubit/complaints_cubit.dart';
+
 import 'package:baladeyate/features/complaints/presentation/complaints_guard_screen.dart';
+
+import 'package:baladeyate/features/complaints/presentation/identity_verification_screen.dart';
+
 import 'package:baladeyate/features/complaints/presentation/track_complaints_screen.dart';
-import 'package:baladeyate/features/delegate/cubits/delegate_survey_cubit/delegate_survey_cubit.dart';
+
+import 'package:baladeyate/features/daily_tasks/cubits/daily_tasks_cubit/daily_tasks_cubit.dart';
+
+import 'package:baladeyate/features/delegate/cubits/building_survey_cubit/building_survey_cubit.dart';
+
 import 'package:baladeyate/features/delegate/models/survey_location.dart';
+
+import 'package:baladeyate/features/delegate/models/survey_navigation_context.dart';
+
 import 'package:baladeyate/features/donations/presentation/donations_screen.dart';
+
 import 'package:baladeyate/features/floor/presentation/floor_screen.dart';
+
 import 'package:baladeyate/features/home/presentation/home_screen.dart';
+
 import 'package:baladeyate/features/notifications/presentation/notifications_screen.dart';
+
 import 'package:baladeyate/features/people/presentation/people_screen.dart';
+
+import 'package:baladeyate/features/profile/cubits/profile_cubit/profile_cubit.dart';
+
 import 'package:baladeyate/features/profile/presentation/profile_screen.dart';
+
 import 'package:baladeyate/features/settings/presentation/settings_screen.dart';
-import 'package:baladeyate/features/daily_tasks/daily_tasks_screen.dart';
+
+import 'package:baladeyate/features/daily_tasks/presentation/delegate_map_screen.dart';
+import 'package:baladeyate/features/daily_tasks/presentation/delegate_tasks_screen.dart';
+import 'package:baladeyate/features/delegate_home/presentation/delegate_home_screen.dart';
+
 import 'package:baladeyate/routes/app_route_observer.dart';
+
+import 'package:baladeyate/routes/auth_navigation.dart';
+
+import 'package:baladeyate/routes/auth_refresh_notifier.dart';
+
 import 'package:baladeyate/routes/navigation_logger.dart';
+
 import 'package:flutter/foundation.dart';
+
+import 'package:flutter/material.dart';
+
 import 'package:flutter_bloc/flutter_bloc.dart';
+
 import 'package:go_router/go_router.dart';
+
+
+
+final _authRefreshNotifier = AuthRefreshNotifier(sl<AuthCubit>());
+
+
 
 final GoRouter appRouter = _createAppRouter();
 
-GoRouter _createAppRouter() {
-  final router = GoRouter(
-    initialLocation: '/splash',
-    debugLogDiagnostics: kDebugMode,
-    observers: [appRouteObserver],
-    routes: [
-      GoRoute(
-        path: '/splash',
-        builder: (context, state) => const SplashScreen(),
-      ),
-      GoRoute(
-        path: '/settings',
-        builder: (context, state) => const SettingsScreen(),
-      ),
-      GoRoute(
-        path: '/login',
-        builder: (context, state) => const AuthScreen(),
-      ),
-      GoRoute(
-        path: '/signup',
-        builder: (context, state) => const SignupScreen(),
-      ),
-      GoRoute(
-        path: '/notifications',
-        builder: (context, state) => const NotificationsScreen(),
-      ),
-      GoRoute(
-        path: '/complains',
-        builder: (context, state) => const ComplaintsGuardScreen(),
-      ),
-      GoRoute(
-        path: '/tasks',
-        builder: (context, state) => const DailyTasksScreen(),
-      ),
-      GoRoute(
-        path: '/info',
-        builder: (context, state) {
-          final location = state.extra is SurveyLocation
-              ? state.extra! as SurveyLocation
-              : null;
-          final cubit = sl<DelegateSurveyCubit>();
-          if (location != null) {
-            cubit.initSurvey(location);
-          }
 
-          return BlocProvider.value(
-            value: cubit,
-            child: BuildingComplexScreen(surveyLocation: location),
+
+GoRouter _createAppRouter() {
+
+  final router = GoRouter(
+
+    initialLocation: '/splash',
+
+    debugLogDiagnostics: kDebugMode,
+
+    observers: [appRouteObserver],
+
+    refreshListenable: _authRefreshNotifier,
+
+    redirect: _authRedirect,
+
+    routes: [
+
+      GoRoute(
+
+        path: '/splash',
+
+        builder: (context, state) => const SplashScreen(),
+
+      ),
+
+      GoRoute(
+
+        path: '/settings',
+
+        builder: (context, state) => BlocProvider(
+
+          create: (_) => sl<ProfileCubit>(),
+
+          child: const SettingsScreen(),
+
+        ),
+
+      ),
+
+      GoRoute(
+
+        path: '/verify-identity',
+
+        builder: (context, state) {
+
+          final authState = sl<AuthCubit>().state;
+
+          final user = authState is AuthSuccess ? authState.user : null;
+
+          return BlocProvider(
+
+            create: (_) => sl<ProfileCubit>(),
+
+            child: IdentityVerificationScreen(
+
+              promptText:
+
+                  'يرجى توثيق هويتك الوطنية لإرسال طلب المراجعة الحكومية.',
+
+              initialNationalId: user?.nationalId ?? user?.nationalNumber,
+
+            ),
+
+          );
+
+        },
+
+      ),
+
+      GoRoute(
+
+        path: '/forgot-password',
+
+        builder: (context, state) => BlocProvider(
+
+          create: (_) => sl<PasswordResetCubit>(),
+
+          child: const ForgotPasswordScreen(),
+
+        ),
+
+      ),
+
+      GoRoute(
+
+        path: '/reset-password',
+
+        builder: (context, state) {
+          final email = state.uri.queryParameters['email'];
+          final fromSettings = state.uri.queryParameters['fromSettings'] == '1';
+
+          return BlocProvider(
+
+            create: (_) => sl<PasswordResetCubit>(),
+
+            child: ResetPasswordScreen(
+              initialEmail: email,
+              fromSettings: fromSettings,
+            ),
+
           );
         },
+
       ),
+
       GoRoute(
+
+        path: '/login',
+
+        builder: (context, state) => BlocProvider(
+
+          create: (_) => sl<AuthFormCubit>(),
+
+          child: const AuthScreen(),
+
+        ),
+
+      ),
+
+      GoRoute(
+
+        path: '/signup',
+
+        builder: (context, state) => BlocProvider(
+
+          create: (_) => sl<AuthFormCubit>(),
+
+          child: const SignupScreen(),
+
+        ),
+
+      ),
+
+      GoRoute(
+
+        path: '/graves',
+
+        builder: (context, state) => BlocProvider(
+
+          create: (_) => sl<GravesCubit>()..loadGraves(),
+
+          child: const GravesSearchScreen(),
+
+        ),
+
+      ),
+
+      GoRoute(
+
+        path: '/notifications',
+
+        builder: (context, state) => const NotificationsScreen(),
+
+      ),
+
+      GoRoute(
+
+        path: '/complains',
+
+        builder: (context, state) => MultiBlocProvider(
+
+          providers: [
+
+            BlocProvider(create: (_) => sl<ComplaintsCubit>()),
+
+            BlocProvider(create: (_) => sl<ProfileCubit>()),
+
+          ],
+
+          child: const ComplaintsGuardScreen(),
+
+        ),
+
+      ),
+
+      GoRoute(
+
+        path: '/tasks',
+
+        redirect: (_, __) => '/delegate/tasks',
+
+      ),
+
+      GoRoute(
+
+        path: '/info',
+
+        builder: (context, state) {
+
+          final location = state.extra is SurveyLocation
+
+              ? state.extra! as SurveyLocation
+
+              : null;
+
+
+
+          return BlocProvider(
+
+            create: (_) {
+
+              final cubit = sl<BuildingSurveyCubit>();
+
+              if (location != null) {
+
+                cubit.initFromPin(location);
+
+              }
+
+              return cubit;
+
+            },
+
+            child: BuildingComplexScreen(surveyLocation: location),
+
+          );
+
+        },
+
+      ),
+
+      GoRoute(
+
+        path: '/building/:pinId',
+
+        builder: (context, state) {
+
+          final pinId = state.pathParameters['pinId']!;
+
+
+
+          return BlocProvider(
+
+            create: (_) => sl<BuildingSurveyCubit>()..loadSurvey(pinId),
+
+            child: BuildingHubScreen(pinId: pinId),
+
+          );
+
+        },
+
+        routes: [
+
+          GoRoute(
+
+            path: 'floor/:floorLocalId',
+
+            builder: (context, state) {
+
+              final pinId = state.pathParameters['pinId']!;
+
+              final floorLocalId = state.pathParameters['floorLocalId']!;
+
+
+
+              return BlocProvider(
+
+                create: (_) => sl<BuildingSurveyCubit>()..loadSurvey(pinId),
+
+                child: FloorHubScreen(
+
+                  pinId: pinId,
+
+                  floorLocalId: floorLocalId,
+
+                ),
+
+              );
+
+            },
+
+          ),
+
+        ],
+
+      ),
+
+      GoRoute(
+
         path: '/floor',
-        builder: (context, state) => const FloorScreen(),
+
+        builder: (context, state) {
+
+          final nav = state.extra is SurveyNavigationContext
+
+              ? state.extra! as SurveyNavigationContext
+
+              : null;
+
+
+
+          return BlocProvider(
+
+            create: (_) {
+
+              final cubit = sl<BuildingSurveyCubit>();
+
+              if (nav != null) {
+
+                cubit.loadSurvey(nav.pinId);
+
+              }
+
+              return cubit;
+
+            },
+
+            child: FloorScreen(navigationContext: nav),
+
+          );
+
+        },
+
       ),
+
       GoRoute(
+
         path: '/apartment',
-        builder: (context, state) => const ApartmentScreen(),
+
+        builder: (context, state) {
+
+          final nav = state.extra is SurveyNavigationContext
+
+              ? state.extra! as SurveyNavigationContext
+
+              : null;
+
+
+
+          return BlocProvider(
+
+            create: (_) {
+
+              final cubit = sl<BuildingSurveyCubit>();
+
+              if (nav != null) {
+
+                cubit.loadSurvey(nav.pinId);
+
+              }
+
+              return cubit;
+
+            },
+
+            child: ApartmentScreen(navigationContext: nav),
+
+          );
+
+        },
+
       ),
+
       GoRoute(
+
         path: '/people',
-        builder: (context, state) => const PeopleScreen(),
+
+        builder: (context, state) {
+
+          final nav = state.extra is SurveyNavigationContext
+
+              ? state.extra! as SurveyNavigationContext
+
+              : null;
+
+
+
+          return BlocProvider(
+
+            create: (_) {
+
+              final cubit = sl<BuildingSurveyCubit>();
+
+              if (nav != null) {
+
+                cubit.loadSurvey(nav.pinId);
+
+              }
+
+              return cubit;
+
+            },
+
+            child: PeopleScreen(navigationContext: nav),
+
+          );
+
+        },
+
       ),
+
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) {
-          return MainNavigationScreen(
-            navigationShell: navigationShell,
+          return BlocProvider(
+            create: (_) => sl<DailyTasksCubit>()..initialize(),
+            child: DelegateNavigationScreen(
+              navigationShell: navigationShell,
+            ),
           );
         },
         branches: [
           StatefulShellBranch(
             routes: [
               GoRoute(
-                path: '/main',
-                builder: (context, state) => const HomeScreen(),
+                path: '/delegate/home',
+                builder: (context, state) => const DelegateHomeScreen(),
               ),
             ],
           ),
           StatefulShellBranch(
             routes: [
               GoRoute(
-                path: '/profile',
-                builder: (context, state) => const ProfileScreen(),
+                path: '/delegate/map',
+                builder: (context, state) => const DelegateMapScreen(),
               ),
             ],
           ),
           StatefulShellBranch(
             routes: [
               GoRoute(
-                path: '/donations',
-                builder: (context, state) => const DonationsScreen(),
-              ),
-            ],
-          ),
-          StatefulShellBranch(
-            routes: [
-              GoRoute(
-                path: '/track',
-                builder: (context, state) => const TrackComplaintsScreen(),
+                path: '/delegate/tasks',
+                builder: (context, state) => const DelegateTasksScreen(),
               ),
             ],
           ),
         ],
       ),
+
+      StatefulShellRoute.indexedStack(
+
+        builder: (context, state, navigationShell) {
+
+          return MainNavigationScreen(
+
+            navigationShell: navigationShell,
+
+          );
+
+        },
+
+        branches: [
+
+          StatefulShellBranch(
+
+            routes: [
+
+              GoRoute(
+
+                path: '/main',
+
+                builder: (context, state) => const HomeScreen(),
+
+              ),
+
+            ],
+
+          ),
+
+          StatefulShellBranch(
+
+            routes: [
+
+              GoRoute(
+
+                path: '/profile',
+
+                builder: (context, state) => BlocProvider(
+
+                  create: (_) => sl<ProfileCubit>()..loadHousehold(),
+
+                  child: const ProfileScreen(),
+
+                ),
+
+              ),
+
+            ],
+
+          ),
+
+          StatefulShellBranch(
+
+            routes: [
+
+              GoRoute(
+
+                path: '/donations',
+
+                builder: (context, state) => const DonationsScreen(),
+
+              ),
+
+            ],
+
+          ),
+
+          StatefulShellBranch(
+
+            routes: [
+
+              GoRoute(
+
+                path: '/track',
+
+                builder: (context, state) => BlocProvider(
+
+                  create: (_) => sl<ComplaintsCubit>()..loadComplaints(),
+
+                  child: const TrackComplaintsScreen(),
+
+                ),
+
+              ),
+
+            ],
+
+          ),
+
+        ],
+
+      ),
+
     ],
+
   );
 
+
+
   NavigationLogger.attach(router);
+
   return router;
+
 }
+
+
+
+String? _authRedirect(BuildContext context, GoRouterState state) {
+
+  final authState = sl<AuthCubit>().state;
+
+  final path = state.uri.path;
+
+
+
+  if (authState is AuthInitial || authState is AuthLoading) {
+
+    if (isPublicRoute(path)) return null;
+
+    return '/splash';
+
+  }
+
+
+
+  if (authState is! AuthSuccess) {
+
+    if (isPublicRoute(path)) return null;
+
+    return '/login';
+
+  }
+
+
+
+  final user = authState.user;
+
+  final home = homeRouteFor(user);
+
+
+
+  if (path == '/login' || path == '/signup') {
+
+    return home;
+
+  }
+
+
+
+  if (user.isCitizen && isDelegateRoute(path)) {
+
+    return '/main';
+
+  }
+
+
+
+  if (user.isDelegateLike && (isCitizenRoute(path) || path == '/signup')) {
+
+    return '/delegate/home';
+
+  }
+
+
+
+  return null;
+
+}
+
+

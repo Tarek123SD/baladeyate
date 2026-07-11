@@ -1,4 +1,6 @@
 import 'package:baladeyate/config/theme/app_colors.dart';
+import 'package:baladeyate/features/complaints/cubits/complaint_detail_cubit/complaint_detail_cubit.dart';
+import 'package:baladeyate/features/complaints/cubits/complaint_detail_cubit/complaint_detail_state.dart';
 import 'package:baladeyate/features/complaints/cubits/complaints_cubit/complaints_cubit.dart';
 import 'package:baladeyate/features/complaints/models/complaint.dart';
 import 'package:flutter/material.dart';
@@ -19,18 +21,24 @@ Future<void> showComplaintDetailSheet(
       ),
     ),
     builder: (sheetContext) {
-      return BlocProvider.value(
-        value: context.read<ComplaintsCubit>(),
-        child: _ComplaintDetailSheet(complaint: complaint),
+      return MultiBlocProvider(
+        providers: [
+          BlocProvider.value(value: context.read<ComplaintsCubit>()),
+          BlocProvider(
+            create: (ctx) => ComplaintDetailCubit(
+              complaint: complaint,
+              complaintsCubit: ctx.read<ComplaintsCubit>(),
+            )..loadDetail(),
+          ),
+        ],
+        child: const _ComplaintDetailSheet(),
       );
     },
   );
 }
 
 class _ComplaintDetailSheet extends StatefulWidget {
-  const _ComplaintDetailSheet({required this.complaint});
-
-  final Complaint complaint;
+  const _ComplaintDetailSheet();
 
   @override
   State<_ComplaintDetailSheet> createState() => _ComplaintDetailSheetState();
@@ -38,35 +46,7 @@ class _ComplaintDetailSheet extends StatefulWidget {
 
 class _ComplaintDetailSheetState extends State<_ComplaintDetailSheet> {
   late final TextEditingController _descriptionController;
-  late bool _isUrgent;
-  bool _isEditing = false;
-  bool _isBusy = false;
-  Complaint? _complaint;
-
-  @override
-  void initState() {
-    super.initState();
-    _complaint = widget.complaint;
-    _descriptionController =
-        TextEditingController(text: widget.complaint.description);
-    _isUrgent = widget.complaint.priority == 'urgent';
-    _loadDetail();
-  }
-
-  Future<void> _loadDetail() async {
-    setState(() => _isBusy = true);
-    final detail =
-        await context.read<ComplaintsCubit>().loadComplaintDetail(widget.complaint.id);
-    if (!mounted) return;
-    if (detail != null) {
-      setState(() {
-        _complaint = detail;
-        _descriptionController.text = detail.description;
-        _isUrgent = detail.priority == 'urgent';
-      });
-    }
-    setState(() => _isBusy = false);
-  }
+  bool _controllerInitialized = false;
 
   @override
   void dispose() {
@@ -74,163 +54,185 @@ class _ComplaintDetailSheetState extends State<_ComplaintDetailSheet> {
     super.dispose();
   }
 
-  bool get _canModify =>
-      _complaint?.status == 'pending' || _complaint?.status == 'in_progress';
-
   @override
   Widget build(BuildContext context) {
-    final complaint = _complaint ?? widget.complaint;
-    final bottomInset = MediaQuery.viewInsetsOf(context).bottom;
+    return BlocConsumer<ComplaintDetailCubit, ComplaintDetailState>(
+      listener: (context, state) {
+        if (!_controllerInitialized) {
+          _descriptionController =
+              TextEditingController(text: state.description);
+          _controllerInitialized = true;
+        } else if (!_descriptionController.text.startsWith(state.description) &&
+            state.description != _descriptionController.text) {
+          _descriptionController.text = state.description;
+        }
+      },
+      builder: (context, state) {
+        if (!_controllerInitialized) {
+          _descriptionController =
+              TextEditingController(text: state.description);
+          _controllerInitialized = true;
+        }
 
-    return Padding(
-      padding: EdgeInsets.fromLTRB(
-        20.w(context),
-        12.h(context),
-        20.w(context),
-        bottomInset + 24.h(context),
-      ),
-      child: Directionality(
-        textDirection: TextDirection.rtl,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Center(
-              child: Container(
-                width: 42.w(context),
-                height: 4.h(context),
-                decoration: BoxDecoration(
-                  color: AppColors.secondaryCharcoal.withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(4),
-                ),
-              ),
-            ),
-            SizedBox(height: 16.h(context)),
-            Row(
+        final complaint = state.complaint;
+        final bottomInset = MediaQuery.viewInsetsOf(context).bottom;
+        final canModify =
+            complaint.status == 'pending' || complaint.status == 'in_progress';
+
+        return Padding(
+          padding: EdgeInsets.fromLTRB(
+            20.w(context),
+            12.h(context),
+            20.w(context),
+            bottomInset + 24.h(context),
+          ),
+          child: Directionality(
+            textDirection: TextDirection.rtl,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Expanded(
-                  child: Text(
-                    'تفاصيل الشكوى #${complaint.id}',
-                    style: TextStyle(
-                      color: AppColors.primaryForest,
-                      fontSize: 18.f(context),
-                      fontWeight: FontWeight.w800,
+                Center(
+                  child: Container(
+                    width: 42.w(context),
+                    height: 4.h(context),
+                    decoration: BoxDecoration(
+                      color: AppColors.secondaryCharcoal.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(4),
                     ),
                   ),
                 ),
-                if (_isBusy)
-                  SizedBox(
-                    width: 20.s(context),
-                    height: 20.s(context),
-                    child: const CircularProgressIndicator(strokeWidth: 2),
+                SizedBox(height: 16.h(context)),
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        'تفاصيل الشكوى #${complaint.id}',
+                        style: TextStyle(
+                          color: AppColors.primaryForest,
+                          fontSize: 18.f(context),
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                    ),
+                    if (state.isBusy)
+                      SizedBox(
+                        width: 20.s(context),
+                        height: 20.s(context),
+                        child: const CircularProgressIndicator(strokeWidth: 2),
+                      ),
+                  ],
+                ),
+                SizedBox(height: 12.h(context)),
+                _InfoRow(
+                  label: 'الحالة',
+                  value: complaint.statusLabel ?? complaint.status,
+                ),
+                _InfoRow(label: 'الأولوية', value: complaint.priority),
+                if (complaint.aiCategory != null &&
+                    complaint.aiCategory!.isNotEmpty)
+                  _InfoRow(label: 'التصنيف', value: complaint.aiCategory!),
+                SizedBox(height: 12.h(context)),
+                if (state.isEditing)
+                  TextField(
+                    controller: _descriptionController,
+                    maxLines: 5,
+                    onChanged: context.read<ComplaintDetailCubit>().setDescription,
+                    decoration: InputDecoration(
+                      labelText: 'الوصف',
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12.r(context)),
+                      ),
+                    ),
+                  )
+                else
+                  Text(
+                    complaint.description,
+                    style: TextStyle(
+                      color: AppColors.secondaryCharcoal,
+                      fontSize: 14.f(context),
+                      height: 1.6,
+                    ),
                   ),
+                SizedBox(height: 16.h(context)),
+                if (canModify) ...[
+                  SwitchListTile(
+                    contentPadding: EdgeInsets.zero,
+                    title: const Text('أولوية عاجلة'),
+                    value: state.isUrgent,
+                    onChanged: state.isEditing
+                        ? context.read<ComplaintDetailCubit>().setIsUrgent
+                        : null,
+                  ),
+                  Row(
+                    children: [
+                      if (state.isEditing) ...[
+                        Expanded(
+                          child: OutlinedButton(
+                            onPressed: state.isBusy
+                                ? null
+                                : () => context
+                                    .read<ComplaintDetailCubit>()
+                                    .cancelEditing(),
+                            child: const Text('إلغاء'),
+                          ),
+                        ),
+                        SizedBox(width: 8.w(context)),
+                        Expanded(
+                          child: ElevatedButton(
+                            onPressed:
+                                state.isBusy ? null : () => _saveChanges(context),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppColors.green,
+                              foregroundColor: Colors.white,
+                            ),
+                            child: const Text('حفظ'),
+                          ),
+                        ),
+                      ] else ...[
+                        Expanded(
+                          child: OutlinedButton.icon(
+                            onPressed: state.isBusy
+                                ? null
+                                : () => context
+                                    .read<ComplaintDetailCubit>()
+                                    .startEditing(),
+                            icon: const Icon(Icons.edit_outlined),
+                            label: const Text('تعديل'),
+                          ),
+                        ),
+                        SizedBox(width: 8.w(context)),
+                        Expanded(
+                          child: ElevatedButton.icon(
+                            onPressed:
+                                state.isBusy ? null : () => _confirmDelete(context),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFFC62828),
+                              foregroundColor: Colors.white,
+                            ),
+                            icon: const Icon(Icons.delete_outline),
+                            label: const Text('حذف'),
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ],
               ],
             ),
-            SizedBox(height: 12.h(context)),
-            _InfoRow(
-              label: 'الحالة',
-              value: complaint.statusLabel ?? complaint.status,
-            ),
-            _InfoRow(label: 'الأولوية', value: complaint.priority),
-            if (complaint.aiCategory != null && complaint.aiCategory!.isNotEmpty)
-              _InfoRow(label: 'التصنيف', value: complaint.aiCategory!),
-            SizedBox(height: 12.h(context)),
-            if (_isEditing)
-              TextField(
-                controller: _descriptionController,
-                maxLines: 5,
-                decoration: InputDecoration(
-                  labelText: 'الوصف',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12.r(context)),
-                  ),
-                ),
-              )
-            else
-              Text(
-                complaint.description,
-                style: TextStyle(
-                  color: AppColors.secondaryCharcoal,
-                  fontSize: 14.f(context),
-                  height: 1.6,
-                ),
-              ),
-            SizedBox(height: 16.h(context)),
-            if (_canModify) ...[
-              SwitchListTile(
-                contentPadding: EdgeInsets.zero,
-                title: const Text('أولوية عاجلة'),
-                value: _isUrgent,
-                onChanged: _isEditing
-                    ? (value) => setState(() => _isUrgent = value)
-                    : null,
-              ),
-              Row(
-                children: [
-                  if (_isEditing) ...[
-                    Expanded(
-                      child: OutlinedButton(
-                        onPressed: _isBusy
-                            ? null
-                            : () => setState(() => _isEditing = false),
-                        child: const Text('إلغاء'),
-                      ),
-                    ),
-                    SizedBox(width: 8.w(context)),
-                    Expanded(
-                      child: ElevatedButton(
-                        onPressed: _isBusy ? null : _saveChanges,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.green,
-                          foregroundColor: Colors.white,
-                        ),
-                        child: const Text('حفظ'),
-                      ),
-                    ),
-                  ] else ...[
-                    Expanded(
-                      child: OutlinedButton.icon(
-                        onPressed: _isBusy
-                            ? null
-                            : () => setState(() => _isEditing = true),
-                        icon: const Icon(Icons.edit_outlined),
-                        label: const Text('تعديل'),
-                      ),
-                    ),
-                    SizedBox(width: 8.w(context)),
-                    Expanded(
-                      child: ElevatedButton.icon(
-                        onPressed: _isBusy ? null : _confirmDelete,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFFC62828),
-                          foregroundColor: Colors.white,
-                        ),
-                        icon: const Icon(Icons.delete_outline),
-                        label: const Text('حذف'),
-                      ),
-                    ),
-                  ],
-                ],
-              ),
-            ],
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 
-  Future<void> _saveChanges() async {
-    setState(() => _isBusy = true);
-    final success = await context.read<ComplaintsCubit>().updateComplaint(
-          id: widget.complaint.id,
-          description: _descriptionController.text.trim(),
-          isUrgent: _isUrgent,
+  Future<void> _saveChanges(BuildContext context) async {
+    context.read<ComplaintDetailCubit>().setDescription(
+          _descriptionController.text,
         );
-    if (!mounted) return;
-    setState(() {
-      _isBusy = false;
-      if (success) _isEditing = false;
-    });
+    final success =
+        await context.read<ComplaintDetailCubit>().saveChanges();
+    if (!context.mounted) return;
     if (success) {
       Navigator.of(context).pop();
       ScaffoldMessenger.of(context).showSnackBar(
@@ -239,7 +241,7 @@ class _ComplaintDetailSheetState extends State<_ComplaintDetailSheet> {
     }
   }
 
-  Future<void> _confirmDelete() async {
+  Future<void> _confirmDelete(BuildContext context) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
@@ -258,20 +260,17 @@ class _ComplaintDetailSheetState extends State<_ComplaintDetailSheet> {
       ),
     );
 
-    if (confirmed != true || !mounted) return;
+    if (confirmed != true || !context.mounted) return;
 
-    setState(() => _isBusy = true);
     final success =
-        await context.read<ComplaintsCubit>().deleteComplaint(widget.complaint.id);
-    if (!mounted) return;
+        await context.read<ComplaintDetailCubit>().deleteComplaint();
+    if (!context.mounted) return;
 
     if (success) {
       Navigator.of(context).pop();
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('تم حذف الشكوى')),
       );
-    } else {
-      setState(() => _isBusy = false);
     }
   }
 }

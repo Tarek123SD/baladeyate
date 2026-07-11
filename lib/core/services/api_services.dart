@@ -48,9 +48,13 @@ class ApiService {
   }
 
   // ----------PATCH Request----------
-  Future<Response> patch(String endpoint, {required Object? data}) async {
+  Future<Response> patch(
+    String endpoint, {
+    required Object? data,
+    Options? options,
+  }) async {
     printUrl(endpoint);
-    final response = await _dio.patch(endpoint, data: data);
+    final response = await _dio.patch(endpoint, data: data, options: options);
     printResponse(response);
     return response;
   }

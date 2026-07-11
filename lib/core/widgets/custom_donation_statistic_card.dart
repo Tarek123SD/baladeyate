@@ -5,12 +5,12 @@ import 'package:responsive_x_toolkit/responsive_x.dart';
 class CustomDonationStatisticCard extends StatelessWidget {
   const CustomDonationStatisticCard({
     super.key,
-    required this.width,
+    this.width,
     required this.value,
     required this.label,
   });
 
-  final double width;
+  final double? width;
   final String value;
   final String label;
 
@@ -38,19 +38,25 @@ class CustomDonationStatisticCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
-            Text(
-              value,
-              textAlign: TextAlign.right,
-              style: TextStyle(
-                color: AppColors.primaryForest,
-                fontSize: 24.f(context),
-                fontWeight: FontWeight.bold,
+            FittedBox(
+              fit: BoxFit.scaleDown,
+              alignment: Alignment.centerRight,
+              child: Text(
+                value,
+                textAlign: TextAlign.right,
+                style: TextStyle(
+                  color: AppColors.primaryForest,
+                  fontSize: 24.f(context),
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ),
             SizedBox(height: 8.h(context)),
             Text(
               label,
               textAlign: TextAlign.right,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
               style: TextStyle(
                 color: const Color(0xFF7A7A7A),
                 fontSize: 13.f(context),

@@ -9,6 +9,8 @@ class EndPoints {
   static const String signup = 'v1/signup';
   static const String login = 'v1/login';
   static const String logout = 'v1/logout';
+  static const String forgotPassword = 'v1/auth/forgot-password';
+  static const String resetPassword = 'v1/auth/reset-password';
 
   // Citizen
   static const String profile = 'v1/profile';

@@ -1,7 +1,6 @@
 import 'package:baladeyate/config/theme/app_colors.dart';
 import 'package:baladeyate/core/constants/app_assets.dart';
 import 'package:baladeyate/core/responsive/responsive_helper.dart';
-import 'package:baladeyate/core/services/service_locator.dart';
 import 'package:baladeyate/core/widgets/custom_app_bar.dart';
 import 'package:baladeyate/core/widgets/custom_track_complaint_card.dart';
 import 'package:baladeyate/core/widgets/custom_track_filter_button.dart';
@@ -14,224 +13,231 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:responsive_x_toolkit/responsive_x.dart';
 
-class TrackComplaintsScreen extends StatefulWidget {
+class TrackComplaintsScreen extends StatelessWidget {
   const TrackComplaintsScreen({super.key});
-
-  @override
-  State<TrackComplaintsScreen> createState() => _TrackComplaintsScreenState();
-}
-
-class _TrackComplaintsScreenState extends State<TrackComplaintsScreen> {
-  int selectedFilter = 0;
 
   @override
   Widget build(BuildContext context) {
     final horizontalPadding = ResponsiveHelper.horizontalPadding(context);
 
-    return BlocProvider(
-      create: (_) => sl<ComplaintsCubit>()..loadComplaints(),
-      child: BlocListener<ComplaintsCubit, ComplaintsState>(
-        listener: (context, state) {
-          if (state is ComplaintsFailure) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(state.message)),
-            );
-          }
-        },
-        child: Container(
-          decoration: const BoxDecoration(
-            image: DecorationImage(
-              image: AssetImage(AppAssets.backgroundWhite),
-              fit: BoxFit.cover,
+    return BlocListener<ComplaintsCubit, ComplaintsState>(
+      listener: (context, state) {
+        if (state is ComplaintsFailure) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(state.message)),
+          );
+        }
+      },
+      child: Container(
+        decoration: const BoxDecoration(
+          image: DecorationImage(
+            image: AssetImage(AppAssets.backgroundWhite),
+            fit: BoxFit.cover,
+          ),
+        ),
+        child: Scaffold(
+          floatingActionButtonLocation:
+              FloatingActionButtonLocation.startFloat,
+          backgroundColor: Colors.transparent,
+          appBar: const CustomAppBar(),
+          floatingActionButton: FloatingActionButton(
+            shape: const CircleBorder(),
+            onPressed: () {
+              context.go('/complains');
+            },
+            backgroundColor: AppColors.green,
+            child: const Icon(
+              Icons.add,
+              color: AppColors.thirdGoldenWheat,
             ),
           ),
-          child: Scaffold(
-            floatingActionButtonLocation:
-                FloatingActionButtonLocation.startFloat,
-            backgroundColor: Colors.transparent,
-            appBar: const CustomAppBar(),
-            floatingActionButton: FloatingActionButton(
-              shape: const CircleBorder(),
-              onPressed: () {
-                context.go('/complains');
-              },
-              backgroundColor: AppColors.green,
-              child: const Icon(
-                Icons.add,
-                color: AppColors.thirdGoldenWheat,
-              ),
-            ),
-            body: SafeArea(
-              child: Directionality(
-                textDirection: TextDirection.rtl,
-                child: Center(
-                  child: ConstrainedBox(
-                    constraints: BoxConstraints(maxWidth: 900.w(context)),
-                    child: BlocBuilder<ComplaintsCubit, ComplaintsState>(
-                      builder: (context, state) {
-                        if (state is ComplaintsLoading) {
-                          return const Center(
-                            child: CircularProgressIndicator(),
-                          );
-                        }
+          body: SafeArea(
+            child: Directionality(
+              textDirection: TextDirection.rtl,
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(maxWidth: 900.w(context)),
+                  child: BlocBuilder<ComplaintsCubit, ComplaintsState>(
+                    buildWhen: (previous, current) =>
+                        previous.runtimeType != current.runtimeType ||
+                        (previous is ComplaintsLoaded &&
+                            current is ComplaintsLoaded &&
+                            (previous.complaints != current.complaints ||
+                                previous.selectedFilterIndex !=
+                                    current.selectedFilterIndex)),
+                    builder: (context, state) {
+                      if (state is ComplaintsLoading) {
+                        return const Center(
+                          child: CircularProgressIndicator(),
+                        );
+                      }
 
-                        if (state is ComplaintsFailure) {
-                          return Center(
-                            child: Padding(
-                              padding: EdgeInsets.symmetric(
-                                horizontal: horizontalPadding,
-                              ),
-                              child: _buildErrorSection(
-                                context,
-                                message: state.message,
-                                onRetry: () => context
-                                    .read<ComplaintsCubit>()
-                                    .loadComplaints(),
-                              ),
+                      if (state is ComplaintsFailure) {
+                        return Center(
+                          child: Padding(
+                            padding: EdgeInsets.symmetric(
+                              horizontal: horizontalPadding,
                             ),
-                          );
-                        }
-
-                        if (state is! ComplaintsLoaded) {
-                          return const SizedBox.shrink();
-                        }
-
-                        final complaints = state.filtered(selectedFilter);
-
-                        return RefreshIndicator(
-                          onRefresh: () =>
-                              context.read<ComplaintsCubit>().loadComplaints(),
-                          child: SingleChildScrollView(
-                            physics: const AlwaysScrollableScrollPhysics(),
-                            child: Padding(
-                              padding: EdgeInsets.symmetric(
-                                horizontal: horizontalPadding,
-                                vertical: 20.h(context),
-                              ),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.end,
-                                children: [
-                                  SizedBox(height: 14.h(context)),
-                                  Center(
-                                    child: Text(
-                                      'مركز تتبع الشكاوي والمقترحات',
-                                      textAlign: TextAlign.center,
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .headlineSmall
-                                          ?.copyWith(
-                                            color: AppColors.primaryForest,
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                    ),
-                                  ),
-                                  SizedBox(height: 12.h(context)),
-                                  Text(
-                                    'نلتزم بالشفافية و السرعة في معالجة طلباتكم لضمان جودة الخدمات العامة في كافة المحافظات.',
-                                    textAlign: TextAlign.center,
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .bodyMedium
-                                        ?.copyWith(
-                                          color: const Color(0xFF3A4B3F),
-                                          height: 1.7,
-                                        ),
-                                  ),
-                                  SizedBox(height: 24.h(context)),
-                                  Row(
-                                    children: [
-                                      CustomTrackStatisticCard(
-                                        title: 'إجمالي الشكاوى',
-                                        value: '${state.totalCount} طلب',
-                                        backgroundColor: Colors.white,
-                                        textColor: const Color(0xFF1F3A2E),
-                                      ),
-                                      SizedBox(width: 12.w(context)),
-                                      CustomTrackStatisticCard(
-                                        title: 'قيد المعالجة',
-                                        value: '${state.inProgressCount} طلب',
-                                        backgroundColor: Colors.white,
-                                        textColor: const Color(0xFF1F3A2E),
-                                      ),
-                                      SizedBox(width: 12.w(context)),
-                                      CustomTrackStatisticCard(
-                                        title: 'تم الحل',
-                                        value: '${state.resolvedCount} طلب',
-                                        backgroundColor:
-                                            AppColors.primaryForest,
-                                        textColor: Colors.white,
-                                        icon: Icons.task_alt,
-                                      ),
-                                    ],
-                                  ),
-                                  SizedBox(height: 24.h(context)),
-                                  Row(
-                                    children: [
-                                      CustomTrackFilterButton(
-                                        label: 'الكل',
-                                        isSelected: selectedFilter == 0,
-                                        onTap: () =>
-                                            setState(() => selectedFilter = 0),
-                                      ),
-                                      SizedBox(width: 8.w(context)),
-                                      CustomTrackFilterButton(
-                                        label: 'قيد الانتظار',
-                                        isSelected: selectedFilter == 1,
-                                        onTap: () =>
-                                            setState(() => selectedFilter = 1),
-                                      ),
-                                      SizedBox(width: 8.w(context)),
-                                      CustomTrackFilterButton(
-                                        label: 'مكتملة',
-                                        isSelected: selectedFilter == 2,
-                                        onTap: () =>
-                                            setState(() => selectedFilter = 2),
-                                      ),
-                                    ],
-                                  ),
-                                  SizedBox(height: 24.h(context)),
-                                  if (complaints.isEmpty)
-                                    Padding(
-                                      padding: EdgeInsets.symmetric(
-                                          vertical: 32.h(context)),
-                                      child: Center(
-                                        child: Text(
-                                          'لا توجد شكاوى حالياً',
-                                          style: Theme.of(context)
-                                              .textTheme
-                                              .bodyLarge
-                                              ?.copyWith(
-                                                color:
-                                                    AppColors.secondaryCharcoal,
-                                              ),
-                                        ),
-                                      ),
-                                    )
-                                  else
-                                    Column(
-                                      children: complaints.map((complaint) {
-                                        return Padding(
-                                          padding: EdgeInsets.only(
-                                            bottom: 16.h(context),
-                                          ),
-                                          child: CustomTrackComplaintCard(
-                                            complaint:
-                                                complaint.toTrackCardMap(),
-                                            onTap: () => showComplaintDetailSheet(
-                                              context,
-                                              complaint: complaint,
-                                            ),
-                                          ),
-                                        );
-                                      }).toList(),
-                                    ),
-                                ],
-                              ),
+                            child: _buildErrorSection(
+                              context,
+                              message: state.message,
+                              onRetry: () => context
+                                  .read<ComplaintsCubit>()
+                                  .loadComplaints(),
                             ),
                           ),
                         );
-                      },
-                    ),
+                      }
+
+                      if (state is! ComplaintsLoaded) {
+                        return const SizedBox.shrink();
+                      }
+
+                      final complaints = state.filtered();
+                      final selectedFilter = state.selectedFilterIndex;
+
+                      return RefreshIndicator(
+                        onRefresh: () =>
+                            context.read<ComplaintsCubit>().loadComplaints(),
+                        child: SingleChildScrollView(
+                          physics: const AlwaysScrollableScrollPhysics(),
+                          child: Padding(
+                            padding: EdgeInsets.symmetric(
+                              horizontal: horizontalPadding,
+                              vertical: 20.h(context),
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.end,
+                              children: [
+                                SizedBox(height: 14.h(context)),
+                                Center(
+                                  child: Text(
+                                    'مركز تتبع الشكاوي والمقترحات',
+                                    textAlign: TextAlign.center,
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .headlineSmall
+                                        ?.copyWith(
+                                          color: AppColors.primaryForest,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                  ),
+                                ),
+                                SizedBox(height: 12.h(context)),
+                                Text(
+                                  'نلتزم بالشفافية و السرعة في معالجة طلباتكم لضمان جودة الخدمات العامة في كافة المحافظات.',
+                                  textAlign: TextAlign.center,
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .bodyMedium
+                                      ?.copyWith(
+                                        color: const Color(0xFF3A4B3F),
+                                        height: 1.7,
+                                      ),
+                                ),
+                                SizedBox(height: 24.h(context)),
+                                Row(
+                                  children: [
+                                    CustomTrackStatisticCard(
+                                      title: 'إجمالي الشكاوى',
+                                      value: '${state.totalCount} طلب',
+                                      backgroundColor: Colors.white,
+                                      textColor: const Color(0xFF1F3A2E),
+                                    ),
+                                    SizedBox(width: 12.w(context)),
+                                    CustomTrackStatisticCard(
+                                      title: 'قيد المعالجة',
+                                      value: '${state.inProgressCount} طلب',
+                                      backgroundColor: Colors.white,
+                                      textColor: const Color(0xFF1F3A2E),
+                                    ),
+                                    SizedBox(width: 12.w(context)),
+                                    CustomTrackStatisticCard(
+                                      title: 'تم الحل',
+                                      value: '${state.resolvedCount} طلب',
+                                      backgroundColor: AppColors.primaryForest,
+                                      textColor: Colors.white,
+                                      icon: Icons.task_alt,
+                                    ),
+                                  ],
+                                ),
+                                SizedBox(height: 24.h(context)),
+                                Row(
+                                  children: [
+                                    CustomTrackFilterButton(
+                                      label: 'الكل',
+                                      isSelected: selectedFilter == 0,
+                                      onTap: () => context
+                                          .read<ComplaintsCubit>()
+                                          .setFilter(0),
+                                    ),
+                                    SizedBox(width: 8.w(context)),
+                                    CustomTrackFilterButton(
+                                      label: 'قيد الانتظار',
+                                      isSelected: selectedFilter == 1,
+                                      onTap: () => context
+                                          .read<ComplaintsCubit>()
+                                          .setFilter(1),
+                                    ),
+                                    SizedBox(width: 8.w(context)),
+                                    CustomTrackFilterButton(
+                                      label: 'مكتملة',
+                                      isSelected: selectedFilter == 2,
+                                      onTap: () => context
+                                          .read<ComplaintsCubit>()
+                                          .setFilter(2),
+                                    ),
+                                  ],
+                                ),
+                                SizedBox(height: 24.h(context)),
+                                if (complaints.isEmpty)
+                                  Padding(
+                                    padding: EdgeInsets.symmetric(
+                                      vertical: 32.h(context),
+                                    ),
+                                    child: Center(
+                                      child: Text(
+                                        'لا توجد شكاوى حالياً',
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .bodyLarge
+                                            ?.copyWith(
+                                              color:
+                                                  AppColors.secondaryCharcoal,
+                                            ),
+                                      ),
+                                    ),
+                                  )
+                                else
+                                  ListView.builder(
+                                    shrinkWrap: true,
+                                    physics:
+                                        const NeverScrollableScrollPhysics(),
+                                    itemCount: complaints.length,
+                                    itemBuilder: (context, index) {
+                                      final complaint = complaints[index];
+                                      return Padding(
+                                        padding: EdgeInsets.only(
+                                          bottom: 16.h(context),
+                                        ),
+                                        child: CustomTrackComplaintCard(
+                                          complaint:
+                                              complaint.toTrackCardMap(),
+                                          onTap: () =>
+                                              showComplaintDetailSheet(
+                                            context,
+                                            complaint: complaint,
+                                          ),
+                                        ),
+                                      );
+                                    },
+                                  ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      );
+                    },
                   ),
                 ),
               ),

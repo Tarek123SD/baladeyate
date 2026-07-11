@@ -24,6 +24,9 @@ class CustomDonationCampaignCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isMobile = context.isMobile;
+    final iconStripWidth = isMobile ? 88.w(context) : 112.w(context);
+
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -37,10 +40,11 @@ class CustomDonationCampaignCard extends StatelessWidget {
         ],
       ),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            width: 120.w(context),
-            height: 180.h(context),
+            width: iconStripWidth,
+            constraints: BoxConstraints(minHeight: 120.h(context)),
             decoration: BoxDecoration(
               color: iconColor.withValues(alpha: 0.15),
               borderRadius: BorderRadius.only(
@@ -49,17 +53,16 @@ class CustomDonationCampaignCard extends StatelessWidget {
               ),
             ),
             child: Center(
-              child: Icon(icon, color: iconColor, size: 52.ic(context)),
+              child: Icon(
+                icon,
+                color: iconColor,
+                size: isMobile ? 40.ic(context) : 48.ic(context),
+              ),
             ),
           ),
           Expanded(
             child: Padding(
-              padding: EdgeInsets.fromLTRB(
-                16.w(context),
-                16.h(context),
-                16.w(context),
-                16.h(context),
-              ),
+              padding: EdgeInsets.all(16.s(context)),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
@@ -97,38 +100,16 @@ class CustomDonationCampaignCard extends StatelessWidget {
                   Text(
                     subtitle,
                     textAlign: TextAlign.right,
-                    maxLines: 2,
+                    maxLines: 3,
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
                       color: AppColors.secondaryCharcoal,
                       fontSize: 12.f(context),
-                      height: 1.4,
+                      height: 1.45,
                     ),
                   ),
                   SizedBox(height: 12.h(context)),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Flexible(
-                        child: Text(
-                          statusLabel,
-                          style: TextStyle(
-                            color: AppColors.primaryForest,
-                            fontWeight: FontWeight.w600,
-                            fontSize: 11.f(context),
-                          ),
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                      Text(
-                        'الهدف 50,000',
-                        style: TextStyle(
-                          color: AppColors.primaryForest.withValues(alpha: 0.65),
-                          fontSize: 11.f(context),
-                        ),
-                      ),
-                    ],
-                  ),
+                  _CampaignStatusRow(statusLabel: statusLabel),
                   SizedBox(height: 8.h(context)),
                   ClipRRect(
                     borderRadius: BorderRadius.circular(12.r(context)),
@@ -145,6 +126,73 @@ class CustomDonationCampaignCard extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+class _CampaignStatusRow extends StatelessWidget {
+  const _CampaignStatusRow({required this.statusLabel});
+
+  final String statusLabel;
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final stackVertically = constraints.maxWidth < 180.w(context);
+
+        if (stackVertically) {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(
+                statusLabel,
+                textAlign: TextAlign.right,
+                style: TextStyle(
+                  color: AppColors.primaryForest,
+                  fontWeight: FontWeight.w600,
+                  fontSize: 11.f(context),
+                ),
+              ),
+              SizedBox(height: 4.h(context)),
+              Text(
+                'الهدف 50,000',
+                textAlign: TextAlign.right,
+                style: TextStyle(
+                  color: AppColors.primaryForest.withValues(alpha: 0.65),
+                  fontSize: 11.f(context),
+                ),
+              ),
+            ],
+          );
+        }
+
+        return Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Flexible(
+              child: Text(
+                statusLabel,
+                textAlign: TextAlign.right,
+                style: TextStyle(
+                  color: AppColors.primaryForest,
+                  fontWeight: FontWeight.w600,
+                  fontSize: 11.f(context),
+                ),
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            SizedBox(width: 8.w(context)),
+            Text(
+              'الهدف 50,000',
+              style: TextStyle(
+                color: AppColors.primaryForest.withValues(alpha: 0.65),
+                fontSize: 11.f(context),
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 }

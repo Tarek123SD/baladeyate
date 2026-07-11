@@ -5,12 +5,17 @@ import 'package:baladeyate/features/home/presentation/components/custom_card.dar
 import 'package:baladeyate/features/home/presentation/components/greeting_card.dart';
 import 'package:baladeyate/features/home/presentation/components/section_header.dart';
 import 'package:baladeyate/features/home/presentation/components/update_card.dart';
+import 'package:baladeyate/features/notifications/cubits/notifications_cubit/notifications_cubit.dart';
+import 'package:baladeyate/features/notifications/cubits/notifications_cubit/notifications_state.dart';
+import 'package:baladeyate/features/notifications/models/app_notification.dart';
+import 'package:baladeyate/features/notifications/utils/notification_display.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:responsive_x_toolkit/responsive_x.dart';
 
 import 'package:baladeyate/core/constants/app_assets.dart';
+import 'package:baladeyate/core/widgets/app_background.dart';
 import 'package:baladeyate/core/responsive/dimensions.dart';
 import 'package:baladeyate/core/widgets/custom_app_bar.dart';
 import 'package:baladeyate/config/theme/app_colors.dart';
@@ -33,13 +38,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: const BoxDecoration(
-        image: DecorationImage(
-          image: AssetImage(AppAssets.backgroundWhite),
-          fit: BoxFit.cover,
-        ),
-      ),
+    return AppBackground(
       child: Scaffold(
         backgroundColor: Colors.transparent,
         appBar: const CustomAppBar(),
@@ -58,6 +57,14 @@ class _HomeScreenState extends State<HomeScreen> {
                     [
                       // Greeting Card
                       BlocBuilder<AuthCubit, AuthState>(
+                        buildWhen: (previous, current) {
+                          if (previous is AuthSuccess && current is AuthSuccess) {
+                            return previous.user.name != current.user.name ||
+                                previous.user.verificationStatus !=
+                                    current.user.verificationStatus;
+                          }
+                          return previous.runtimeType != current.runtimeType;
+                        },
                         builder: (context, state) {
                           final userName =
                               state is AuthSuccess ? state.user.name : 'مواطن';
@@ -90,40 +97,65 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                       SizedBox(height: 40.h(context)),
                       // Latest Updates
-                      Column(
-                        children: [
-                          const SectionHeader(
-                            title: 'آخر التحديثات',
-                            actionText: 'عرض الكل',
-                          ),
-                          SizedBox(height: 16.h(context)),
-                          UpdateCard(
-                            title: 'تم قبول طلب تجديد الهوية',
-                            time: 'شهر ساعتين',
-                            description:
-                                'سيتم إرسال بطاقتك المجددة عبر البريد الحكومي خلال 7 أيام عمل.',
-                            icon: Icons.verified,
-                            iconBgColor: Colors.amber,
-                          ),
-                          SizedBox(height: 12.h(context)),
-                          UpdateCard(
-                            title: 'فاتورة الكهرباء جاهرة',
-                            time: 'أمس',
-                            description:
-                                'صدرت فاتورة الكهرباء والمياه بقيمة 15,200 ل.س. يرجى الدفع.',
-                            icon: Icons.receipt,
-                            iconBgColor: Colors.grey,
-                          ),
-                          SizedBox(height: 12.h(context)),
-                          UpdateCard(
-                            title: 'تنبيه: صيانة عامة',
-                            time: '28 شهرين',
-                            description:
-                                'ستُقفل خدمات الدفع الإلكترونية من اليوم 01 من الساعة 2-12 فجراً.',
-                            icon: Icons.error,
-                            iconBgColor: Colors.red,
-                          ),
-                        ],
+                      BlocBuilder<NotificationsCubit, NotificationsState>(
+                        builder: (context, notificationsState) {
+                          final notifications = notificationsState
+                                  is NotificationsLoaded
+                              ? notificationsState.notifications
+                                  .take(3)
+                                  .toList()
+                              : const <AppNotification>[];
+
+                          return Column(
+                            children: [
+                              SectionHeader(
+                                title: 'آخر التحديثات',
+                                actionText: 'عرض الكل',
+                                onActionTap: () => context.push('/notifications'),
+                              ),
+                              SizedBox(height: 16.h(context)),
+                              if (notificationsState is NotificationsLoading &&
+                                  notifications.isEmpty)
+                                const Padding(
+                                  padding: EdgeInsets.symmetric(vertical: 24),
+                                  child: Center(
+                                    child: CircularProgressIndicator(),
+                                  ),
+                                )
+                              else if (notifications.isEmpty)
+                                UpdateCard(
+                                  title: 'لا توجد تحديثات بعد',
+                                  time: 'اليوم',
+                                  description:
+                                      'ستظهر هنا الإشعارات والتنبيهات الجديدة من البلدية.',
+                                  icon: Icons.notifications_none_outlined,
+                                  iconBgColor: AppColors.primaryForest,
+                                )
+                              else
+                                ...notifications.map((notification) {
+                                  return Padding(
+                                    padding:
+                                        EdgeInsets.only(bottom: 12.h(context)),
+                                    child: UpdateCard(
+                                      title: notification.title,
+                                      time: formatNotificationTime(
+                                        notification.createdAt,
+                                      ),
+                                      description: notificationDescription(
+                                        notification,
+                                      ),
+                                      icon: iconForNotificationType(
+                                        notification.type,
+                                      ),
+                                      iconBgColor: iconColorForNotificationType(
+                                        notification.type,
+                                      ),
+                                    ),
+                                  );
+                                }),
+                            ],
+                          );
+                        },
                       ),
                       SizedBox(height: 40.h(context)),
                       // Heritage Section
@@ -226,9 +258,13 @@ class _HomeScreenState extends State<HomeScreen> {
         children: [
           tile('تقديم شكوى', Icons.volume_up, onTap: () => context.go('/complains')),
           SizedBox(height: gap),
-          tile('المتحف الثقافي', Icons.groups),
+          tile('المتحف الثقافي', Icons.groups, onTap: _showMuseumUnavailable),
           SizedBox(height: gap),
-          tile('البحث في المدافن', Icons.search),
+          tile(
+            'البحث في المدافن',
+            Icons.search,
+            onTap: () => context.push('/graves'),
+          ),
         ],
       );
     }
@@ -242,10 +278,26 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ),
         SizedBox(width: gap),
-        Expanded(child: tile('المتحف الثقافي', Icons.groups)),
+        Expanded(child: tile('المتحف الثقافي', Icons.groups, onTap: _showMuseumUnavailable)),
         SizedBox(width: gap),
-        Expanded(child: tile('البحث في المدافن', Icons.search)),
+        Expanded(
+          child: tile(
+            'البحث في المدافن',
+            Icons.search,
+            onTap: () => context.push('/graves'),
+          ),
+        ),
       ],
+    );
+  }
+
+  void _showMuseumUnavailable() {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text(
+          'المتحف الثقافي غير متصل بخدمة API حالياً. لا يوجد endpoint مخصص له في المنصة.',
+        ),
+      ),
     );
   }
 }

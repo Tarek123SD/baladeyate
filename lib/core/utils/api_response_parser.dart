@@ -80,10 +80,27 @@ class ApiResponseParser {
     required String fallback,
   }) {
     if (error is DioException) {
+      final statusCode = error.response?.statusCode;
+      if (statusCode == 413) {
+        return Exception('حجم الملف كبير جدًا، يرجى اختيار صورة أصغر');
+      }
+
       final data = error.response?.data;
       if (data is Map<String, dynamic>) {
         return Exception(extractMessage(data) ?? fallback);
       }
+
+      switch (error.type) {
+        case DioExceptionType.connectionTimeout:
+        case DioExceptionType.sendTimeout:
+        case DioExceptionType.receiveTimeout:
+          return Exception('انتهت مهلة الاتصال، تحقق من الإنترنت وحاول مرة أخرى');
+        case DioExceptionType.connectionError:
+          return Exception('تعذر الاتصال بالخادم، تحقق من الإنترنت');
+        default:
+          break;
+      }
+
       return Exception(fallback);
     }
 
