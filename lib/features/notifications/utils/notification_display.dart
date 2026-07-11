@@ -34,6 +34,10 @@ IconData iconForNotificationType(String type) {
       return Icons.assignment_outlined;
     case 'CitizenGeneralNotification':
       return Icons.notifications_none_outlined;
+    case 'IdentityVerificationNotification':
+      return Icons.verified_user_outlined;
+    case 'BulkNotification':
+      return Icons.campaign_outlined;
     default:
       return Icons.info_outline;
   }
@@ -46,6 +50,10 @@ Color iconColorForNotificationType(String type) {
     case 'NewTaskAssignedNotification':
       return AppColors.green;
     case 'CitizenGeneralNotification':
+      return AppColors.primaryForest;
+    case 'IdentityVerificationNotification':
+      return AppColors.green;
+    case 'BulkNotification':
       return AppColors.primaryForest;
     default:
       return AppColors.secondaryCharcoal;

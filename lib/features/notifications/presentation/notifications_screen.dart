@@ -403,6 +403,10 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
         return Icons.assignment_outlined;
       case 'CitizenGeneralNotification':
         return Icons.family_restroom;
+      case 'IdentityVerificationNotification':
+        return Icons.verified_user_outlined;
+      case 'BulkNotification':
+        return Icons.campaign_outlined;
       default:
         return Icons.notifications_outlined;
     }
@@ -416,6 +420,10 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
         return AppColors.primaryGoldenWheat;
       case 'CitizenGeneralNotification':
         return AppColors.secondaryForest;
+      case 'IdentityVerificationNotification':
+        return AppColors.green;
+      case 'BulkNotification':
+        return AppColors.primaryForest;
       default:
         return AppColors.green;
     }

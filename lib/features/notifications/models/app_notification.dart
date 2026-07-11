@@ -72,6 +72,10 @@ class AppNotification {
         return 'مهمة ميدانية جديدة';
       case 'CitizenGeneralNotification':
         return 'إشعار عام';
+      case 'IdentityVerificationNotification':
+        return 'توثيق الحساب';
+      case 'BulkNotification':
+        return 'إشعار جماعي';
       default:
         return 'إشعار';
     }
