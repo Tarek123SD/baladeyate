@@ -16,6 +16,7 @@ class CustomDailyTaskCard extends StatelessWidget {
     this.onStart,
     this.onNavigate,
     this.onInfo,
+    this.startLabel,
   });
 
   final String title;
@@ -29,8 +30,14 @@ class CustomDailyTaskCard extends StatelessWidget {
   final VoidCallback? onNavigate;
   final VoidCallback? onInfo;
 
+  /// Overrides the primary action label. Defaults by [status].
+  final String? startLabel;
+
   bool get _isCompleted => status == DailyTaskStatus.completed;
-  bool get _isActive => status == DailyTaskStatus.highPriority;
+  bool get _showActions => !_isCompleted && onStart != null;
+  String get _resolvedStartLabel =>
+      startLabel ??
+      (status == DailyTaskStatus.highPriority ? 'متابعة المهمة' : 'بدء المهمة');
 
   @override
   Widget build(BuildContext context) {
@@ -148,7 +155,7 @@ class CustomDailyTaskCard extends StatelessWidget {
                   ),
               ],
             ),
-            if (_isActive) ...[
+            if (_showActions) ...[
               SizedBox(height: 16.h(context)),
               Row(
                 children: [
@@ -166,7 +173,7 @@ class CustomDailyTaskCard extends StatelessWidget {
                           ),
                         ),
                         child: Text(
-                          'بدء المهمة',
+                          _resolvedStartLabel,
                           style: TextStyle(
                             fontSize: 14.f(context),
                             fontWeight: FontWeight.w700,
@@ -175,18 +182,22 @@ class CustomDailyTaskCard extends StatelessWidget {
                       ),
                     ),
                   ),
-                  SizedBox(width: 8.w(context)),
-                  _buildIconAction(
-                    context,
-                    icon: Icons.navigation_rounded,
-                    onTap: onNavigate,
-                  ),
-                  SizedBox(width: 8.w(context)),
-                  _buildIconAction(
-                    context,
-                    icon: Icons.info_outline_rounded,
-                    onTap: onInfo,
-                  ),
+                  if (onNavigate != null) ...[
+                    SizedBox(width: 8.w(context)),
+                    _buildIconAction(
+                      context,
+                      icon: Icons.navigation_rounded,
+                      onTap: onNavigate,
+                    ),
+                  ],
+                  if (onInfo != null) ...[
+                    SizedBox(width: 8.w(context)),
+                    _buildIconAction(
+                      context,
+                      icon: Icons.info_outline_rounded,
+                      onTap: onInfo,
+                    ),
+                  ],
                 ],
               ),
             ],

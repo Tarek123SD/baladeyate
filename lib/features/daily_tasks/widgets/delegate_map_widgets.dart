@@ -20,9 +20,9 @@ double markerHueForStatus(SurveyPinStatus status) {
 DailyTaskStatus cardStatusForPin(SurveyPin pin) {
   switch (pin.status) {
     case SurveyPinStatus.assigned:
-      return DailyTaskStatus.highPriority;
-    case SurveyPinStatus.inProgress:
       return DailyTaskStatus.scheduled;
+    case SurveyPinStatus.inProgress:
+      return DailyTaskStatus.highPriority;
     case SurveyPinStatus.completed:
       return DailyTaskStatus.completed;
   }

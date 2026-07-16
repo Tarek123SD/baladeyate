@@ -27,4 +27,14 @@ class AppColors {
 
   // Feedback Colors
   static const Color alertRed = Color(0xFFD32F2F);
+
+  // Input Field Colors
+  /// Soft mist-green background used for text fields.
+  static const Color inputFill = Color(0xFFEAEFEC);
+
+  /// Subtle resting border for text fields.
+  static const Color inputBorder = Color(0xFFC7D2CC);
+
+  /// Border color when a text field is focused.
+  static const Color inputFocusedBorder = green;
 }

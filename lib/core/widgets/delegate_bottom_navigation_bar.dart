@@ -16,67 +16,97 @@ class DelegateBottomNavigationBar extends StatelessWidget {
     'الرئيسية',
     'الخريطة',
     'المهام',
+    'المباني',
   ];
 
   static const _icons = [
     Icons.home_outlined,
     Icons.map_outlined,
     Icons.assignment_outlined,
+    Icons.apartment_outlined,
   ];
 
   static const _activeIcons = [
     Icons.home_rounded,
     Icons.map_rounded,
     Icons.assignment_rounded,
+    Icons.apartment_rounded,
   ];
 
   @override
   Widget build(BuildContext context) {
-    final radius = 18.r(context);
-    final barPaddingV = 6.h(context);
+    final radius = 28.r(context);
+    final barPaddingV = 8.h(context);
     final iconSize = 24.s(context);
     final labelSize = 11.f(context);
     final pillH = 30.h(context);
     final pillW = 44.w(context);
+    final horizontalMargin = 16.w(context);
+    final bottomMargin = 14.h(context);
 
-    return Container(
-      decoration: BoxDecoration(
-        color: AppColors.secondaryForest,
-        borderRadius: BorderRadius.only(
-          topLeft: Radius.circular(radius),
-          topRight: Radius.circular(radius),
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.primaryForest.withValues(alpha: 0.25),
-            blurRadius: 12,
-            offset: const Offset(0, -4),
-          ),
-        ],
+    return Padding(
+      padding: EdgeInsets.fromLTRB(
+        horizontalMargin,
+        0,
+        horizontalMargin,
+        bottomMargin,
       ),
-      child: SafeArea(
-        top: false,
-        child: Padding(
-          padding: EdgeInsets.symmetric(
-            horizontal: 4.w(context),
-            vertical: barPaddingV,
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              AppColors.primaryForest,
+              AppColors.secondaryForest,
+              AppColors.thirdForest,
+            ],
+            stops: [0.0, 0.45, 1.0],
           ),
-          child: Row(
-            children: List.generate(_labels.length, (index) {
-              final isSelected = index == currentIndex;
-              return Expanded(
-                child: _NavItem(
-                  label: _labels[index],
-                  icon: isSelected ? _activeIcons[index] : _icons[index],
-                  isSelected: isSelected,
-                  onTap: () => onTap(index),
-                  iconSize: iconSize,
-                  labelSize: labelSize,
-                  pillH: pillH,
-                  pillW: pillW,
-                ),
-              );
-            }),
+          borderRadius: BorderRadius.circular(radius),
+          border: Border.all(
+            color: Colors.white.withValues(alpha: 0.14),
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.primaryForest.withValues(alpha: 0.35),
+              blurRadius: 20,
+              offset: const Offset(0, 8),
+            ),
+            BoxShadow(
+              color: AppColors.thirdForest.withValues(alpha: 0.2),
+              blurRadius: 6,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(radius),
+          child: SafeArea(
+            top: false,
+            child: Padding(
+              padding: EdgeInsets.symmetric(
+                horizontal: 6.w(context),
+                vertical: barPaddingV,
+              ),
+              child: Row(
+                children: List.generate(_labels.length, (index) {
+                  final isSelected = index == currentIndex;
+                  return Expanded(
+                    child: _NavItem(
+                      label: _labels[index],
+                      icon: isSelected ? _activeIcons[index] : _icons[index],
+                      isSelected: isSelected,
+                      onTap: () => onTap(index),
+                      iconSize: iconSize,
+                      labelSize: labelSize,
+                      pillH: pillH,
+                      pillW: pillW,
+                    ),
+                  );
+                }),
+              ),
+            ),
           ),
         ),
       ),
@@ -125,13 +155,21 @@ class _NavItem extends StatelessWidget {
                 height: pillH,
                 width: pillW,
                 decoration: BoxDecoration(
-                  color: isSelected
-                      ? Colors.white.withValues(alpha: 0.18)
-                      : Colors.transparent,
+                  gradient: isSelected
+                      ? LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: [
+                            Colors.white.withValues(alpha: 0.28),
+                            Colors.white.withValues(alpha: 0.1),
+                          ],
+                        )
+                      : null,
+                  color: isSelected ? null : Colors.transparent,
                   borderRadius: BorderRadius.circular(10.r(context)),
                   border: isSelected
                       ? Border.all(
-                          color: Colors.white.withValues(alpha: 0.35),
+                          color: Colors.white.withValues(alpha: 0.4),
                         )
                       : null,
                 ),

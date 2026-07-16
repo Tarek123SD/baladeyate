@@ -15,6 +15,8 @@ import 'package:baladeyate/features/daily_tasks/cubits/daily_tasks_cubit/daily_t
 import 'package:baladeyate/features/auth/repo/auth_repository.dart';
 import 'package:baladeyate/features/complaints/cubits/complaints_cubit/complaints_cubit.dart';
 import 'package:baladeyate/features/complaints/repo/complaints_repository.dart';
+import 'package:baladeyate/features/donations/cubits/donations_cubit/donations_cubit.dart';
+import 'package:baladeyate/features/donations/repo/donations_repository.dart';
 import 'package:baladeyate/features/delegate/cubits/building_survey_cubit/building_survey_cubit.dart';
 import 'package:baladeyate/features/delegate/data/local_building_survey_store.dart';
 import 'package:baladeyate/features/delegate/data/local_survey_pin_store.dart';
@@ -84,6 +86,10 @@ Future<void> setupServiceLocator() async {
     () => ComplaintsRepository(apiService: sl()),
   );
 
+  sl.registerLazySingleton<DonationsRepository>(
+    () => DonationsRepository(apiService: sl()),
+  );
+
   sl.registerLazySingleton<LocalSurveyPinStore>(
     () => LocalSurveyPinStore(cacheService: sl()),
   );
@@ -126,11 +132,15 @@ Future<void> setupServiceLocator() async {
     () => ComplaintsCubit(complaintsRepository: sl<ComplaintsRepository>()),
   );
 
+  sl.registerFactory<DonationsCubit>(
+    () => DonationsCubit(donationsRepository: sl<DonationsRepository>()),
+  );
+
   sl.registerFactory<GravesCubit>(
     () => GravesCubit(adminRepository: sl<AdminRepository>()),
   );
 
-  sl.registerFactory<DailyTasksCubit>(
+  sl.registerLazySingleton<DailyTasksCubit>(
     () => DailyTasksCubit(delegateRepository: sl<DelegateRepository>()),
   );
 

@@ -19,38 +19,57 @@ class CustomCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final radius = 16.r(context);
+
     return Material(
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(16.r(context)),
+        borderRadius: BorderRadius.circular(radius),
         child: Container(
           decoration: BoxDecoration(
             color: bgColor,
-            borderRadius: BorderRadius.circular(16.r(context)),
-            border: Border.all(
-              color: Colors.black,
-              width: 0.5,
-            ),
-          ),
-          padding: EdgeInsets.symmetric(vertical: 20.s(context)),
-          child: Column(
-            children: [
-              Icon(
-                icon,
-                size: 32.s(context),
-                color: iconColor,
+            borderRadius: BorderRadius.circular(radius),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.06),
+                blurRadius: 12.r(context),
+                offset: Offset(0, 3.h(context)),
               ),
-              SizedBox(height: 12.s(context)),
+            ],
+          ),
+          padding: EdgeInsets.symmetric(
+            horizontal: 12.s(context),
+            vertical: 18.s(context),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 48.s(context),
+                height: 48.s(context),
+                decoration: BoxDecoration(
+                  color: (iconColor ?? Colors.black).withValues(alpha: 0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  icon,
+                  size: 24.s(context),
+                  color: iconColor,
+                ),
+              ),
+              SizedBox(height: 10.s(context)),
               Text(
                 title,
                 textAlign: TextAlign.center,
                 style: TextStyle(
-                  fontSize: 14.s(context),
-                  fontWeight: FontWeight.w500,
+                  fontSize: 13.f(context),
+                  fontWeight: FontWeight.w600,
                   color: Colors.black87,
                 ),
                 textDirection: TextDirection.rtl,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
               ),
             ],
           ),

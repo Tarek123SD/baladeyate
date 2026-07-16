@@ -12,9 +12,23 @@ class DailyTasksCubit extends Cubit<DailyTasksState> {
         super(const DailyTasksState());
 
   final DelegateRepository _delegateRepository;
+  bool _initialized = false;
 
   Future<void> initialize() async {
+    if (_initialized) return;
+    _initialized = true;
     await Future.wait([loadPins(), loadTasks(), initLocation()]);
+  }
+
+  /// Forces a full reload of pins and tasks (e.g. after finishing a survey).
+  Future<void> refreshDashboard() {
+    return Future.wait([loadPins(), loadTasks()]);
+  }
+
+  /// Clears in-memory state on logout so the next session starts fresh.
+  void clearSession() {
+    _initialized = false;
+    emit(const DailyTasksState());
   }
 
   Future<void> loadPins() async {

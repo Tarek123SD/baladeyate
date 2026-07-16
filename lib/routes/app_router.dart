@@ -46,6 +46,7 @@ import 'package:baladeyate/features/delegate/models/survey_location.dart';
 
 import 'package:baladeyate/features/delegate/models/survey_navigation_context.dart';
 
+import 'package:baladeyate/features/donations/cubits/donations_cubit/donations_cubit.dart';
 import 'package:baladeyate/features/donations/presentation/donations_screen.dart';
 
 import 'package:baladeyate/features/floor/presentation/floor_screen.dart';
@@ -64,6 +65,7 @@ import 'package:baladeyate/features/settings/presentation/settings_screen.dart';
 
 import 'package:baladeyate/features/daily_tasks/presentation/delegate_map_screen.dart';
 import 'package:baladeyate/features/daily_tasks/presentation/delegate_tasks_screen.dart';
+import 'package:baladeyate/features/daily_tasks/presentation/delegate_buildings_screen.dart';
 import 'package:baladeyate/features/delegate_home/presentation/delegate_home_screen.dart';
 
 import 'package:baladeyate/routes/app_route_observer.dart';
@@ -484,8 +486,9 @@ GoRouter _createAppRouter() {
 
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) {
-          return BlocProvider(
-            create: (_) => sl<DailyTasksCubit>()..initialize(),
+          final cubit = sl<DailyTasksCubit>()..initialize();
+          return BlocProvider.value(
+            value: cubit,
             child: DelegateNavigationScreen(
               navigationShell: navigationShell,
             ),
@@ -513,6 +516,14 @@ GoRouter _createAppRouter() {
               GoRoute(
                 path: '/delegate/tasks',
                 builder: (context, state) => const DelegateTasksScreen(),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/delegate/buildings',
+                builder: (context, state) => const DelegateBuildingsScreen(),
               ),
             ],
           ),
@@ -579,7 +590,10 @@ GoRouter _createAppRouter() {
 
                 path: '/donations',
 
-                builder: (context, state) => const DonationsScreen(),
+                builder: (context, state) => BlocProvider(
+                  create: (_) => sl<DonationsCubit>()..loadCases(),
+                  child: const DonationsScreen(),
+                ),
 
               ),
 
@@ -635,11 +649,27 @@ String? _authRedirect(BuildContext context, GoRouterState state) {
 
 
 
-  if (authState is AuthInitial || authState is AuthLoading) {
+  if (authState is AuthInitial) {
 
     if (isPublicRoute(path)) return null;
 
     return '/splash';
+
+  }
+
+
+
+  // Logout (and other in-app auth actions) emit AuthLoading while the user is
+
+  // on a protected route — send them to login, not splash, to avoid re-running
+
+  // session restore and briefly landing back on home.
+
+  if (authState is AuthLoading) {
+
+    if (isPublicRoute(path)) return null;
+
+    return '/login';
 
   }
 

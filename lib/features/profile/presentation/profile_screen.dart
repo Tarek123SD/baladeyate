@@ -1,25 +1,24 @@
 import 'package:baladeyate/config/theme/app_colors.dart';
-import 'package:baladeyate/core/constants/app_assets.dart';
+import 'package:baladeyate/core/responsive/dimensions.dart';
 import 'package:baladeyate/core/responsive/responsive_helper.dart';
+import 'package:baladeyate/core/widgets/app_background.dart';
 import 'package:baladeyate/core/widgets/custom_app_bar.dart';
 import 'package:baladeyate/core/widgets/custom_profile_family_member_card.dart';
-import 'package:baladeyate/core/widgets/custom_profile_tab_button.dart';
 import 'package:baladeyate/features/profile/cubits/profile_cubit/profile_cubit.dart';
 import 'package:baladeyate/features/profile/cubits/profile_cubit/profile_state.dart';
 import 'package:baladeyate/features/profile/models/household.dart';
+import 'package:baladeyate/features/profile/presentation/components/profile_empty_state.dart';
+import 'package:baladeyate/features/profile/presentation/components/profile_hero_card.dart';
+import 'package:baladeyate/features/profile/presentation/components/profile_housing_card.dart';
+import 'package:baladeyate/features/profile/presentation/components/profile_section_header.dart';
+import 'package:baladeyate/features/profile/presentation/components/profile_stats_row.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:responsive_x_toolkit/responsive_x.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
-
-  static const _memberColors = [
-    Color(0xFFB8956A),
-    Color(0xFFA0C9C3),
-    Color(0xFFF4D9B8),
-    Color(0xFF8FB8AE),
-  ];
 
   @override
   Widget build(BuildContext context) {
@@ -37,91 +36,75 @@ class ProfileScreen extends StatelessWidget {
           previous.runtimeType != current.runtimeType ||
           (previous is ProfileLoaded &&
               current is ProfileLoaded &&
-              (previous.household != current.household ||
-                  previous.selectedTab != current.selectedTab)),
+              previous.household != current.household),
       builder: (context, profileState) {
         final household =
             profileState is ProfileLoaded ? profileState.household : null;
-        final selectedTab =
-            profileState is ProfileLoaded ? profileState.selectedTab : 0;
         final isLoading = profileState is ProfileLoading;
         final errorMessage =
             profileState is ProfileFailure ? profileState.message : null;
 
-        return Container(
-          decoration: const BoxDecoration(
-            image: DecorationImage(
-              image: AssetImage(AppAssets.backgroundWhite),
-              fit: BoxFit.cover,
-            ),
-          ),
+        return AppBackground(
           child: Scaffold(
             backgroundColor: Colors.transparent,
             appBar: const CustomAppBar(),
             body: SafeArea(
-              child: RefreshIndicator(
-                onRefresh: () =>
-                    context.read<ProfileCubit>().loadHousehold(),
-                child: SingleChildScrollView(
-                  physics: const AlwaysScrollableScrollPhysics(),
-                  child: Column(
-                    children: [
-                      _buildHeaderCard(context, household),
-                      Transform.translate(
-                        offset: Offset(0, -30.h(context)),
-                        child: _buildAddressCard(
-                          context,
-                          horizontalPadding: horizontalPadding,
-                          household: household,
-                          isLoading: isLoading,
-                          errorMessage: errorMessage,
+              child: Directionality(
+                textDirection: TextDirection.rtl,
+                child: Center(
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(
+                      maxWidth: Dimensions.contentMaxWidth.w(context),
+                    ),
+                    child: RefreshIndicator(
+                      color: AppColors.primaryForest,
+                      onRefresh: () =>
+                          context.read<ProfileCubit>().loadHousehold(),
+                      child: SingleChildScrollView(
+                        physics: const AlwaysScrollableScrollPhysics(),
+                        padding: EdgeInsets.fromLTRB(
+                          horizontalPadding,
+                          16.h(context),
+                          horizontalPadding,
+                          30.h(context),
                         ),
-                      ),
-                      SizedBox(height: 20.h(context)),
-                      Padding(
-                        padding: EdgeInsets.symmetric(
-                          horizontal: horizontalPadding,
-                        ),
-                        child: Row(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
-                            CustomProfileTabButton(
-                              label: 'الرقبة العائلية',
-                              isSelected: selectedTab == 0,
-                              onTap: () =>
-                                  context.read<ProfileCubit>().selectTab(0),
-                            ),
-                            SizedBox(width: 12.w(context)),
-                            CustomProfileTabButton(
-                              label: 'العقارات',
-                              isSelected: selectedTab == 1,
-                              onTap: () =>
-                                  context.read<ProfileCubit>().selectTab(1),
-                            ),
-                            SizedBox(width: 12.w(context)),
-                            CustomProfileTabButton(
-                              label: 'المدافن',
-                              isSelected: selectedTab == 2,
-                              onTap: () =>
-                                  context.read<ProfileCubit>().selectTab(2),
+                            ProfileHeroCard(familyBook: household?.familyBook)
+                                .animate()
+                                .fadeIn(duration: 350.ms)
+                                .slideY(begin: -0.1, end: 0),
+                            SizedBox(height: 20.h(context)),
+                            ProfileStatsRow(
+                              household: household,
+                              isLoading: isLoading,
+                            )
+                                .animate()
+                                .fadeIn(duration: 350.ms, delay: 80.ms)
+                                .slideY(begin: 0.08, end: 0),
+                            SizedBox(height: 20.h(context)),
+                            ProfileHousingCard(
+                              household: household,
+                              isLoading: isLoading,
+                              errorMessage: errorMessage,
+                              onRetry: () =>
+                                  context.read<ProfileCubit>().loadHousehold(),
+                            )
+                                .animate()
+                                .fadeIn(duration: 350.ms, delay: 120.ms)
+                                .slideY(begin: 0.08, end: 0),
+                            SizedBox(height: 22.h(context)),
+                            _buildMembersSection(
+                              context,
+                              household: household,
+                              isLoading: isLoading,
+                              errorMessage: errorMessage,
                             ),
                           ],
                         ),
                       ),
-                      SizedBox(height: 24.h(context)),
-                      Padding(
-                        padding: EdgeInsets.symmetric(
-                          horizontal: horizontalPadding,
-                        ),
-                        child: _buildTabContent(
-                          context,
-                          selectedTab: selectedTab,
-                          household: household,
-                          isLoading: isLoading,
-                          errorMessage: errorMessage,
-                        ),
-                      ),
-                      SizedBox(height: 30.h(context)),
-                    ],
+                    ),
                   ),
                 ),
               ),
@@ -132,254 +115,62 @@ class ProfileScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildHeaderCard(BuildContext context, Household? household) {
-    return Container(
-      width: double.infinity,
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [Color(0xFF5FA89D), Color(0xFF7BC9B8)],
-        ),
-      ),
-      padding: EdgeInsets.symmetric(
-        horizontal: 24.w(context),
-        vertical: 35.h(context),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.end,
-        children: [
-          Text(
-            ' الملف الرقمي الموحد ',
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: AppColors.primaryCharcoal,
-                ),
-            textDirection: TextDirection.rtl,
-          ),
-          SizedBox(height: 8.h(context)),
-          Text(
-            'البطاقة العائلية',
-            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                ),
-            textDirection: TextDirection.rtl,
-          ),
-          SizedBox(height: 8.h(context)),
-          Text(
-            household?.familyBook ?? '—',
-            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w600,
-                ),
-            textDirection: TextDirection.rtl,
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildAddressCard(
+  Widget _buildMembersSection(
     BuildContext context, {
-    required double horizontalPadding,
     required Household? household,
     required bool isLoading,
     required String? errorMessage,
   }) {
-    return Container(
-      margin: EdgeInsets.symmetric(horizontal: horizontalPadding),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(24.r(context)),
-        boxShadow: const [
-          BoxShadow(
-            color: Color.fromRGBO(0, 0, 0, 0.08),
-            blurRadius: 14,
-            offset: Offset(0, 8),
-          ),
-        ],
-      ),
-      padding: EdgeInsets.all(20.s(context)),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.end,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              Text(
-                'بيانات السكن',
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
-                textDirection: TextDirection.rtl,
-              ),
-              SizedBox(width: 8.w(context)),
-              Icon(Icons.home, color: Colors.amber, size: 20.ic(context)),
-            ],
-          ),
-          if (isLoading) ...[
-            SizedBox(height: 20.h(context)),
-            const Center(child: CircularProgressIndicator()),
-          ] else if (errorMessage != null) ...[
-            SizedBox(height: 16.h(context)),
-            Text(
-              errorMessage,
-              textDirection: TextDirection.rtl,
-              textAlign: TextAlign.right,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: AppColors.secondaryCharcoal,
-                    height: 1.5,
-                  ),
-            ),
-          ] else ...[
-            SizedBox(height: 16.h(context)),
-            Row(
-              children: [
-                Expanded(
-                  child: _infoTile(
-                    context,
-                    title: 'الهيئة / المقر',
-                    value: household?.buildingName ?? '—',
-                  ),
-                ),
-                SizedBox(width: 12.w(context)),
-                Expanded(
-                  child: _infoTile(
-                    context,
-                    title: 'الشارع / الحي',
-                    value: household?.address ?? '—',
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ],
-      ),
-    );
-  }
-
-  Widget _infoTile(
-    BuildContext context, {
-    required String title,
-    required String value,
-  }) {
-    return Container(
-      padding: EdgeInsets.all(16.s(context)),
-      decoration: BoxDecoration(
-        color: Colors.grey[100],
-        borderRadius: BorderRadius.circular(16.r(context)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.end,
-        children: [
-          Text(
-            title,
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: Colors.grey[600],
-                  fontWeight: FontWeight.w600,
-                ),
-            textDirection: TextDirection.rtl,
-          ),
-          SizedBox(height: 8.h(context)),
-          Text(
-            value,
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
-            textDirection: TextDirection.rtl,
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildTabContent(
-    BuildContext context, {
-    required int selectedTab,
-    required Household? household,
-    required bool isLoading,
-    required String? errorMessage,
-  }) {
-    if (selectedTab != 0) {
-      return Center(
-        child: Padding(
-          padding: EdgeInsets.symmetric(vertical: 24.h(context)),
-          child: Text(
-            'لا توجد بيانات متاحة من الخادم لهذا القسم حالياً',
-            textAlign: TextAlign.center,
-            textDirection: TextDirection.rtl,
-            style: Theme.of(context).textTheme.bodyLarge,
-          ),
-        ),
-      );
-    }
-
     if (isLoading) {
       return const Center(child: CircularProgressIndicator());
     }
 
     if (household == null) {
-      return Text(
-        errorMessage ?? 'لا توجد بيانات عائلية متاحة',
-        textDirection: TextDirection.rtl,
-        textAlign: TextAlign.right,
+      return ProfileEmptyState(
+        icon: Icons.people_outline_rounded,
+        title: 'لا توجد بيانات عائلية',
+        description: errorMessage ??
+            'لم يتم العثور على بيانات الأسرة. اسحب للأسفل للتحديث.',
       );
     }
 
     final members = household.members;
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.end,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Text(
-          'الأسرة المسجلين',
-          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
-          textDirection: TextDirection.rtl,
+        ProfileSectionHeader(
+          title: 'أفراد الأسرة',
+          badge: '${members.length} فرد',
         ),
         SizedBox(height: 16.h(context)),
-        Container(
-          padding: EdgeInsets.symmetric(
-            horizontal: 12.w(context),
-            vertical: 8.h(context),
-          ),
-          decoration: BoxDecoration(
-            color: Colors.teal[200],
-            borderRadius: BorderRadius.circular(20.r(context)),
-          ),
-          child: Text(
-            '${members.length} أفراد',
-            style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                  color: Colors.teal[800],
-                  fontWeight: FontWeight.w600,
+        if (members.isEmpty)
+          const ProfileEmptyState(
+            icon: Icons.people_outline_rounded,
+            title: 'لا يوجد أفراد مسجّلون',
+            description:
+                'لم يتم العثور على أفراد في السجل العائلي المرتبط بحسابك.',
+          )
+        else
+          ListView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: members.length,
+            itemBuilder: (context, index) {
+              final member = members[index];
+              return Padding(
+                padding: EdgeInsets.only(bottom: 12.h(context)),
+                child: CustomProfileFamilyMemberCard(
+                  name: member.fullName,
+                  nationalId: member.nationalId,
+                  role: member.roleLabel,
+                  initials: member.initials,
                 ),
-            textDirection: TextDirection.rtl,
+              )
+                  .animate()
+                  .fadeIn(duration: 300.ms, delay: (40 * index).ms)
+                  .slideY(begin: 0.08, end: 0);
+            },
           ),
-        ),
-        SizedBox(height: 16.h(context)),
-        ListView.builder(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          itemCount: members.length,
-          itemBuilder: (context, index) {
-            final member = members[index];
-            final color = _memberColors[index % _memberColors.length];
-            return Padding(
-              padding: EdgeInsets.only(bottom: 12.h(context)),
-              child: CustomProfileFamilyMemberCard(
-                member: {
-                  'name': member.fullName,
-                  'number': '${member.nationalId} : الرقم الوطني',
-                  'role': member.roleLabel,
-                  'image': member.initials,
-                  'bgColor': color,
-                },
-              ),
-            );
-          },
-        ),
       ],
     );
   }

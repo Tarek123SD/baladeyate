@@ -43,4 +43,9 @@ class EndPoints {
   static String notificationRead(String id) => 'v1/notifications/$id/read';
   static const String notificationsReadAll = 'v1/notifications/read-all';
   static const String fcmToken = 'v1/notifications/update-fcm-token';
+
+  // Donations & Special Cases (our API — cases managed from the dashboard)
+  static const String donations = 'v1/donations';
+  static String donationById(int id) => 'v1/donations/$id';
+  static String donationDonate(int id) => 'v1/donations/$id/donate';
 }

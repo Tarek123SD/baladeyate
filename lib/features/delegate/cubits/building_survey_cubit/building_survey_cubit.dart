@@ -191,6 +191,31 @@ class BuildingSurveyCubit extends Cubit<BuildingSurveyState> {
     );
   }
 
+  /// Loads an existing apartment unit for review / edit.
+  Future<void> editApartmentUnit({
+    required String floorLocalId,
+    required String apartmentLocalId,
+  }) async {
+    final current = _survey;
+    if (current == null) return;
+
+    final floor = current.floorByLocalId(floorLocalId);
+    if (floor == null) return;
+
+    final matches =
+        floor.apartments.where((a) => a.localId == apartmentLocalId);
+    if (matches.isEmpty) return;
+    final unit = matches.first;
+
+    await _emitAndPersist(
+      current.copyWith(
+        currentFloorLocalId: floorLocalId,
+        currentApartment: unit,
+        clearCurrentApartment: false,
+      ),
+    );
+  }
+
   Future<void> updateCurrentApartment({
     String? floorType,
     String? waterMeter,
@@ -261,10 +286,16 @@ class BuildingSurveyCubit extends Cubit<BuildingSurveyState> {
     emit(BuildingSurveySaving(survey: current));
 
     try {
-      final result = await _delegateRepository.createSurveyApartmentAndFamily(
-        buildingId: current.buildingId!,
-        unit: unit,
-      );
+      final isUpdate = unit.isSaved &&
+          unit.apartmentId != null &&
+          unit.familyId != null;
+
+      final result = isUpdate
+          ? await _delegateRepository.updateSurveyApartmentAndFamily(unit: unit)
+          : await _delegateRepository.createSurveyApartmentAndFamily(
+              buildingId: current.buildingId!,
+              unit: unit,
+            );
 
       final savedUnit = unit.copyWith(
         apartmentId: result.apartmentId,
@@ -274,7 +305,15 @@ class BuildingSurveyCubit extends Cubit<BuildingSurveyState> {
 
       final floors = current.floors.map((f) {
         if (f.localId != floorLocalId) return f;
-        return f.copyWith(apartments: [...f.apartments, savedUnit]);
+        final apartments = List<ApartmentUnitDraft>.from(f.apartments);
+        final existingIndex =
+            apartments.indexWhere((a) => a.localId == savedUnit.localId);
+        if (existingIndex >= 0) {
+          apartments[existingIndex] = savedUnit;
+        } else {
+          apartments.add(savedUnit);
+        }
+        return f.copyWith(apartments: apartments);
       }).toList();
 
       final updated = current.copyWith(
@@ -299,6 +338,8 @@ class BuildingSurveyCubit extends Cubit<BuildingSurveyState> {
     final current = _survey;
     if (current == null) return;
 
+    await flush();
+
     await _delegateRepository.updateDraftPin(
       SurveyPin(
         id: current.pinId,
@@ -306,13 +347,16 @@ class BuildingSurveyCubit extends Cubit<BuildingSurveyState> {
         longitude: current.longitude,
         status: SurveyPinStatus.completed,
         buildingId: current.buildingId,
-        title: current.building.name,
+        title: current.building.name.isNotEmpty
+            ? current.building.name
+            : 'مسح مكتمل',
         address: current.building.realEstateNumber,
       ),
     );
 
     final updated = current.copyWith(phase: SurveyPhase.completed);
     await _emitAndPersist(updated);
+    await flush();
   }
 
   Future<void> _emitAndPersist(BuildingSurvey survey) async {

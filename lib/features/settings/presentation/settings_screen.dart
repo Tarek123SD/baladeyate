@@ -23,96 +23,97 @@ class SettingsScreen extends StatelessWidget {
     final horizontalPadding = ResponsiveHelper.horizontalPadding(context);
 
     return BlocListener<ProfileCubit, ProfileState>(
-        listener: (context, state) {
-          if (state is ProfileFailure) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(state.message)),
-            );
-          } else if (state is ProfilePhoneUpdated) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('تم تحديث رقم الهاتف')),
-            );
-          } else if (state is ProfileVerificationSubmitted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('تم إرسال طلب توثيق الهوية')),
-            );
-          }
-        },
-        child: BlocListener<AuthCubit, AuthState>(
       listener: (context, state) {
-        if (state is AuthLoggedOut) {
-          context.go('/login');
-        } else if (state is AuthFailure) {
+        if (state is ProfileFailure) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text(state.message)),
           );
+        } else if (state is ProfilePhoneUpdated) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('تم تحديث رقم الهاتف')),
+          );
+        } else if (state is ProfileVerificationSubmitted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('تم إرسال طلب توثيق الهوية')),
+          );
         }
       },
-      child: Container(
-        decoration: const BoxDecoration(
-          image: DecorationImage(
-            image: AssetImage(AppAssets.backgroundWhite),
-            fit: BoxFit.cover,
+      child: BlocListener<AuthCubit, AuthState>(
+        listener: (context, state) {
+          if (state is AuthLoggedOut) {
+            context.go('/login');
+          } else if (state is AuthFailure) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(state.message)),
+            );
+          }
+        },
+        child: Container(
+          decoration: const BoxDecoration(
+            image: DecorationImage(
+              image: AssetImage(AppAssets.backgroundWhite),
+              fit: BoxFit.cover,
+            ),
           ),
-        ),
-        child: Scaffold(
-          backgroundColor: Colors.transparent,
-          appBar: const CustomAppBar(
-            showSettings: false,
-            showBackButton: true,
-          ),
-          body: SafeArea(
-            child: Center(
-              child: ConstrainedBox(
-                constraints: BoxConstraints(
-                  maxWidth: Dimensions.contentMaxWidth.w(context),
-                ),
-                child: SingleChildScrollView(
-                  padding: EdgeInsets.fromLTRB(
-                    horizontalPadding,
-                    16.h(context),
-                    horizontalPadding,
-                    24.h(context),
+          child: Scaffold(
+            backgroundColor: Colors.transparent,
+            appBar: const CustomAppBar(
+              showSettings: false,
+              showBackButton: true,
+            ),
+            body: SafeArea(
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(
+                    maxWidth: Dimensions.contentMaxWidth.w(context),
                   ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      _buildHeader(context),
-                      SizedBox(height: 20.h(context)),
-                      _buildProfileCard(context),
-                      SizedBox(height: 12.h(context)),
-                      _buildAccountActions(context),
-                      SizedBox(height: 24.h(context)),
-                      _buildSectionTitle(context, 'الإعدادات العامة'),
-                      SizedBox(height: 12.h(context)),
-                      const CustomSettingsOptionCard(
-                        title: 'تغيير اللغة',
-                        subtitle: 'العربية',
-                        leadingIcon: Icons.language_rounded,
-                      ),
-                      SizedBox(height: 10.h(context)),
-                      CustomSettingsOptionCard(
-                        title: 'تغيير كلمة المرور',
-                        leadingIcon: Icons.lock_outline_rounded,
-                        onTap: () => _openResetPassword(context),
-                      ),
-                      SizedBox(height: 24.h(context)),
-                      _buildSectionTitle(context, 'القانونية والمعلومات'),
-                      SizedBox(height: 12.h(context)),
-                      const CustomSettingsOptionCard(
-                        title: 'سياسة الخصوصية',
-                        leadingIcon: Icons.privacy_tip_outlined,
-                      ),
-                      SizedBox(height: 10.h(context)),
-                      const CustomSettingsOptionCard(
-                        title: 'الشروط والأحكام العامة',
-                        leadingIcon: Icons.gavel_rounded,
-                      ),
-                      SizedBox(height: 24.h(context)),
-                      _buildLogoutButton(context),
-                      SizedBox(height: 16.h(context)),
-                      _buildFooter(context),
-                    ],
+                  child: SingleChildScrollView(
+                    padding: EdgeInsets.fromLTRB(
+                      horizontalPadding,
+                      16.h(context),
+                      horizontalPadding,
+                      24.h(context),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        _buildHeader(context),
+                        SizedBox(height: 20.h(context)),
+                        _buildProfileCard(context),
+                        SizedBox(height: 12.h(context)),
+                        _buildAccountActions(context),
+                        SizedBox(height: 24.h(context)),
+                        _buildSectionTitle(context, 'الإعدادات العامة'),
+                        SizedBox(height: 12.h(context)),
+                        const CustomSettingsOptionCard(
+                          title: 'تغيير اللغة',
+                          subtitle: 'العربية',
+                          leadingIcon: Icons.language_rounded,
+                        ),
+                        SizedBox(height: 10.h(context)),
+                        CustomSettingsOptionCard(
+                          title: 'تغيير كلمة المرور',
+                          leadingIcon: Icons.lock_outline_rounded,
+                          onTap: () => _openResetPassword(context),
+                        ),
+                        SizedBox(height: 24.h(context)),
+                        _buildSectionTitle(context, 'القانونية والمعلومات'),
+                        SizedBox(height: 12.h(context)),
+                        const CustomSettingsOptionCard(
+                          title: 'سياسة الخصوصية',
+                          leadingIcon: Icons.privacy_tip_outlined,
+                        ),
+                        SizedBox(height: 10.h(context)),
+                        const CustomSettingsOptionCard(
+                          title: 'الشروط والأحكام العامة',
+                          leadingIcon: Icons.gavel_rounded,
+                        ),
+                        SizedBox(height: 24.h(context)),
+                        _buildLogoutButton(context),
+                        SizedBox(height: 16.h(context)),
+                        _buildFooter(context),
+                      ],
+                    ),
                   ),
                 ),
               ),
@@ -120,7 +121,6 @@ class SettingsScreen extends StatelessWidget {
           ),
         ),
       ),
-    ),
     );
   }
 
@@ -189,7 +189,7 @@ class SettingsScreen extends StatelessWidget {
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                             color: AppColors.secondaryCharcoal
                                 .withValues(alpha: 0.8),
-                            fontSize: 13.f(context),
+                            fontSize: 15.f(context),
                           ),
                     ),
                     if (user?.phoneNumber != null) ...[
@@ -197,7 +197,11 @@ class SettingsScreen extends StatelessWidget {
                       Text(
                         'الهاتف: ${user!.phoneNumber}',
                         textDirection: TextDirection.rtl,
-                        style: Theme.of(context).textTheme.bodySmall,
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                              color: AppColors.secondaryCharcoal
+                                  .withValues(alpha: 0.8),
+                              fontSize: 15.f(context),
+                            ),
                       ),
                     ],
                     SizedBox(height: 10.h(context)),
@@ -208,7 +212,7 @@ class SettingsScreen extends StatelessWidget {
                       ),
                       decoration: BoxDecoration(
                         color: isApproved
-                            ? AppColors.thirdGoldenWheat
+                            ? Colors.green
                             : AppColors.thirdGoldenWheat
                                 .withValues(alpha: 0.45),
                         borderRadius: BorderRadius.circular(12.r(context)),
@@ -315,7 +319,8 @@ class SettingsScreen extends StatelessWidget {
             child: const Text('إلغاء'),
           ),
           TextButton(
-            onPressed: () => Navigator.pop(dialogContext, controller.text.trim()),
+            onPressed: () =>
+                Navigator.pop(dialogContext, controller.text.trim()),
             child: const Text('حفظ'),
           ),
         ],
@@ -348,9 +353,8 @@ class SettingsScreen extends StatelessWidget {
         return SizedBox(
           height: 52.h(context),
           child: ElevatedButton.icon(
-            onPressed: isLoading
-                ? null
-                : () => context.read<AuthCubit>().logout(),
+            onPressed:
+                isLoading ? null : () => context.read<AuthCubit>().logout(),
             style: ElevatedButton.styleFrom(
               elevation: 0,
               backgroundColor: AppColors.green,
@@ -388,23 +392,14 @@ class SettingsScreen extends StatelessWidget {
     return Column(
       children: [
         Text(
-          'V2.4.0 إصدار النظام',
+          'إصدار النظام: V1.0.0',
           textDirection: TextDirection.rtl,
           style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: AppColors.secondaryCharcoal.withValues(alpha: 0.65),
-                fontSize: 12.f(context),
+                color: AppColors.secondaryCharcoal.withValues(alpha: 0.90),
+                fontSize: 14.f(context),
               ),
         ),
         SizedBox(height: 4.h(context)),
-        Text(
-          'الدعم الفني الحكومي المركز',
-          textDirection: TextDirection.rtl,
-          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: AppColors.primaryForest,
-                fontWeight: FontWeight.w600,
-                fontSize: 12.f(context),
-              ),
-        ),
       ],
     );
   }

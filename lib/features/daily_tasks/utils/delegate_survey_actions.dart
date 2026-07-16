@@ -16,8 +16,13 @@ Future<void> resumeDelegateSurvey(
   Future<void> Function(SurveyPin pin)? onFocusPin,
 }) async {
   final cubit = context.read<DailyTasksCubit>();
+  final surveyStore = sl<LocalBuildingSurveyStore>();
+  final survey = await surveyStore.loadSurvey(pin.id);
 
-  if (pin.status == SurveyPinStatus.completed) {
+  if (!context.mounted) return;
+
+  // Completed pin with no local survey data: focus on map only.
+  if (pin.status == SurveyPinStatus.completed && survey == null) {
     if (onFocusPin != null) {
       await onFocusPin(pin);
     } else {
@@ -26,11 +31,8 @@ Future<void> resumeDelegateSurvey(
     return;
   }
 
-  final surveyStore = sl<LocalBuildingSurveyStore>();
-  final survey = await surveyStore.loadSurvey(pin.id);
-
-  if (!context.mounted) return;
-
+  // Allow reviewing / editing when local survey still exists
+  // (including after "إنهاء مسح المبنى").
   if (survey != null && survey.phase != SurveyPhase.buildingPending) {
     await context.push('/building/${pin.id}');
   } else {
