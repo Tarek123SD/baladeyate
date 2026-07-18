@@ -4,7 +4,6 @@ import 'package:baladeyate/core/services/api_services.dart';
 import 'package:baladeyate/core/services/end_points.dart';
 import 'package:baladeyate/core/utils/api_response_parser.dart';
 import 'package:baladeyate/features/auth/models/user.dart';
-import 'package:baladeyate/features/profile/models/household.dart';
 import 'package:dio/dio.dart';
 
 class CitizenRepository {
@@ -68,20 +67,7 @@ class CitizenRepository {
     }
   }
 
-  Future<Household> getMyHousehold() async {
-    try {
-      final response = await _apiService.get(EndPoints.myHousehold);
-      final payload = ApiResponseParser.expectData(response.data);
 
-      if (payload is! Map<String, dynamic>) {
-        throw Exception('استجابة غير صالحة من الخادم');
-      }
-
-      return Household.fromJson(payload);
-    } catch (error) {
-      throw ApiResponseParser.mapError(error, fallback: 'فشل تحميل بيانات السكن');
-    }
-  }
 
   Future<void> updateFcmToken(String fcmToken) async {
     try {

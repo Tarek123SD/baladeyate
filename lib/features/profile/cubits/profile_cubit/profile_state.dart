@@ -1,6 +1,6 @@
 import 'dart:io';
 
-import 'package:baladeyate/features/profile/models/household.dart';
+import 'package:baladeyate/features/auth/models/user.dart';
 import 'package:equatable/equatable.dart';
 
 sealed class ProfileState extends Equatable {
@@ -20,26 +20,26 @@ final class ProfileLoading extends ProfileState {
 
 final class ProfileLoaded extends ProfileState {
   const ProfileLoaded({
-    required this.household,
+    required this.user,
     this.selectedTab = 0,
     this.identityImage,
     this.showResubmitForm = false,
   });
 
-  final Household household;
+  final User user;
   final int selectedTab;
   final File? identityImage;
   final bool showResubmitForm;
 
   ProfileLoaded copyWith({
-    Household? household,
+    User? user,
     int? selectedTab,
     File? identityImage,
     bool clearIdentityImage = false,
     bool? showResubmitForm,
   }) {
     return ProfileLoaded(
-      household: household ?? this.household,
+      user: user ?? this.user,
       selectedTab: selectedTab ?? this.selectedTab,
       identityImage:
           clearIdentityImage ? null : (identityImage ?? this.identityImage),
@@ -49,7 +49,7 @@ final class ProfileLoaded extends ProfileState {
 
   @override
   List<Object?> get props =>
-      [household, selectedTab, identityImage, showResubmitForm];
+      [user, selectedTab, identityImage, showResubmitForm];
 }
 
 final class ProfileVerificationDraft extends ProfileState {

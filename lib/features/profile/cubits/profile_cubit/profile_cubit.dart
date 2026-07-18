@@ -1,8 +1,8 @@
 import 'dart:io';
 
 import 'package:baladeyate/features/auth/cubits/auth_cubit/auth_cubit.dart';
+import 'package:baladeyate/features/auth/cubits/auth_cubit/auth_state.dart';
 import 'package:baladeyate/features/profile/cubits/profile_cubit/profile_state.dart';
-import 'package:baladeyate/features/profile/models/household.dart';
 import 'package:baladeyate/features/profile/repo/citizen_repository.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -36,17 +36,22 @@ class ProfileCubit extends Cubit<ProfileState> {
     return false;
   }
 
-  Future<void> loadHousehold() async {
+  Future<void> loadProfile() async {
     final previousTab = selectedTab;
     final previousImage = identityImage;
     emit(const ProfileLoading());
     try {
-      final household = await _citizenRepository.getMyHousehold();
-      emit(ProfileLoaded(
-        household: household,
-        selectedTab: previousTab,
-        identityImage: previousImage,
-      ));
+      await _authCubit.refreshUser();
+      final authState = _authCubit.state;
+      if (authState is AuthSuccess) {
+        emit(ProfileLoaded(
+          user: authState.user,
+          selectedTab: previousTab,
+          identityImage: previousImage,
+        ));
+      } else {
+        emit(const ProfileFailure(message: 'يجب تسجيل الدخول أولاً'));
+      }
     } catch (error) {
       emit(ProfileFailure(message: _messageFromError(error)));
     }
@@ -75,19 +80,15 @@ class ProfileCubit extends Cubit<ProfileState> {
     if (current is ProfileLoaded) {
       emit(current.copyWith(showResubmitForm: value));
     } else {
-      emit(ProfileLoaded(
-        household: _emptyHousehold,
-        showResubmitForm: value,
-      ));
+      final authState = _authCubit.state;
+      if (authState is AuthSuccess) {
+        emit(ProfileLoaded(
+          user: authState.user,
+          showResubmitForm: value,
+        ));
+      }
     }
   }
-
-  static const _emptyHousehold = Household(
-    familyBook: '—',
-    buildingName: '—',
-    address: '—',
-    members: [],
-  );
 
   Future<void> updatePhone(String phoneNumber) async {
     emit(const ProfileLoading());

@@ -39,7 +39,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
       title: Row(
         textDirection: TextDirection.rtl,
         children: [
-          if (showBackButton)
+          if (showBackButton || context.canPop())
             IconButton(
               onPressed: () {
                 if (context.canPop()) {

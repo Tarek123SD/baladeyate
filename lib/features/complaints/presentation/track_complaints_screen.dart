@@ -43,7 +43,7 @@ class TrackComplaintsScreen extends StatelessWidget {
           appBar: const CustomAppBar(),
           floatingActionButton: FloatingActionButton.extended(
             heroTag: null,
-            onPressed: () => context.go('/complains'),
+            onPressed: () => context.push('/complains'),
             backgroundColor: AppColors.green,
             icon: const Icon(Icons.add, color: AppColors.thirdGoldenWheat),
             label: Text(

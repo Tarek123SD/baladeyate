@@ -570,7 +570,7 @@ GoRouter _createAppRouter() {
 
                 builder: (context, state) => BlocProvider(
 
-                  create: (_) => sl<ProfileCubit>()..loadHousehold(),
+                  create: (_) => sl<ProfileCubit>()..loadProfile(),
 
                   child: const ProfileScreen(),
 

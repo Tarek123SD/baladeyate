@@ -16,10 +16,18 @@ migrate_working_dir/
 *.iws
 .idea/
 
-# The .vscode folder contains launch configuration and tasks you configure in
-# VS Code which you may wish to be included in version control, so this line
-# is commented out by default.
-#.vscode/
+# Local working environment — never upload these
+# .vscode/settings.json contains machine-specific Flutter SDK paths
+.vscode/
+
+# Environment variable files (API keys, secrets)
+.env
+.env.*
+!.env.example
+
+# macOS / Windows system files
+.DS_Store
+Thumbs.db
 
 # Flutter/Dart/Pub related
 **/doc/api/

@@ -64,7 +64,8 @@ class _HomeScreenState extends State<HomeScreen> {
                             buildWhen: (previous, current) {
                               if (previous is AuthSuccess &&
                                   current is AuthSuccess) {
-                                return previous.user.name != current.user.name ||
+                                return previous.user.name !=
+                                        current.user.name ||
                                     previous.user.verificationStatus !=
                                         current.user.verificationStatus;
                               }
@@ -79,8 +80,8 @@ class _HomeScreenState extends State<HomeScreen> {
                                   ? (state.user.verificationStatusLabel ??
                                       'حالة التوثيق غير معروفة')
                                   : 'سجّل الدخول لعرض حالتك';
-                              final isVerified = state is AuthSuccess &&
-                                  state.user.isVerified;
+                              final isVerified =
+                                  state is AuthSuccess && state.user.isVerified;
                               final showVerification = state is AuthSuccess &&
                                   state.user.canSubmitVerification;
 
@@ -98,9 +99,9 @@ class _HomeScreenState extends State<HomeScreen> {
                                   if (showVerification) ...[
                                     SizedBox(height: 16.h(context)),
                                     VerificationBanner(
-                                      wasRejected: state
-                                              .user.verificationStatus ==
-                                          'rejected',
+                                      wasRejected:
+                                          state.user.verificationStatus ==
+                                              'rejected',
                                     ),
                                   ],
                                 ],
@@ -127,12 +128,12 @@ class _HomeScreenState extends State<HomeScreen> {
                           // Latest Updates
                           BlocBuilder<NotificationsCubit, NotificationsState>(
                             builder: (context, notificationsState) {
-                              final notifications = notificationsState
-                                      is NotificationsLoaded
-                                  ? notificationsState.notifications
-                                      .take(3)
-                                      .toList()
-                                  : const <AppNotification>[];
+                              final notifications =
+                                  notificationsState is NotificationsLoaded
+                                      ? notificationsState.notifications
+                                          .take(3)
+                                          .toList()
+                                      : const <AppNotification>[];
 
                               return Column(
                                 children: [
@@ -289,17 +290,17 @@ class _HomeScreenState extends State<HomeScreen> {
       _QuickService(
         title: 'تقديم شكوى',
         icon: Icons.campaign_outlined,
-        onTap: () => context.go('/complains'),
+        onTap: () => context.push('/complains'),
       ),
       _QuickService(
         title: 'متابعة الشكاوى',
         icon: Icons.track_changes_outlined,
-        onTap: () => context.go('/track'),
+        onTap: () => context.push('/track'),
       ),
       _QuickService(
         title: 'التبرعات',
         icon: Icons.volunteer_activism_outlined,
-        onTap: () => context.go('/donations'),
+        onTap: () => context.push('/donations'),
       ),
       _QuickService(
         title: 'البحث في المدافن',
@@ -311,9 +312,8 @@ class _HomeScreenState extends State<HomeScreen> {
     return LayoutBuilder(
       builder: (context, constraints) {
         final crossAxisCount = context.isMobile ? 2 : 3;
-        final itemWidth =
-            (constraints.maxWidth - gap * (crossAxisCount - 1)) /
-                crossAxisCount;
+        final itemWidth = (constraints.maxWidth - gap * (crossAxisCount - 1)) /
+            crossAxisCount;
 
         return Wrap(
           spacing: gap,
@@ -333,7 +333,6 @@ class _HomeScreenState extends State<HomeScreen> {
       },
     );
   }
-
 }
 
 class _QuickService {
