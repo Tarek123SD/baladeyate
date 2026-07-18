@@ -1,18 +1,28 @@
 import 'package:baladeyate/config/theme/app_colors.dart';
-import 'package:baladeyate/core/constants/app_assets.dart';
+import 'package:baladeyate/core/responsive/dimensions.dart';
 import 'package:baladeyate/core/responsive/responsive_helper.dart';
 import 'package:baladeyate/core/services/service_locator.dart';
+import 'package:baladeyate/core/widgets/app_background.dart';
+import 'package:baladeyate/core/widgets/custom_notification_card.dart';
 import 'package:baladeyate/features/auth/cubits/auth_cubit/auth_cubit.dart';
 import 'package:baladeyate/features/auth/cubits/auth_cubit/auth_state.dart';
-import 'package:baladeyate/routes/auth_navigation.dart';
-import 'package:baladeyate/core/widgets/custom_notification_card.dart';
 import 'package:baladeyate/features/notifications/cubits/notifications_cubit/notifications_cubit.dart';
 import 'package:baladeyate/features/notifications/cubits/notifications_cubit/notifications_state.dart';
 import 'package:baladeyate/features/notifications/models/app_notification.dart';
+import 'package:baladeyate/features/notifications/presentation/components/notifications_hero_card.dart';
+import 'package:baladeyate/features/notifications/utils/notification_display.dart';
+import 'package:baladeyate/features/profile/presentation/components/profile_empty_state.dart';
+import 'package:baladeyate/features/profile/presentation/components/profile_section_header.dart';
+import 'package:baladeyate/routes/auth_navigation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:responsive_x_toolkit/responsive_x.dart';
+
+enum _NotificationFilter { all, unread }
+
+enum _NotificationGroup { today, yesterday, earlier }
 
 class NotificationsScreen extends StatefulWidget {
   const NotificationsScreen({super.key});
@@ -22,10 +32,11 @@ class NotificationsScreen extends StatefulWidget {
 }
 
 class _NotificationsScreenState extends State<NotificationsScreen> {
+  _NotificationFilter _filter = _NotificationFilter.all;
+
   @override
   void initState() {
     super.initState();
-    // Always refresh when the screen opens so the list and badge stay in sync.
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
         context.read<NotificationsCubit>().loadNotifications();
@@ -56,54 +67,105 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
             ..showSnackBar(SnackBar(content: Text(message)));
         }
       },
-      child: Container(
-        decoration: const BoxDecoration(
-          image: DecorationImage(
-            image: AssetImage(AppAssets.backgroundWhite),
-            fit: BoxFit.cover,
-          ),
-        ),
+      child: AppBackground(
         child: Scaffold(
           backgroundColor: Colors.transparent,
           appBar: _buildAppBar(context),
           body: SafeArea(
             child: Directionality(
               textDirection: TextDirection.rtl,
-              child: BlocBuilder<NotificationsCubit, NotificationsState>(
-                builder: (context, state) {
-                  if (state is NotificationsLoading) {
-                    return const Center(child: CircularProgressIndicator());
-                  }
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(
+                    maxWidth: Dimensions.contentMaxWidth.w(context),
+                  ),
+                  child: BlocBuilder<NotificationsCubit, NotificationsState>(
+                    builder: (context, state) {
+                      if (state is NotificationsLoading) {
+                        return _buildLoadingState(context, horizontalPadding);
+                      }
 
-                  if (state is NotificationsFailure) {
-                    return _buildErrorState(context, state.message);
-                  }
+                      if (state is NotificationsFailure) {
+                        return _buildErrorState(context, state.message);
+                      }
 
-                  final loaded = state is NotificationsLoaded
-                      ? state
-                      : const NotificationsLoaded(notifications: []);
+                      final loaded = state is NotificationsLoaded
+                          ? state
+                          : const NotificationsLoaded(notifications: []);
 
-                  return Column(
-                    children: [
-                      _buildSummaryBar(context, loaded, horizontalPadding),
-                      Expanded(
-                        child: RefreshIndicator(
-                          color: AppColors.primaryForest,
-                          onRefresh: () => context
-                              .read<NotificationsCubit>()
-                              .loadNotifications(),
-                          child: loaded.notifications.isEmpty
-                              ? _buildEmptyState(context)
-                              : _buildList(
-                                  context,
-                                  loaded.notifications,
-                                  horizontalPadding,
+                      final filtered = _filteredNotifications(
+                        loaded.notifications,
+                      );
+
+                      return RefreshIndicator(
+                        color: AppColors.primaryForest,
+                        onRefresh: () => context
+                            .read<NotificationsCubit>()
+                            .loadNotifications(),
+                        child: CustomScrollView(
+                          physics: const AlwaysScrollableScrollPhysics(),
+                          slivers: [
+                            SliverPadding(
+                              padding: EdgeInsets.fromLTRB(
+                                horizontalPadding,
+                                16.h(context),
+                                horizontalPadding,
+                                0,
+                              ),
+                              sliver: SliverToBoxAdapter(
+                                child: NotificationsHeroCard(
+                                  totalCount: loaded.notifications.length,
+                                  unreadCount: loaded.unreadCount,
+                                  isSubmitting: loaded.isSubmitting,
+                                  onMarkAllRead: loaded.hasUnread
+                                      ? () => context
+                                          .read<NotificationsCubit>()
+                                          .markAllAsRead()
+                                      : null,
+                                )
+                                    .animate()
+                                    .fadeIn(duration: 350.ms)
+                                    .slideY(begin: -0.08, end: 0),
+                              ),
+                            ),
+                            SliverPadding(
+                              padding: EdgeInsets.fromLTRB(
+                                horizontalPadding,
+                                18.h(context),
+                                horizontalPadding,
+                                8.h(context),
+                              ),
+                              sliver: SliverToBoxAdapter(
+                                child: _buildFilterChips(context, loaded)
+                                    .animate()
+                                    .fadeIn(duration: 300.ms, delay: 60.ms),
+                              ),
+                            ),
+                            if (filtered.isEmpty)
+                              SliverFillRemaining(
+                                hasScrollBody: false,
+                                child: Padding(
+                                  padding: EdgeInsets.symmetric(
+                                    horizontal: horizontalPadding,
+                                  ),
+                                  child: _buildEmptyState(context),
                                 ),
+                              )
+                            else
+                              ..._buildGroupedSlivers(
+                                context,
+                                filtered,
+                                horizontalPadding,
+                              ),
+                            SliverToBoxAdapter(
+                              child: SizedBox(height: 28.h(context)),
+                            ),
+                          ],
                         ),
-                      ),
-                    ],
-                  );
-                },
+                      );
+                    },
+                  ),
+                ),
               ),
             ),
           ),
@@ -115,8 +177,25 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   PreferredSizeWidget _buildAppBar(BuildContext context) {
     return AppBar(
       backgroundColor: Colors.white,
-      elevation: 4,
+      elevation: 0,
+      scrolledUnderElevation: 2,
+      shadowColor: AppColors.primaryForest.withValues(alpha: 0.12),
       automaticallyImplyLeading: false,
+      bottom: PreferredSize(
+        preferredSize: Size.fromHeight(1.h(context)),
+        child: Container(
+          height: 1,
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                AppColors.primaryForest.withValues(alpha: 0.0),
+                AppColors.primaryForest.withValues(alpha: 0.12),
+                AppColors.primaryForest.withValues(alpha: 0.0),
+              ],
+            ),
+          ),
+        ),
+      ),
       title: Row(
         textDirection: TextDirection.rtl,
         children: [
@@ -133,7 +212,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
               }
             },
             icon: Icon(
-              Icons.arrow_forward_ios,
+              Icons.arrow_forward_ios_rounded,
               color: AppColors.primaryForest,
               size: 20.ic(context),
             ),
@@ -152,14 +231,14 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                SizedBox(height: 4.h(context)),
+                SizedBox(height: 2.h(context)),
                 Text(
-                  'يمكنك متابعة أحدث التنبيهات هنا',
+                  'تنبيهاتك في مكان واحد',
                   textAlign: TextAlign.center,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
-                    color: const Color(0xFF6D6D6D),
+                    color: AppColors.secondaryCharcoal.withValues(alpha: 0.55),
                     fontSize: 12.f(context),
                   ),
                 ),
@@ -172,151 +251,162 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     );
   }
 
-  Widget _buildSummaryBar(
+  Widget _buildFilterChips(
     BuildContext context,
     NotificationsLoaded state,
-    double horizontalPadding,
   ) {
     final unreadCount = state.unreadCount;
-    final hasUnread = unreadCount > 0;
 
-    return Padding(
-      padding: EdgeInsets.fromLTRB(
-        horizontalPadding,
-        16.h(context),
-        horizontalPadding,
-        10.h(context),
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: Text(
-              hasUnread
-                  ? 'لديك $unreadCount ${_unreadLabel(unreadCount)} غير مقروء'
-                  : state.notifications.isEmpty
-                      ? 'لا توجد إشعارات'
-                      : 'جميع الإشعارات مقروءة',
-              style: TextStyle(
-                color: AppColors.primaryForest,
-                fontSize: 14.f(context),
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ),
-          if (hasUnread)
-            TextButton.icon(
-              onPressed: () =>
-                  context.read<NotificationsCubit>().markAllAsRead(),
-              style: TextButton.styleFrom(
-                foregroundColor: AppColors.primaryGoldenWheat,
-                padding: EdgeInsets.symmetric(
-                  horizontal: 10.w(context),
-                  vertical: 4.h(context),
-                ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10.r(context)),
-                ),
-              ),
-              icon: Icon(
-                Icons.done_all_rounded,
-                size: 18.ic(context),
-                color: AppColors.primaryGoldenWheat,
-              ),
-              label: Text(
-                'تحديد الكل كمقروء',
-                style: TextStyle(
-                  fontSize: 13.f(context),
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-        ],
-      ),
+    return Row(
+      textDirection: TextDirection.rtl,
+      children: [
+        _FilterChip(
+          label: 'الكل',
+          count: state.notifications.length,
+          isSelected: _filter == _NotificationFilter.all,
+          onTap: () => setState(() => _filter = _NotificationFilter.all),
+        ),
+        SizedBox(width: 10.w(context)),
+        _FilterChip(
+          label: 'غير مقروء',
+          count: unreadCount,
+          isSelected: _filter == _NotificationFilter.unread,
+          highlight: unreadCount > 0,
+          onTap: () => setState(() => _filter = _NotificationFilter.unread),
+        ),
+      ],
     );
   }
 
-  Widget _buildList(
+  List<AppNotification> _filteredNotifications(
+    List<AppNotification> notifications,
+  ) {
+    if (_filter == _NotificationFilter.unread) {
+      return notifications.where((n) => !n.isRead).toList();
+    }
+    return notifications;
+  }
+
+  List<Widget> _buildGroupedSlivers(
     BuildContext context,
     List<AppNotification> notifications,
     double horizontalPadding,
   ) {
-    return ListView.separated(
-      physics: const AlwaysScrollableScrollPhysics(),
+    final groups = <_NotificationGroup, List<AppNotification>>{};
+    for (final notification in notifications) {
+      final group = _groupFor(notification.createdAt);
+      groups.putIfAbsent(group, () => []).add(notification);
+    }
+
+    final orderedGroups = [
+      _NotificationGroup.today,
+      _NotificationGroup.yesterday,
+      _NotificationGroup.earlier,
+    ].where((g) => groups.containsKey(g));
+
+    var animationIndex = 0;
+    final slivers = <Widget>[];
+
+    for (final group in orderedGroups) {
+      final items = groups[group]!;
+      slivers.add(
+        SliverPadding(
+          padding: EdgeInsets.fromLTRB(
+            horizontalPadding,
+            8.h(context),
+            horizontalPadding,
+            4.h(context),
+          ),
+          sliver: SliverToBoxAdapter(
+            child: ProfileSectionHeader(
+              title: _groupLabel(group),
+              badge: '${items.length}',
+            ),
+          ),
+        ),
+      );
+
+      slivers.add(
+        SliverPadding(
+          padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
+          sliver: SliverList.separated(
+            itemCount: items.length,
+            separatorBuilder: (_, __) => SizedBox(height: 12.h(context)),
+            itemBuilder: (context, index) {
+              final notification = items[index];
+              final currentIndex = animationIndex++;
+              return CustomNotificationCard(
+                isRead: notification.isRead,
+                time: formatNotificationTime(notification.createdAt),
+                title: notification.title,
+                message: notificationDescription(notification),
+                typeLabel: typeLabelForNotificationType(notification.type),
+                icon: iconForNotificationType(notification.type),
+                iconColor: iconColorForNotificationType(notification.type),
+                onTap: notification.isRead
+                    ? null
+                    : () => context
+                        .read<NotificationsCubit>()
+                        .markAsRead(notification.id),
+              )
+                  .animate()
+                  .fadeIn(
+                    duration: 300.ms,
+                    delay: (40 * currentIndex).ms,
+                  )
+                  .slideY(begin: 0.06, end: 0);
+            },
+          ),
+        ),
+      );
+    }
+
+    return slivers;
+  }
+
+  Widget _buildLoadingState(
+    BuildContext context,
+    double horizontalPadding,
+  ) {
+    return ListView(
       padding: EdgeInsets.fromLTRB(
         horizontalPadding,
-        6.h(context),
+        16.h(context),
         horizontalPadding,
         24.h(context),
       ),
-      itemCount: notifications.length,
-      separatorBuilder: (_, __) => SizedBox(height: 12.h(context)),
-      itemBuilder: (context, index) {
-        final notification = notifications[index];
-        return CustomNotificationCard(
-          isRead: notification.isRead,
-          time: _formatTime(notification.createdAt),
-          title: notification.title,
-          message: notification.message,
-          icon: _iconForType(notification.type),
-          iconColor: _iconColorForType(notification.type),
-          onTap: notification.isRead
-              ? null
-              : () => context
-                  .read<NotificationsCubit>()
-                  .markAsRead(notification.id),
-        );
-      },
+      children: [
+        _SkeletonBox(height: 160.h(context), radius: 24.r(context)),
+        SizedBox(height: 20.h(context)),
+        Row(
+          children: [
+            Expanded(child: _SkeletonBox(height: 36.h(context), radius: 20)),
+            SizedBox(width: 10.w(context)),
+            Expanded(child: _SkeletonBox(height: 36.h(context), radius: 20)),
+          ],
+        ),
+        SizedBox(height: 24.h(context)),
+        for (var i = 0; i < 4; i++) ...[
+          _SkeletonBox(height: 110.h(context), radius: 20.r(context)),
+          SizedBox(height: 12.h(context)),
+        ],
+      ],
     );
   }
 
   Widget _buildEmptyState(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        return SingleChildScrollView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          child: ConstrainedBox(
-            constraints: BoxConstraints(minHeight: constraints.maxHeight),
-            child: Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Container(
-                    padding: EdgeInsets.all(22.s(context)),
-                    decoration: BoxDecoration(
-                      color: AppColors.primaryForest.withValues(alpha: 0.06),
-                      shape: BoxShape.circle,
-                    ),
-                    child: Icon(
-                      Icons.notifications_off_outlined,
-                      size: 46.ic(context),
-                      color: AppColors.primaryForest.withValues(alpha: 0.5),
-                    ),
-                  ),
-                  SizedBox(height: 16.h(context)),
-                  Text(
-                    'لا توجد إشعارات بعد',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: AppColors.primaryForest,
-                      fontSize: 16.f(context),
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  SizedBox(height: 6.h(context)),
-                  Text(
-                    'ستظهر هنا أحدث التنبيهات الخاصة بك',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: const Color(0xFF9A9A9A),
-                      fontSize: 13.f(context),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        );
-      },
+    final isUnreadFilter = _filter == _NotificationFilter.unread;
+
+    return ProfileEmptyState(
+      icon: isUnreadFilter
+          ? Icons.mark_email_read_rounded
+          : Icons.notifications_off_outlined,
+      title: isUnreadFilter
+          ? 'لا توجد إشعارات غير مقروءة'
+          : 'لا توجد إشعارات بعد',
+      description: isUnreadFilter
+          ? 'رائع! لقد اطلعت على جميع التنبيهات.'
+          : 'ستظهر هنا أحدث التنبيهات والتحديثات الخاصة بك.',
     );
   }
 
@@ -327,19 +417,10 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
-              Icons.wifi_off_rounded,
-              size: 46.ic(context),
-              color: const Color(0xFF9A9A9A),
-            ),
-            SizedBox(height: 14.h(context)),
-            Text(
-              message,
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                color: const Color(0xFF5B5B5B),
-                fontSize: 14.f(context),
-              ),
+            ProfileEmptyState(
+              icon: Icons.wifi_off_rounded,
+              title: 'تعذّر تحميل الإشعارات',
+              description: message,
             ),
             SizedBox(height: 16.h(context)),
             ElevatedButton.icon(
@@ -348,8 +429,13 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.primaryForest,
                 foregroundColor: Colors.white,
+                elevation: 0,
+                padding: EdgeInsets.symmetric(
+                  horizontal: 20.w(context),
+                  vertical: 12.h(context),
+                ),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12.r(context)),
+                  borderRadius: BorderRadius.circular(14.r(context)),
                 ),
               ),
               icon: Icon(Icons.refresh_rounded, size: 18.ic(context)),
@@ -361,71 +447,171 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     );
   }
 
-  String _unreadLabel(int count) {
-    if (count == 1) return 'إشعار';
-    if (count == 2) return 'إشعارين';
-    if (count <= 10) return 'إشعارات';
-    return 'إشعارًا';
-  }
-
-  String _formatTime(String? createdAt) {
+  _NotificationGroup _groupFor(String? createdAt) {
     if (createdAt == null || createdAt.isEmpty) {
-      return 'الآن';
+      return _NotificationGroup.today;
     }
 
     final parsed = DateTime.tryParse(createdAt);
     if (parsed == null) {
-      return createdAt;
+      return _NotificationGroup.earlier;
     }
 
-    final diff = DateTime.now().difference(parsed);
-    if (diff.inMinutes < 1) {
-      return 'الآن';
-    }
-    if (diff.inMinutes < 60) {
-      return 'منذ ${diff.inMinutes} دقيقة';
-    }
-    if (diff.inHours < 24) {
-      return 'منذ ${diff.inHours} ساعة';
-    }
-    if (diff.inDays < 7) {
-      return 'منذ ${diff.inDays} يوم';
-    }
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final date = DateTime(parsed.year, parsed.month, parsed.day);
+    final diff = today.difference(date).inDays;
 
-    return '${parsed.day}/${parsed.month}/${parsed.year}';
+    if (diff == 0) return _NotificationGroup.today;
+    if (diff == 1) return _NotificationGroup.yesterday;
+    return _NotificationGroup.earlier;
   }
 
-  IconData _iconForType(String type) {
-    switch (type) {
-      case 'ComplaintStatusUpdatedNotification':
-        return Icons.report_outlined;
-      case 'NewTaskAssignedNotification':
-        return Icons.assignment_outlined;
-      case 'CitizenGeneralNotification':
-        return Icons.family_restroom;
-      case 'IdentityVerificationNotification':
-        return Icons.verified_user_outlined;
-      case 'BulkNotification':
-        return Icons.campaign_outlined;
-      default:
-        return Icons.notifications_outlined;
+  String _groupLabel(_NotificationGroup group) {
+    switch (group) {
+      case _NotificationGroup.today:
+        return 'اليوم';
+      case _NotificationGroup.yesterday:
+        return 'أمس';
+      case _NotificationGroup.earlier:
+        return 'سابقاً';
     }
   }
+}
 
-  Color _iconColorForType(String type) {
-    switch (type) {
-      case 'ComplaintStatusUpdatedNotification':
-        return AppColors.primaryForest;
-      case 'NewTaskAssignedNotification':
-        return AppColors.primaryGoldenWheat;
-      case 'CitizenGeneralNotification':
-        return AppColors.secondaryForest;
-      case 'IdentityVerificationNotification':
-        return AppColors.green;
-      case 'BulkNotification':
-        return AppColors.primaryForest;
-      default:
-        return AppColors.green;
-    }
+class _FilterChip extends StatelessWidget {
+  const _FilterChip({
+    required this.label,
+    required this.count,
+    required this.isSelected,
+    required this.onTap,
+    this.highlight = false,
+  });
+
+  final String label;
+  final int count;
+  final bool isSelected;
+  final VoidCallback onTap;
+  final bool highlight;
+
+  @override
+  Widget build(BuildContext context) {
+    return Expanded(
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(20.r(context)),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            padding: EdgeInsets.symmetric(
+              horizontal: 14.w(context),
+              vertical: 10.h(context),
+            ),
+            decoration: BoxDecoration(
+              gradient: isSelected
+                  ? const LinearGradient(
+                      colors: [
+                        AppColors.primaryForest,
+                        AppColors.secondaryForest,
+                      ],
+                    )
+                  : null,
+              color: isSelected
+                  ? null
+                  : Colors.white.withValues(alpha: 0.75),
+              borderRadius: BorderRadius.circular(20.r(context)),
+              border: Border.all(
+                color: isSelected
+                    ? Colors.transparent
+                    : AppColors.primaryForest.withValues(alpha: 0.1),
+              ),
+              boxShadow: isSelected
+                  ? [
+                      BoxShadow(
+                        color:
+                            AppColors.primaryForest.withValues(alpha: 0.2),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
+                      ),
+                    ]
+                  : null,
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              textDirection: TextDirection.rtl,
+              children: [
+                Text(
+                  label,
+                  style: TextStyle(
+                    color: isSelected
+                        ? Colors.white
+                        : AppColors.primaryForest,
+                    fontSize: 13.f(context),
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                if (count > 0) ...[
+                  SizedBox(width: 6.w(context)),
+                  Container(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: 7.w(context),
+                      vertical: 2.h(context),
+                    ),
+                    decoration: BoxDecoration(
+                      color: isSelected
+                          ? Colors.white.withValues(alpha: 0.2)
+                          : (highlight
+                              ? AppColors.alertRed.withValues(alpha: 0.1)
+                              : AppColors.primaryForest
+                                  .withValues(alpha: 0.08)),
+                      borderRadius: BorderRadius.circular(12.r(context)),
+                    ),
+                    child: Text(
+                      '$count',
+                      style: TextStyle(
+                        color: isSelected
+                            ? Colors.white
+                            : (highlight
+                                ? AppColors.alertRed
+                                : AppColors.primaryForest),
+                        fontSize: 11.f(context),
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _SkeletonBox extends StatelessWidget {
+  const _SkeletonBox({
+    required this.height,
+    required this.radius,
+  });
+
+  final double height;
+  final double radius;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: height,
+      decoration: BoxDecoration(
+        color: AppColors.primaryForest.withValues(alpha: 0.06),
+        borderRadius: BorderRadius.circular(radius),
+      ),
+    )
+        .animate(onPlay: (controller) => controller.repeat())
+        .shimmer(
+          duration: 1200.ms,
+          color: Colors.white.withValues(alpha: 0.35),
+        );
   }
 }

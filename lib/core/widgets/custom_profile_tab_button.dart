@@ -19,23 +19,24 @@ class CustomProfileTabButton extends StatelessWidget {
     return Expanded(
       child: GestureDetector(
         onTap: onTap,
-        child: Container(
-          padding: EdgeInsets.symmetric(vertical: 12.h(context)),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          height: 44.h(context),
           decoration: BoxDecoration(
-            color: isSelected ? AppColors.primaryForest : Colors.white,
-            borderRadius: BorderRadius.circular(16.r(context)),
-            border: Border.all(
-              color: isSelected ? AppColors.primaryForest : Colors.grey[300]!,
-            ),
+            color: isSelected ? AppColors.primaryForest : Colors.transparent,
+            borderRadius: BorderRadius.circular(22.r(context)),
           ),
+          alignment: Alignment.center,
           child: Text(
             label,
             textAlign: TextAlign.center,
             textDirection: TextDirection.rtl,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
             style: TextStyle(
-              color: isSelected ? Colors.white : Colors.black87,
+              color: isSelected ? Colors.white : AppColors.primaryForest,
               fontWeight: FontWeight.w600,
-              fontSize: 13.f(context),
+              fontSize: 12.f(context),
             ),
           ),
         ),

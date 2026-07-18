@@ -111,6 +111,7 @@ class PeopleScreenState extends State<PeopleScreen> {
   Future<void> _saveUnit() async {
     _syncText();
     final cubit = context.read<BuildingSurveyCubit>();
+    final wasUpdate = _readCurrentUnit()?.isSaved == true;
     final success = await cubit.saveApartmentUnit();
 
     if (!mounted) return;
@@ -118,7 +119,13 @@ class PeopleScreenState extends State<PeopleScreen> {
     if (success) {
       final nav = widget.navigationContext!;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('تم حفظ الشقة وبيانات الأسرة بنجاح')),
+        SnackBar(
+          content: Text(
+            wasUpdate
+                ? 'تم تحديث الشقة وبيانات الأسرة بنجاح'
+                : 'تم حفظ الشقة وبيانات الأسرة بنجاح',
+          ),
+        ),
       );
       context.go('/building/${nav.pinId}/floor/${nav.floorLocalId}');
       return;
@@ -401,6 +408,7 @@ class PeopleScreenState extends State<PeopleScreen> {
         }
 
         final isSaving = state is BuildingSurveySaving;
+        final isUpdate = _readCurrentUnit()?.isSaved == true;
         return Container(
           decoration: const BoxDecoration(
             image: DecorationImage(
@@ -440,7 +448,11 @@ class PeopleScreenState extends State<PeopleScreen> {
                                   color: Colors.white,
                                 ),
                               )
-                            : const Text('حفظ الشقة وبيانات الأسرة'),
+                            : Text(
+                                isUpdate
+                                    ? 'تحديث الشقة وبيانات الأسرة'
+                                    : 'حفظ الشقة وبيانات الأسرة',
+                              ),
                       ),
                     ),
                   ),

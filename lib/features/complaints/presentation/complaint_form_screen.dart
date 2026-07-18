@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:baladeyate/core/widgets/custom_complaint_input_field.dart';
 import 'package:baladeyate/core/widgets/custom_complaint_map_box.dart';
 import 'package:baladeyate/core/widgets/custom_complaint_priority_button.dart';
@@ -7,6 +9,7 @@ import 'package:baladeyate/features/complaints/cubits/complaints_cubit/complaint
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:responsive_x_toolkit/responsive_x.dart';
 
 import 'package:baladeyate/config/theme/app_colors.dart';
@@ -22,6 +25,10 @@ class ComplaintFormScreen extends StatefulWidget {
 class _ComplaintFormScreenState extends State<ComplaintFormScreen> {
   final TextEditingController _subjectController = TextEditingController();
   final TextEditingController _detailsController = TextEditingController();
+
+  List<File> _attachments = [];
+  LatLng? _selectedLocation;
+  String _addressText = '';
 
   @override
   void dispose() {
@@ -198,6 +205,7 @@ class _ComplaintFormScreenState extends State<ComplaintFormScreen> {
             child: CustomComplaintInputField(
               controller: _subjectController,
               hint: 'مثال: صيانة الطرق...',
+              prefixIcon: Icons.subject_rounded,
             ),
           ),
           SizedBox(height: 14.s(context)),
@@ -214,13 +222,18 @@ class _ComplaintFormScreenState extends State<ComplaintFormScreen> {
           _buildSectionCard(
             context: context,
             title: 'المرفقات و الصور',
-            child: const CustomComplaintUploadBox(),
+            child: CustomComplaintUploadBox(
+              onFilesChanged: (files) => _attachments = files,
+            ),
           ),
           SizedBox(height: 14.s(context)),
           _buildSectionCard(
             context: context,
             title: 'الموقع الجغرافي',
-            child: const CustomComplaintMapBox(),
+            child: CustomComplaintMapBox(
+              onLocationSelected: (location) => _selectedLocation = location,
+              onAddressChanged: (address) => _addressText = address.trim(),
+            ),
           ),
           SizedBox(height: 18.s(context)),
           if (errorMessage != null) ...[
@@ -272,8 +285,7 @@ class _ComplaintFormScreenState extends State<ComplaintFormScreen> {
     );
   }
 
-  void _submitComplaint(BuildContext context) {
-    final subject = _subjectController.text.trim();
+  Future<void> _submitComplaint(BuildContext context) async {
     final details = _detailsController.text.trim();
 
     if (details.isEmpty) {
@@ -283,10 +295,154 @@ class _ComplaintFormScreenState extends State<ComplaintFormScreen> {
       return;
     }
 
-    final description = subject.isEmpty ? details : '$subject\n$details';
+    final confirmed = await _showConfirmationDialog(context);
+    if (confirmed != true || !context.mounted) return;
+
+    _sendComplaint(context);
+  }
+
+  Future<bool?> _showConfirmationDialog(BuildContext context) {
+    bool acknowledged = false;
+
+    return showDialog<bool>(
+      context: context,
+      builder: (dialogContext) {
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return Directionality(
+              textDirection: TextDirection.rtl,
+              child: AlertDialog(
+                backgroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(18.r(context)),
+                ),
+                title: Row(
+                  children: [
+                    Icon(
+                      Icons.verified_user_rounded,
+                      color: AppColors.primaryForest,
+                      size: 22.ic(context),
+                    ),
+                    SizedBox(width: 8.s(context)),
+                    Text(
+                      'تأكيد الإقرار',
+                      style: TextStyle(
+                        fontSize: 17.f(context),
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.primaryForest,
+                      ),
+                    ),
+                  ],
+                ),
+                content: InkWell(
+                  borderRadius: BorderRadius.circular(12.r(context)),
+                  onTap: () =>
+                      setDialogState(() => acknowledged = !acknowledged),
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(vertical: 4.s(context)),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        SizedBox(
+                          width: 24.s(context),
+                          height: 24.s(context),
+                          child: Checkbox(
+                            value: acknowledged,
+                            activeColor: AppColors.green,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(6.r(context)),
+                            ),
+                            onChanged: (value) => setDialogState(
+                              () => acknowledged = value ?? false,
+                            ),
+                          ),
+                        ),
+                        SizedBox(width: 10.s(context)),
+                        Expanded(
+                          child: Text(
+                            'المعلومات الواردة في هذه الشكوى صحيحة وأنا مسؤول عنها تماماً',
+                            style: TextStyle(
+                              fontSize: 13.f(context),
+                              height: 1.6,
+                              color: AppColors.secondaryCharcoal,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                actionsPadding: EdgeInsets.symmetric(
+                  horizontal: 16.s(context),
+                  vertical: 8.s(context),
+                ),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.of(dialogContext).pop(false),
+                    child: Text(
+                      'إلغاء',
+                      style: TextStyle(
+                        fontSize: 14.f(context),
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.secondaryCharcoal,
+                      ),
+                    ),
+                  ),
+                  ElevatedButton(
+                    onPressed: acknowledged
+                        ? () => Navigator.of(dialogContext).pop(true)
+                        : null,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.green,
+                      foregroundColor: Colors.white,
+                      disabledBackgroundColor:
+                          AppColors.secondaryCharcoal.withValues(alpha: 0.3),
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12.r(context)),
+                      ),
+                    ),
+                    child: Text(
+                      'إرسال',
+                      style: TextStyle(
+                        fontSize: 14.f(context),
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  void _sendComplaint(BuildContext context) {
+    final subject = _subjectController.text.trim();
+    final details = _detailsController.text.trim();
+
+    final buffer = StringBuffer(subject.isEmpty ? details : '$subject\n$details');
+
+    if (_addressText.isNotEmpty) {
+      buffer.write('\nعنوان الموقع: $_addressText');
+    }
+
+    if (_selectedLocation != null) {
+      buffer
+        ..write('\nالموقع: ')
+        ..write(_selectedLocation!.latitude.toStringAsFixed(5))
+        ..write(', ')
+        ..write(_selectedLocation!.longitude.toStringAsFixed(5));
+    }
+
+    if (_attachments.isNotEmpty) {
+      buffer.write('\nعدد المرفقات: ${_attachments.length}');
+    }
 
     context.read<ComplaintsCubit>().createComplaint(
-          description: description,
+          description: buffer.toString(),
           isUrgent: context.read<ComplaintsCubit>().isUrgent,
         );
   }

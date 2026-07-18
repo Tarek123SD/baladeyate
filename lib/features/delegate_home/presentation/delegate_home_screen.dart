@@ -258,6 +258,8 @@ class DelegateHomeScreen extends StatelessWidget {
             distance: statusLabelForDelegateTask(task),
             time: timeLabelForDelegateTask(task),
             status: cardStatusForDelegateTask(task),
+            startLabel:
+                task.isInProgress ? 'متابعة المهمة' : 'بدء المهمة',
             onTap: () => showDelegateAssignedTaskSheet(context, task),
             onStart: task.isInProgress
                 ? () => showDelegateAssignedTaskSheet(context, task)
@@ -281,6 +283,9 @@ class DelegateHomeScreen extends StatelessWidget {
             distance: statusLabelForPin(pin),
             time: pin.status == SurveyPinStatus.completed ? 'محفوظ' : 'مفتوح',
             status: cardStatusForPin(pin),
+            startLabel: pin.status == SurveyPinStatus.inProgress
+                ? 'متابعة المهمة'
+                : 'بدء المهمة',
             onTap: () {
               context.read<DailyTasksCubit>().selectPin(pin.id);
               context.go('/delegate/map');

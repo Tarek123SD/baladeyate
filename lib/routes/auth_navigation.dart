@@ -21,6 +21,7 @@ const delegateRoutes = {
   '/delegate/home',
   '/delegate/map',
   '/delegate/tasks',
+  '/delegate/buildings',
   '/tasks',
   '/info',
   '/floor',

@@ -15,6 +15,18 @@ class LocalBuildingSurveyStore {
     return all[pinId];
   }
 
+  /// All locally saved building surveys entered by the delegate.
+  Future<List<BuildingSurvey>> loadAllSurveys() async {
+    final all = await _loadAll();
+    final list = all.values.toList();
+    list.sort((a, b) {
+      final aName = a.building.name;
+      final bName = b.building.name;
+      return bName.compareTo(aName);
+    });
+    return list;
+  }
+
   Future<void> saveSurvey(BuildingSurvey survey) async {
     final all = await _loadAll();
     all[survey.pinId] = survey;

@@ -10,6 +10,7 @@ import 'package:baladeyate/features/delegate/models/registered_household.dart';
 import 'package:baladeyate/features/delegate/data/local_survey_pin_store.dart';
 import 'package:baladeyate/features/delegate/models/survey_draft.dart';
 import 'package:baladeyate/features/delegate/models/survey_pin.dart';
+import 'package:baladeyate/features/delegate/models/survey_pin_status.dart';
 import 'package:baladeyate/features/delegate/models/survey_submission_result.dart';
 
 class DelegateRepository {
@@ -299,6 +300,7 @@ class DelegateRepository {
 
   Future<Family> updateFamily({
     required int id,
+    String? familyBook,
     String? healthStatus,
     String? livingStatus,
     String? lastAidDate,
@@ -310,6 +312,7 @@ class DelegateRepository {
       final response = await _apiService.put(
         EndPoints.familyById(id),
         data: {
+          if (familyBook != null) 'family_book': familyBook,
           if (healthStatus != null) 'health_status': healthStatus,
           if (livingStatus != null) 'living_status': livingStatus,
           if (lastAidDate != null) 'last_aid_date': lastAidDate,
@@ -532,6 +535,44 @@ class DelegateRepository {
     }
   }
 
+  /// Updates an already-saved apartment + family during survey review/edit.
+  Future<({int apartmentId, int familyId})> updateSurveyApartmentAndFamily({
+    required ApartmentUnitDraft unit,
+  }) async {
+    final apartmentId = unit.apartmentId;
+    final familyId = unit.familyId;
+    if (apartmentId == null || familyId == null) {
+      throw Exception('لا يمكن تحديث شقة غير محفوظة على الخادم');
+    }
+
+    try {
+      await updateApartment(
+        id: apartmentId,
+        floorType: unit.floorType,
+        waterMeter: unit.waterMeter,
+        electricityMeter: unit.electricityMeter,
+        landline: unit.landline,
+        isSealed: unit.isSealed,
+      );
+      await updateFamily(
+        id: familyId,
+        familyBook: unit.familyBook,
+        healthStatus: unit.healthStatus,
+        livingStatus: unit.livingStatus,
+        lastAidDate: unit.lastAidDate.isNotEmpty ? unit.lastAidDate : null,
+        unemployedCount: int.tryParse(unit.unemployedCount),
+        studentsCount: int.tryParse(unit.studentsCount),
+        occupancyType: unit.occupancyType,
+      );
+      return (apartmentId: apartmentId, familyId: familyId);
+    } catch (error) {
+      throw ApiResponseParser.mapError(
+        error,
+        fallback: 'فشل تحديث بيانات الشقة',
+      );
+    }
+  }
+
   Future<List<SurveyPin>> _fetchCompletedPins() async {
     try {
       final response = await _apiService.get(EndPoints.buildings);
@@ -648,12 +689,33 @@ class DelegateRepository {
     List<SurveyPin> draftPins,
   ) {
     final merged = <String, SurveyPin>{};
+    final remoteByBuildingId = <int, String>{};
 
     for (final pin in remotePins) {
       merged[pin.id] = pin;
+      final buildingId = pin.buildingId;
+      if (buildingId != null) {
+        remoteByBuildingId[buildingId] = pin.id;
+      }
     }
 
     for (final pin in draftPins) {
+      final buildingId = pin.buildingId;
+      final remoteId =
+          buildingId != null ? remoteByBuildingId[buildingId] : null;
+
+      // Same building already came from GET /buildings.
+      if (remoteId != null) {
+        if (pin.status == SurveyPinStatus.inProgress) {
+          // Keep the local draft so the delegate can resume editing,
+          // keyed by the local pin id; drop the remote duplicate.
+          merged.remove(remoteId);
+          merged[pin.id] = pin;
+        }
+        // Completed local drafts are superseded by the remote pin.
+        continue;
+      }
+
       merged[pin.id] = pin;
     }
 

@@ -33,41 +33,59 @@ class _ComplaintsGuardScreenState extends State<ComplaintsGuardScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<AuthCubit, AuthState>(
-      builder: (context, state) {
-        if (state is AuthLoading || state is AuthInitial) {
-          return const _GuardLoadingView();
-        }
-
-        if (state is! AuthSuccess) {
-          return _GuardMessageView(
-            icon: Icons.lock_outline_rounded,
-            iconColor: AppColors.secondaryCharcoal,
-            message: 'يرجى تسجيل الدخول للوصول إلى نظام الشكاوى.',
-            actionLabel: 'تسجيل الدخول',
-            onAction: () => context.go('/login'),
-          );
-        }
-
-        final user = state.user;
-        final status = user.verificationStatus ?? 'unverified';
-
-        switch (status) {
-          case 'approved':
-            return const ComplaintFormScreen();
-          case 'pending':
-            return const _VerificationPendingView();
-          case 'rejected':
-            return _VerificationRejectedView(user: user);
-          case 'unverified':
-          default:
-            return IdentityVerificationScreen(
-              promptText:
-                  'الرجاء توثيق هويتك الوطنية لتتمكن من استخدام نظام الشكاوى.',
-              initialNationalId: user.nationalId ?? user.nationalNumber,
-            );
+    return PopScope(
+      canPop: context.canPop(),
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) return;
+        final authState = context.read<AuthCubit>().state;
+        if (authState is AuthSuccess) {
+          final user = authState.user;
+          final status = user.verificationStatus ?? 'unverified';
+          if (status == 'approved') {
+            context.go('/track');
+            return;
+          }
+          context.go(homeRouteFor(user));
+        } else {
+          context.go('/login');
         }
       },
+      child: BlocBuilder<AuthCubit, AuthState>(
+        builder: (context, state) {
+          if (state is AuthLoading || state is AuthInitial) {
+            return const _GuardLoadingView();
+          }
+
+          if (state is! AuthSuccess) {
+            return _GuardMessageView(
+              icon: Icons.lock_outline_rounded,
+              iconColor: AppColors.secondaryCharcoal,
+              message: 'يرجى تسجيل الدخول للوصول إلى نظام الشكاوى.',
+              actionLabel: 'تسجيل الدخول',
+              onAction: () => context.go('/login'),
+            );
+          }
+
+          final user = state.user;
+          final status = user.verificationStatus ?? 'unverified';
+
+          switch (status) {
+            case 'approved':
+              return const ComplaintFormScreen();
+            case 'pending':
+              return const _VerificationPendingView();
+            case 'rejected':
+              return _VerificationRejectedView(user: user);
+            case 'unverified':
+            default:
+              return IdentityVerificationScreen(
+                promptText:
+                    'الرجاء توثيق هويتك الوطنية لتتمكن من استخدام نظام الشكاوى.',
+                initialNationalId: user.nationalId ?? user.nationalNumber,
+              );
+          }
+        },
+      ),
     );
   }
 }
@@ -140,8 +158,7 @@ class _VerificationRejectedView extends StatelessWidget {
         return _GuardMessageView(
           icon: Icons.error_outline_rounded,
           iconColor: Colors.red.shade700,
-          message:
-              'تم رفض التوثيق: $rejectionReason. يرجى إعادة رفع الهوية.',
+          message: 'تم رفض التوثيق: $rejectionReason. يرجى إعادة رفع الهوية.',
           actionLabel: 'إعادة رفع الهوية بالكاميرا',
           actionIcon: Icons.camera_alt_outlined,
           onAction: () =>
@@ -232,8 +249,7 @@ class _GuardMessageView extends StatelessWidget {
                     color: Colors.white.withValues(alpha: 0.94),
                     borderRadius: BorderRadius.circular(20.r(context)),
                     border: Border.all(
-                      color: AppColors.secondaryCharcoal
-                          .withValues(alpha: 0.1),
+                      color: AppColors.secondaryCharcoal.withValues(alpha: 0.1),
                     ),
                     boxShadow: [
                       BoxShadow(

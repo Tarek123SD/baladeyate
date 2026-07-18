@@ -11,6 +11,7 @@ class ApiService {
     String endpoint, {
     Map<String, dynamic>? queryParams,
     Object? data,
+    Options? options,
   }) async {
     printUrl(endpoint);
 
@@ -18,6 +19,7 @@ class ApiService {
       endpoint,
       queryParameters: queryParams,
       data: data,
+      options: options,
     );
     printResponse(response);
     return response;

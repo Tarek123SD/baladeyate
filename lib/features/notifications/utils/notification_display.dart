@@ -67,3 +67,20 @@ String notificationDescription(AppNotification notification) {
   }
   return 'لا توجد تفاصيل إضافية.';
 }
+
+String typeLabelForNotificationType(String type) {
+  switch (type) {
+    case 'ComplaintStatusUpdatedNotification':
+      return 'تحديث شكوى';
+    case 'NewTaskAssignedNotification':
+      return 'مهمة ميدانية';
+    case 'CitizenGeneralNotification':
+      return 'إشعار عام';
+    case 'IdentityVerificationNotification':
+      return 'توثيق الحساب';
+    case 'BulkNotification':
+      return 'إشعار جماعي';
+    default:
+      return 'تنبيه';
+  }
+}

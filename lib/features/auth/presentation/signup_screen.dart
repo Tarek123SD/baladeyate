@@ -1,11 +1,13 @@
 import 'dart:io';
 import 'package:baladeyate/core/widgets/custom_form_field_label.dart';
 import 'package:baladeyate/core/widgets/custom_textfield.dart';
+import 'package:baladeyate/core/widgets/password_input_field.dart';
 import 'package:baladeyate/core/widgets/responsive_body.dart';
 import 'package:baladeyate/features/auth/cubits/auth_cubit/auth_cubit.dart';
 import 'package:baladeyate/features/auth/cubits/auth_cubit/auth_state.dart';
 import 'package:baladeyate/features/auth/cubits/auth_form_cubit/auth_form_cubit.dart';
 import 'package:baladeyate/features/auth/cubits/auth_form_cubit/auth_form_state.dart';
+import 'package:baladeyate/features/auth/presentation/widgets/auth_screen_widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -14,7 +16,6 @@ import 'package:responsive_x_toolkit/responsive_x.dart';
 import 'package:baladeyate/config/constants/storage_keys.dart';
 import 'package:baladeyate/config/theme/app_colors.dart';
 import 'package:baladeyate/config/validator/validator.dart';
-import 'package:baladeyate/core/constants/app_assets.dart';
 import 'package:baladeyate/core/services/cache_service.dart';
 import 'package:baladeyate/core/services/service_locator.dart';
 import 'package:baladeyate/routes/auth_navigation.dart';
@@ -80,63 +81,38 @@ class _SignupScreenState extends State<SignupScreen> {
           );
         }
       },
-      child: Stack(
-        children: [
-          const Positioned.fill(
-            child: RepaintBoundary(
-              child: DecoratedBox(
-                decoration: BoxDecoration(
-                  image: DecorationImage(
-                    image: AssetImage(AppAssets.backgroundWhite),
-                    fit: BoxFit.cover,
-                  ),
-                ),
+      child: AuthScreenScaffold(
+        showBackButton: true,
+        onBack: () => context.go('/login'),
+        body: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const AuthBrandedHeader(
+                compact: true,
+                title: 'إنشاء حساب جديد',
+                subtitle: 'المنصة المحلية لخدمات المواطنة',
               ),
-            ),
-          ),
-          Scaffold(
-            backgroundColor: Colors.transparent,
-            resizeToAvoidBottomInset: false,
-            body: SafeArea(
-              child: SingleChildScrollView(
+              AuthFormPanel(
                 child: ResponsiveBody(
-                  child: Form(
-                    key: _formKey,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        SizedBox(height: 40.h(context)),
-                        Image.asset(
-                          AppAssets.logoGold,
-                          width: 120.s(context),
-                          height: 120.s(context),
-                          fit: BoxFit.contain,
-                        ),
-                        SizedBox(height: 24.h(context)),
-                        // Title
-                        Text(
-                          'إنشاء حساب جديد',
-                          style: Theme.of(context)
-                              .textTheme
-                              .headlineSmall
-                              ?.copyWith(
-                                fontWeight: FontWeight.bold,
-                                color: AppColors.primaryForest,
-                              ),
-                          textDirection: TextDirection.rtl,
-                        ),
-                        SizedBox(height: 8.h(context)),
-                        // Subtitle
-                        Text(
-                          'المنصة المحلية لخدمات المواطنة',
-                          style:
-                              Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                    color: Colors.grey,
-                                  ),
-                          textDirection: TextDirection.rtl,
-                        ),
-                        SizedBox(height: 32.h(context)),
-                        // First Name Field
+                  child: Padding(
+                    padding: EdgeInsets.fromLTRB(
+                      0,
+                      16.h(context),
+                      0,
+                      32.h(context),
+                    ),
+                    child: Form(
+                      key: _formKey,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          const AuthSectionHeader(
+                            title: 'بيانات الحساب',
+                            subtitle:
+                                'أدخل بياناتك الشخصية لإتمام التسجيل',
+                          ),
+                          SizedBox(height: 28.h(context)),
                         const CustomFormFieldLabel(label: 'الاسم الأول'),
                         SizedBox(height: 8.h(context)),
                         CustomTextfield(
@@ -144,8 +120,7 @@ class _SignupScreenState extends State<SignupScreen> {
                           hint: 'مثال: يوسف',
                           suffixIcon: null,
                         ),
-                        SizedBox(height: 24.h(context)),
-                        // Last Name Field
+                        SizedBox(height: 20.h(context)),
                         const CustomFormFieldLabel(label: 'الكنية'),
                         SizedBox(height: 8.h(context)),
                         CustomTextfield(
@@ -153,8 +128,7 @@ class _SignupScreenState extends State<SignupScreen> {
                           hint: 'مثال: الخطيب',
                           suffixIcon: null,
                         ),
-                        SizedBox(height: 24.h(context)),
-                        // National Number Field
+                        SizedBox(height: 20.h(context)),
                         const CustomFormFieldLabel(label: 'الرقم الوطني'),
                         SizedBox(height: 8.h(context)),
                         CustomTextfield(
@@ -164,8 +138,7 @@ class _SignupScreenState extends State<SignupScreen> {
                           keyboardType: TextInputType.number,
                           validator: Validator.nationalNumber,
                         ),
-                        SizedBox(height: 24.h(context)),
-                        // Phone Number Field
+                        SizedBox(height: 20.h(context)),
                         const CustomFormFieldLabel(label: 'رقم الهاتف'),
                         SizedBox(height: 8.h(context)),
                         CustomTextfield(
@@ -175,8 +148,7 @@ class _SignupScreenState extends State<SignupScreen> {
                           keyboardType: TextInputType.phone,
                           validator: Validator.phoneNumber,
                         ),
-                        SizedBox(height: 24.h(context)),
-                        // Email Field
+                        SizedBox(height: 20.h(context)),
                         const CustomFormFieldLabel(label: 'البريد الإلكتروني'),
                         SizedBox(height: 8.h(context)),
                         CustomTextfield(
@@ -186,10 +158,8 @@ class _SignupScreenState extends State<SignupScreen> {
                           keyboardType: TextInputType.emailAddress,
                           validator: Validator.email,
                         ),
-                        SizedBox(height: 24.h(context)),
-                        // Personal ID Photo Upload
-                        const CustomFormFieldLabel(
-                            label: 'صورة الهوية الشخصية'),
+                        SizedBox(height: 20.h(context)),
+                        const CustomFormFieldLabel(label: 'صورة الهوية الشخصية'),
                         SizedBox(height: 8.h(context)),
                         BlocBuilder<AuthFormCubit, AuthFormState>(
                           buildWhen: (previous, current) =>
@@ -197,13 +167,13 @@ class _SignupScreenState extends State<SignupScreen> {
                           builder: (context, formState) =>
                               _buildUploadField(formState.identityImage),
                         ),
-                        SizedBox(height: 24.h(context)),
+                        SizedBox(height: 20.h(context)),
                         const CustomFormFieldLabel(label: 'كلمة السر'),
                         SizedBox(height: 8.h(context)),
                         BlocBuilder<AuthFormCubit, AuthFormState>(
                           buildWhen: (previous, current) =>
                               previous.showPassword != current.showPassword,
-                          builder: (context, formState) => _buildPasswordField(
+                          builder: (context, formState) => PasswordInputField(
                             controller: _passwordController,
                             isVisible: formState.showPassword,
                             onToggle: () => context
@@ -212,74 +182,35 @@ class _SignupScreenState extends State<SignupScreen> {
                             validator: Validator.signupPassword,
                           ),
                         ),
-                        SizedBox(height: 24.h(context)),
+                        SizedBox(height: 20.h(context)),
                         const CustomFormFieldLabel(label: 'تأكيد كلمة السر'),
                         SizedBox(height: 8.h(context)),
                         BlocBuilder<AuthFormCubit, AuthFormState>(
                           buildWhen: (previous, current) =>
                               previous.showConfirmPassword !=
                               current.showConfirmPassword,
-                          builder: (context, formState) => _buildPasswordField(
+                          builder: (context, formState) => PasswordInputField(
                             controller: _confirmPasswordController,
                             isVisible: formState.showConfirmPassword,
                             onToggle: () => context
                                 .read<AuthFormCubit>()
                                 .toggleShowConfirmPassword(),
+                            validator: (value) => Validator.confirmPassword(
+                              value,
+                              _passwordController.text,
+                            ),
                           ),
                         ),
                         SizedBox(height: 20.h(context)),
                         BlocBuilder<AuthFormCubit, AuthFormState>(
                           buildWhen: (previous, current) =>
                               previous.agreeToTerms != current.agreeToTerms,
-                          builder: (context, formState) => GestureDetector(
-                            onTap: () => context
-                                .read<AuthFormCubit>()
-                                .setAgreeToTerms(!formState.agreeToTerms),
-                            behavior: HitTestBehavior.opaque,
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.stretch,
-                              children: [
-                                Text(
-                                  'أوافق على شروط الاستخدام وسياسة الخصوصية الخاصة بالخدمات',
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .bodySmall
-                                      ?.copyWith(
-                                        color: Colors.grey[700],
-                                        height: 1.4,
-                                      ),
-                                  textDirection: TextDirection.rtl,
-                                  textAlign: TextAlign.right,
-                                ),
-                                SizedBox(height: 8.h(context)),
-                                Row(
-                                  crossAxisAlignment: CrossAxisAlignment.center,
-                                  children: [
-                                    _buildTermsCheckbox(
-                                      context,
-                                      formState.agreeToTerms,
-                                    ),
-                                    Expanded(
-                                      child: Text(
-                                        'الرقمية السيادية.',
-                                        style: Theme.of(context)
-                                            .textTheme
-                                            .bodySmall
-                                            ?.copyWith(
-                                              color: Colors.grey[700],
-                                              height: 1.4,
-                                            ),
-                                        textDirection: TextDirection.rtl,
-                                        textAlign: TextAlign.right,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ],
-                            ),
+                          builder: (context, formState) => _buildTermsSection(
+                            context,
+                            formState.agreeToTerms,
                           ),
                         ),
-                        SizedBox(height: 32.h(context)),
+                        SizedBox(height: 28.h(context)),
                         BlocBuilder<AuthFormCubit, AuthFormState>(
                           buildWhen: (previous, current) =>
                               previous.agreeToTerms != current.agreeToTerms,
@@ -290,109 +221,72 @@ class _SignupScreenState extends State<SignupScreen> {
                                   (current is AuthLoading),
                               builder: (context, state) {
                                 final isLoading = state is AuthLoading;
-                                return SizedBox(
-                                  width: double.infinity,
-                                  height: 56.h(context),
-                                  child: ElevatedButton(
-                                    onPressed:
-                                        (formState.agreeToTerms && !isLoading)
-                                            ? _handleCreateAccount
-                                            : null,
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: AppColors.green,
-                                      disabledBackgroundColor: Colors.grey[300],
-                                      elevation:
-                                          (formState.agreeToTerms && !isLoading)
-                                              ? 4
-                                              : 0,
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(
-                                          28.r(context),
-                                        ),
-                                      ),
-                                    ),
-                                    child: isLoading
-                                        ? SizedBox(
-                                            width: 24.s(context),
-                                            height: 24.s(context),
-                                            child:
-                                                const CircularProgressIndicator(
-                                              valueColor:
-                                                  AlwaysStoppedAnimation(
-                                                Colors.white,
-                                              ),
-                                            ),
-                                          )
-                                        : Row(
-                                            mainAxisAlignment:
-                                                MainAxisAlignment.center,
-                                            children: [
-                                              Text(
-                                                'إنشاء الحساب',
-                                                style: Theme.of(context)
-                                                    .textTheme
-                                                    .titleMedium
-                                                    ?.copyWith(
-                                                      color: Colors.white,
-                                                      fontWeight:
-                                                          FontWeight.w600,
-                                                      fontSize: 16.s(context),
-                                                    ),
-                                              ),
-                                              SizedBox(width: 12.s(context)),
-                                              Icon(
-                                                Icons.arrow_forward,
-                                                color: Colors.white,
-                                                size: 20.s(context),
-                                              ),
-                                            ],
-                                          ),
-                                  ),
+                                return AuthPrimaryButton(
+                                  label: 'إنشاء الحساب',
+                                  trailingIcon: Icons.arrow_forward,
+                                  backgroundColor: AppColors.green,
+                                  isLoading: isLoading,
+                                  enabled: formState.agreeToTerms,
+                                  onPressed: _handleCreateAccount,
                                 );
                               },
                             );
                           },
                         ),
                         SizedBox(height: 20.h(context)),
-                        // Sign In Link
-                        GestureDetector(
-                          onTap: () {
-                            context.go('/login');
-                          },
-                          child: RichText(
-                            textDirection: TextDirection.rtl,
-                            text: TextSpan(
-                              text: 'لديك حساب بالفعل؟ ',
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .bodyMedium
-                                  ?.copyWith(
-                                    color: Colors.grey[600],
-                                    fontWeight: FontWeight.w400,
-                                  ),
-                              children: [
-                                TextSpan(
-                                  text: 'تسجيل الدخول',
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .bodyMedium
-                                      ?.copyWith(
-                                        color: AppColors.primaryForest,
-                                        fontWeight: FontWeight.w700,
-                                        fontSize: 14.s(context),
-                                      ),
-                                ),
-                              ],
-                            ),
+                          AuthSwitchLink(
+                            prompt: 'لديك حساب بالفعل؟ ',
+                            actionLabel: 'تسجيل الدخول',
+                            onTap: () => context.go('/login'),
                           ),
-                        ),
-                        SizedBox(height: 40.h(context)),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
                 ),
               ),
-            ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTermsSection(BuildContext context, bool agreeToTerms) {
+    return GestureDetector(
+      onTap: () =>
+          context.read<AuthFormCubit>().setAgreeToTerms(!agreeToTerms),
+      behavior: HitTestBehavior.opaque,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            'أوافق على شروط الاستخدام وسياسة الخصوصية الخاصة بالخدمات',
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: Colors.grey.shade700,
+                  height: 1.4,
+                ),
+            textDirection: TextDirection.rtl,
+            textAlign: TextAlign.right,
+          ),
+          SizedBox(height: 8.h(context)),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            textDirection: TextDirection.rtl,
+            children: [
+              _buildTermsCheckbox(context, agreeToTerms),
+              Expanded(
+                child: Text(
+                  'الرقمية السيادية.',
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: Colors.grey.shade700,
+                        height: 1.4,
+                      ),
+                  textDirection: TextDirection.rtl,
+                  textAlign: TextAlign.right,
+                ),
+              ),
+            ],
           ),
         ],
       ),
@@ -405,6 +299,7 @@ class _SignupScreenState extends State<SignupScreen> {
     return Container(
       width: boxSize,
       height: boxSize,
+      margin: EdgeInsets.only(left: 10.s(context)),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(4.r(context)),
@@ -425,59 +320,9 @@ class _SignupScreenState extends State<SignupScreen> {
     );
   }
 
-  Widget _buildPasswordField({
-    required TextEditingController controller,
-    required bool isVisible,
-    required VoidCallback onToggle,
-    String? Function(String?)? validator,
-  }) {
-    final r = 12.r(context);
-    return TextFormField(
-      controller: controller,
-      textDirection: TextDirection.rtl,
-      obscureText: !isVisible,
-      style: const TextStyle(color: Colors.black),
-      scrollPadding: const EdgeInsets.only(bottom: 120),
-      decoration: InputDecoration(
-        hintText: '••••••••',
-        hintStyle: TextStyle(color: Colors.grey[600]),
-        hintTextDirection: TextDirection.rtl,
-        filled: true,
-        fillColor: Colors.grey[100],
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(r),
-          borderSide: const BorderSide(color: Colors.black, width: 1.5),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(r),
-          borderSide: const BorderSide(color: Colors.black, width: 1.5),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(r),
-          borderSide: const BorderSide(color: Colors.black, width: 2),
-        ),
-        suffixIcon: IconButton(
-          icon: Icon(
-            isVisible ? Icons.lock_open : Icons.lock,
-            color: Colors.grey[400],
-          ),
-          onPressed: onToggle,
-        ),
-        contentPadding: EdgeInsets.symmetric(
-          horizontal: 16.s(context),
-          vertical: 16.s(context),
-        ),
-      ),
-      validator: validator ??
-          (value) => Validator.confirmPassword(
-                value,
-                _passwordController.text,
-              ),
-    );
-  }
-
   Widget _buildUploadField(File? identityImage) {
     final r = 12.r(context);
+
     return GestureDetector(
       onTap: _pickImage,
       child: Container(

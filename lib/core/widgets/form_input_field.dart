@@ -59,7 +59,11 @@ class FormInputField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final radius = 12.r(context);
+    final radius = 14.r(context);
+    OutlineInputBorder outline(Color color, double width) => OutlineInputBorder(
+          borderRadius: BorderRadius.circular(radius),
+          borderSide: BorderSide(color: color, width: width),
+        );
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.end,
@@ -79,9 +83,9 @@ class FormInputField extends StatelessWidget {
             borderRadius: BorderRadius.circular(radius),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha: 0.08),
-                blurRadius: 8,
-                offset: const Offset(0, 2),
+                color: Colors.black.withValues(alpha: 0.06),
+                blurRadius: 10,
+                offset: const Offset(0, 3),
               ),
             ],
           ),
@@ -95,7 +99,7 @@ class FormInputField extends StatelessWidget {
             onChanged: onChanged,
             obscureText: obscureText,
             maxLines: obscureText ? 1 : maxLines,
-            cursorColor: AppColors.primaryForest,
+            cursorColor: AppColors.secondaryForest,
             style: TextStyle(
               fontSize: 14.f(context),
               color: Colors.black,
@@ -105,47 +109,36 @@ class FormInputField extends StatelessWidget {
               hintText: hint,
               hintTextDirection: TextDirection.rtl,
               hintStyle: TextStyle(
-                color: Colors.grey[600],
+                color: Colors.grey[500],
                 fontSize: 13.f(context),
               ),
               filled: true,
-              fillColor: enabled ? Colors.grey[100] : Colors.grey[200],
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(radius),
-                borderSide: const BorderSide(color: Colors.black, width: 1.5),
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(radius),
-                borderSide: const BorderSide(color: Colors.black, width: 1.5),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(radius),
-                borderSide: const BorderSide(color: Colors.black, width: 2),
-              ),
-              disabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(radius),
-                borderSide: BorderSide(
-                  color: Colors.grey.shade400,
-                  width: 1.5,
-                ),
-              ),
+              fillColor: enabled
+                  ? AppColors.inputFill
+                  : AppColors.inputFill.withValues(alpha: 0.6),
+              border: outline(AppColors.inputBorder, 1.4),
+              enabledBorder: outline(AppColors.inputBorder, 1.4),
+              focusedBorder: outline(AppColors.inputFocusedBorder, 1.8),
+              errorBorder: outline(AppColors.alertRed, 1.4),
+              focusedErrorBorder: outline(AppColors.alertRed, 1.8),
+              disabledBorder: outline(Colors.grey.shade300, 1.4),
               prefixIcon: prefixIcon != null
                   ? Icon(
                       prefixIcon,
-                      color: Colors.grey[600],
+                      color: AppColors.secondaryForest,
                       size: 20.s(context),
                     )
                   : null,
               suffixIcon: suffixIcon != null
                   ? Icon(
                       suffixIcon,
-                      color: Colors.grey[600],
+                      color: AppColors.secondaryForest,
                       size: 20.s(context),
                     )
                   : null,
               contentPadding: EdgeInsets.symmetric(
                 horizontal: 16.w(context),
-                vertical: 14.h(context),
+                vertical: 15.h(context),
               ),
             ),
           ),

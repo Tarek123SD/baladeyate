@@ -66,10 +66,13 @@ class SurveyPin {
       id: id?.toString() ?? '',
       latitude: _readCoordinate(json, 'latitude', 'lat'),
       longitude: _readCoordinate(json, 'longitude', 'lng'),
-      status: SurveyPinStatus.completed,
+      status: json.containsKey('survey_status')
+          ? SurveyPinStatus.fromString(json['survey_status'] as String?)
+          : SurveyPinStatus.completed,
       buildingId: id is int ? id : int.tryParse(id?.toString() ?? ''),
       title: json['name'] as String? ?? json['building_name'] as String?,
-      address: json['address'] as String?,
+      address: json['address'] as String? ??
+          json['real_estate_number'] as String?,
     );
   }
 
@@ -88,9 +91,23 @@ class SurveyPin {
     String primary,
     String fallback,
   ) {
-    final value = json[primary] ?? json[fallback];
-    if (value is num) return value.toDouble();
-    return double.tryParse(value?.toString() ?? '') ?? 0;
+    final direct = json[primary] ?? json[fallback];
+    if (direct is num) return direct.toDouble();
+    final parsedDirect = double.tryParse(direct?.toString() ?? '');
+    if (parsedDirect != null) return parsedDirect;
+
+    // New survey flow posts `{ coordinates: { lat, lng } }`.
+    final nested = json['coordinates'];
+    if (nested is Map) {
+      final nestedMap = Map<String, dynamic>.from(nested);
+      final nestedValue = nestedMap[primary] ??
+          nestedMap[fallback] ??
+          nestedMap[primary == 'latitude' ? 'lat' : 'lng'];
+      if (nestedValue is num) return nestedValue.toDouble();
+      return double.tryParse(nestedValue?.toString() ?? '') ?? 0;
+    }
+
+    return 0;
   }
 
   String _formatCoordinates() =>
