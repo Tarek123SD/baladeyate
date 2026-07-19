@@ -22,64 +22,11 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:responsive_x_toolkit/responsive_x.dart';
 
-class DelegateHomeScreen extends StatelessWidget {
+class DelegateHomeScreen extends StatefulWidget {
   const DelegateHomeScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    final horizontalPadding = Dimensions.pad(24, context);
-
-    return AppBackground(
-      child: Scaffold(
-        backgroundColor: Colors.transparent,
-        appBar: const CustomAppBar(),
-        body: SafeArea(
-          child: Center(
-            child: ConstrainedBox(
-              constraints: BoxConstraints(
-                maxWidth: Dimensions.contentMaxWidth.w(context),
-              ),
-              child: BlocBuilder<DailyTasksCubit, DailyTasksState>(
-                builder: (context, tasksState) {
-                  return CustomScrollView(
-                    slivers: [
-                      SliverPadding(
-                        padding: EdgeInsets.all(horizontalPadding),
-                        sliver: SliverList(
-                          delegate: SliverChildListDelegate([
-                            _buildGreeting(context),
-                            SizedBox(height: 24.h(context)),
-                            _buildProgressRow(context, tasksState),
-                            SizedBox(height: 28.h(context)),
-                            const SectionHeader(title: 'الوصول السريع'),
-                            SizedBox(height: 16.h(context)),
-                            _buildQuickActions(context),
-                            SizedBox(height: 28.h(context)),
-                            SectionHeader(
-                              title: 'مهام ذات أولوية',
-                              actionText: 'عرض الكل',
-                              onActionTap: () => context.go('/delegate/tasks'),
-                            ),
-                            SizedBox(height: 16.h(context)),
-                            ..._buildPriorityTasks(context, tasksState),
-                            SizedBox(height: 28.h(context)),
-                            const SectionHeader(title: 'آخر النشاط'),
-                            SizedBox(height: 16.h(context)),
-                            ..._buildRecentActivity(context, tasksState),
-                            SizedBox(height: 24.h(context)),
-                          ]),
-                        ),
-                      ),
-                    ],
-                  );
-                },
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
+  State<DelegateHomeScreen> createState() => _DelegateHomeScreenState();
 
   Widget _buildGreeting(BuildContext context) {
     return BlocBuilder<AuthCubit, AuthState>(
@@ -367,4 +314,80 @@ class DelegateHomeScreen extends StatelessWidget {
     if (hour < 17) return 'مساء الخير';
     return 'مساء الخير';
   }
+}
+
+class _DelegateHomeScreenState extends State<DelegateHomeScreen> {
+  int? _lastShellIndex;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final shell = StatefulNavigationShell.maybeOf(context);
+    if (shell != null) {
+      final index = shell.currentIndex;
+      if (index == 0 && _lastShellIndex != 0) {
+        if (mounted) {
+          context.read<DailyTasksCubit>().refreshDashboard();
+        }
+      }
+      _lastShellIndex = index;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final horizontalPadding = Dimensions.pad(24, context);
+
+    return AppBackground(
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        appBar: const CustomAppBar(),
+        body: SafeArea(
+          child: Center(
+            child: ConstrainedBox(
+              constraints: BoxConstraints(
+                maxWidth: Dimensions.contentMaxWidth.w(context),
+              ),
+              child: BlocBuilder<DailyTasksCubit, DailyTasksState>(
+                builder: (context, tasksState) {
+                  return CustomScrollView(
+                    slivers: [
+                      SliverPadding(
+                        padding: EdgeInsets.all(horizontalPadding),
+                        sliver: SliverList(
+                          delegate: SliverChildListDelegate([
+                            widget._buildGreeting(context),
+                            SizedBox(height: 24.h(context)),
+                            widget._buildProgressRow(context, tasksState),
+                            SizedBox(height: 28.h(context)),
+                            const SectionHeader(title: 'الوصول السريع'),
+                            SizedBox(height: 16.h(context)),
+                            widget._buildQuickActions(context),
+                            SizedBox(height: 28.h(context)),
+                            SectionHeader(
+                              title: 'مهام ذات أولوية',
+                              actionText: 'عرض الكل',
+                              onActionTap: () => context.go('/delegate/tasks'),
+                            ),
+                            SizedBox(height: 16.h(context)),
+                            ...widget._buildPriorityTasks(context, tasksState),
+                            SizedBox(height: 28.h(context)),
+                            const SectionHeader(title: 'آخر النشاط'),
+                            SizedBox(height: 16.h(context)),
+                            ...widget._buildRecentActivity(context, tasksState),
+                            SizedBox(height: 24.h(context)),
+                          ]),
+                        ),
+                      ),
+                    ],
+                  );
+                },
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
 }

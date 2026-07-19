@@ -98,13 +98,17 @@ class BuildingHubScreen extends StatelessWidget {
                                   title: 'الطوابق',
                                   count: survey.floors.length,
                                   action: TextButton.icon(
-                                    onPressed: () => context.push(
-                                      '/floor',
-                                      extra: SurveyNavigationContext(
-                                        pinId: pinId,
-                                        isNewFloor: true,
-                                      ),
-                                    ),
+                                    onPressed: () async {
+                                      await context.push(
+                                        '/floor',
+                                        extra: SurveyNavigationContext(
+                                          pinId: pinId,
+                                          isNewFloor: true,
+                                        ),
+                                      );
+                                      if (!context.mounted) return;
+                                      context.read<BuildingSurveyCubit>().loadSurvey(pinId);
+                                    },
                                     style: TextButton.styleFrom(
                                       foregroundColor: AppColors.green,
                                     ),
@@ -132,13 +136,17 @@ class BuildingHubScreen extends StatelessWidget {
                                   horizontal: horizontalPadding,
                                 ),
                                 child: _EmptyFloorsState(
-                                  onAddFloor: () => context.push(
-                                    '/floor',
-                                    extra: SurveyNavigationContext(
-                                      pinId: pinId,
-                                      isNewFloor: true,
-                                    ),
-                                  ),
+                                  onAddFloor: () async {
+                                    await context.push(
+                                      '/floor',
+                                      extra: SurveyNavigationContext(
+                                        pinId: pinId,
+                                        isNewFloor: true,
+                                      ),
+                                    );
+                                    if (!context.mounted) return;
+                                    context.read<BuildingSurveyCubit>().loadSurvey(pinId);
+                                  },
                                 ),
                               ),
                             )
@@ -164,16 +172,24 @@ class BuildingHubScreen extends StatelessWidget {
                                     subtitle:
                                         '${floor.savedApartmentCount} شقة مسجلة'
                                         '${floor.expectedApartmentCount.isNotEmpty ? ' / ${floor.expectedApartmentCount} متوقعة' : ''}',
-                                    onTap: () => context.push(
-                                      '/building/$pinId/floor/${floor.localId}',
-                                    ),
-                                    onEdit: () => context.push(
-                                      '/floor',
-                                      extra: SurveyNavigationContext(
-                                        pinId: pinId,
-                                        floorLocalId: floor.localId,
-                                      ),
-                                    ),
+                                    onTap: () async {
+                                      await context.push(
+                                        '/building/$pinId/floor/${floor.localId}',
+                                      );
+                                      if (!context.mounted) return;
+                                      context.read<BuildingSurveyCubit>().loadSurvey(pinId);
+                                    },
+                                    onEdit: () async {
+                                      await context.push(
+                                        '/floor',
+                                        extra: SurveyNavigationContext(
+                                          pinId: pinId,
+                                          floorLocalId: floor.localId,
+                                        ),
+                                      );
+                                      if (!context.mounted) return;
+                                      context.read<BuildingSurveyCubit>().loadSurvey(pinId);
+                                    },
                                   )
                                       .animate()
                                       .fadeIn(

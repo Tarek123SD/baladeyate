@@ -29,10 +29,21 @@ class _DelegateTasksScreenState extends State<DelegateTasksScreen>
     with RouteAware {
   SurveyPinStatus? _statusFilter;
   bool _routeSubscribed = false;
+  int? _lastShellIndex;
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
+
+    final shell = StatefulNavigationShell.maybeOf(context);
+    if (shell != null) {
+      final index = shell.currentIndex;
+      if (index == 2 && _lastShellIndex != 2) {
+        _refreshTasks();
+      }
+      _lastShellIndex = index;
+    }
+
     if (_routeSubscribed) return;
     final route = ModalRoute.of(context);
     if (route is PageRoute<void>) {

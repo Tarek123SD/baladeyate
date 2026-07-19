@@ -1,10 +1,12 @@
 import 'package:baladeyate/config/theme/app_colors.dart';
 import 'package:baladeyate/core/constants/app_assets.dart';
+import 'package:baladeyate/core/services/service_locator.dart';
 import 'package:baladeyate/core/widgets/custom_app_bar.dart';
 import 'package:baladeyate/core/widgets/form_dropdown_field.dart';
 import 'package:baladeyate/core/widgets/form_input_field.dart';
 import 'package:baladeyate/core/widgets/form_section_card.dart';
 import 'package:baladeyate/core/widgets/info_card.dart';
+import 'package:baladeyate/features/daily_tasks/cubits/daily_tasks_cubit/daily_tasks_cubit.dart';
 import 'package:baladeyate/features/delegate/cubits/building_survey_cubit/building_survey_cubit.dart';
 import 'package:baladeyate/features/delegate/models/building_survey.dart';
 import 'package:baladeyate/features/delegate/models/survey_navigation_context.dart';
@@ -127,7 +129,18 @@ class PeopleScreenState extends State<PeopleScreen> {
           ),
         ),
       );
-      context.go('/building/${nav.pinId}/floor/${nav.floorLocalId}');
+      final navigator = Navigator.of(context);
+      sl<DailyTasksCubit>().refreshDashboard();
+      if (navigator.canPop()) {
+        navigator.pop();
+        if (navigator.canPop()) {
+          navigator.pop();
+        }
+      } else {
+        if (mounted) {
+          context.go('/building/${nav.pinId}/floor/${nav.floorLocalId}');
+        }
+      }
       return;
     }
 

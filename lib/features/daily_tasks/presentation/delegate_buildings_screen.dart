@@ -29,6 +29,7 @@ class _DelegateBuildingsScreenState extends State<DelegateBuildingsScreen>
   bool _routeSubscribed = false;
   bool _isLoading = true;
   List<BuildingSurvey> _surveys = const [];
+  int? _lastShellIndex;
 
   @override
   void initState() {
@@ -39,6 +40,16 @@ class _DelegateBuildingsScreenState extends State<DelegateBuildingsScreen>
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
+
+    final shell = StatefulNavigationShell.maybeOf(context);
+    if (shell != null) {
+      final index = shell.currentIndex;
+      if (index == 3 && _lastShellIndex != 3) {
+        _loadBuildings();
+      }
+      _lastShellIndex = index;
+    }
+
     if (_routeSubscribed) return;
     final route = ModalRoute.of(context);
     if (route is PageRoute<void>) {
@@ -175,8 +186,7 @@ class _DelegateBuildingsScreenState extends State<DelegateBuildingsScreen>
                               Text(
                                 'إزالة المبنى من قائمة المسوحات',
                                 style: TextStyle(
-                                  color:
-                                      Colors.white.withValues(alpha: 0.8),
+                                  color: Colors.white.withValues(alpha: 0.8),
                                   fontSize: 12.f(context),
                                 ),
                               ),
@@ -298,8 +308,8 @@ class _DelegateBuildingsScreenState extends State<DelegateBuildingsScreen>
                                             Color(0xFF8B3A2F),
                                           ],
                                         ),
-                                        borderRadius:
-                                            BorderRadius.circular(14.r(context)),
+                                        borderRadius: BorderRadius.circular(
+                                            14.r(context)),
                                         boxShadow: [
                                           BoxShadow(
                                             color: AppColors.alertRed

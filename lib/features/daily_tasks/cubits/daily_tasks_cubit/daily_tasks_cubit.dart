@@ -108,9 +108,23 @@ class DailyTasksCubit extends Cubit<DailyTasksState> {
   Future<LatLng?> moveToCurrentLocation() async {
     emit(state.copyWith(isLocating: true));
     try {
+      final position = await Geolocator.getLastKnownPosition();
+      if (position != null) {
+        final latLng = LatLng(position.latitude, position.longitude);
+        emit(state.copyWith(
+          currentPosition: latLng,
+          isLocating: false,
+          clearLocationMessage: true,
+        ));
+        return latLng;
+      }
+    } catch (_) {}
+
+    try {
       final position = await Geolocator.getCurrentPosition(
         locationSettings: const LocationSettings(
           accuracy: LocationAccuracy.high,
+          timeLimit: Duration(seconds: 4),
         ),
       );
       final latLng = LatLng(position.latitude, position.longitude);
@@ -121,11 +135,27 @@ class DailyTasksCubit extends Cubit<DailyTasksState> {
       ));
       return latLng;
     } catch (_) {
-      emit(state.copyWith(
-        isLocating: false,
-        locationMessage: 'تعذر تحديد موقعك الحالي',
-      ));
-      return null;
+      try {
+        final position = await Geolocator.getCurrentPosition(
+          locationSettings: const LocationSettings(
+            accuracy: LocationAccuracy.low,
+            timeLimit: Duration(seconds: 6),
+          ),
+        );
+        final latLng = LatLng(position.latitude, position.longitude);
+        emit(state.copyWith(
+          currentPosition: latLng,
+          isLocating: false,
+          clearLocationMessage: true,
+        ));
+        return latLng;
+      } catch (err) {
+        emit(state.copyWith(
+          isLocating: false,
+          locationMessage: 'تعذر تحديد موقعك الحالي',
+        ));
+        return null;
+      }
     }
   }
 

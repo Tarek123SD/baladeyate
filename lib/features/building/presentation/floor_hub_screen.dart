@@ -31,6 +31,8 @@ class FloorHubScreen extends StatelessWidget {
         floorLocalId: floorLocalId,
       ),
     );
+    if (!context.mounted) return;
+    context.read<BuildingSurveyCubit>().loadSurvey(pinId);
   }
 
   Future<void> _openEditApartment(
@@ -49,6 +51,8 @@ class FloorHubScreen extends StatelessWidget {
         floorLocalId: floorLocalId,
       ),
     );
+    if (!context.mounted) return;
+    context.read<BuildingSurveyCubit>().loadSurvey(pinId);
   }
 
   @override

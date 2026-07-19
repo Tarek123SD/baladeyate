@@ -48,6 +48,13 @@ class _DelegateMapViewState extends State<_DelegateMapView> with RouteAware {
     }
     if (_lastShellIndex == DelegateShellIndices.map) return;
     _lastFocusedPinId = null;
+
+    if (mounted) {
+      final cubit = context.read<DailyTasksCubit>();
+      cubit.loadPins();
+      cubit.loadTasks();
+    }
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       _animateToCurrentLocation(animate: false);
@@ -80,7 +87,6 @@ class _DelegateMapViewState extends State<_DelegateMapView> with RouteAware {
   @override
   void dispose() {
     appRouteObserver.unsubscribe(this);
-    _mapController?.dispose();
     super.dispose();
   }
 
@@ -178,6 +184,18 @@ class _DelegateMapViewState extends State<_DelegateMapView> with RouteAware {
                 content: Text('اضغط مطولاً على الخريطة لإضافة نقطة مسح'),
               ),
             );
+          },
+        ),
+        BlocListener<DailyTasksCubit, DailyTasksState>(
+          listenWhen: (previous, current) =>
+              previous.currentPosition == null &&
+              current.currentPosition != null,
+          listener: (context, state) {
+            if (_mapController != null && state.currentPosition != null) {
+              _mapController!.animateCamera(
+                CameraUpdate.newLatLngZoom(state.currentPosition!, 14.5),
+              );
+            }
           },
         ),
         BlocListener<DailyTasksCubit, DailyTasksState>(
