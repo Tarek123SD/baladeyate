@@ -21,41 +21,68 @@ const Map<String, String> _floorTypes = {
 };
 
 class ApartmentScreen extends StatefulWidget {
-  const ApartmentScreen({super.key, this.navigationContext});
+  const ApartmentScreen({
+    super.key,
+    this.navigationContext,
+    required this.apartmentsCount,
+  });
 
   final SurveyNavigationContext? navigationContext;
+  final int apartmentsCount;
 
   @override
   State<ApartmentScreen> createState() => ApartmentScreenState();
 }
 
 class ApartmentScreenState extends State<ApartmentScreen> {
-  late TextEditingController _waterMeterController;
-  late TextEditingController _electricityMeterController;
-  late TextEditingController _landlineController;
+  late List<TextEditingController> _waterMeterControllers;
+  late List<TextEditingController> _electricityMeterControllers;
+  late List<TextEditingController> _landlineControllers;
+  late List<ApartmentUnitDraft> _apartmentDrafts;
+  bool _initialized = false;
 
   bool get _isStandalone => widget.navigationContext != null;
 
   @override
   void initState() {
     super.initState();
-    final unit = _readCurrentUnit();
-    _waterMeterController =
-        TextEditingController(text: unit?.waterMeter ?? '');
-    _electricityMeterController =
-        TextEditingController(text: unit?.electricityMeter ?? '');
-    _landlineController = TextEditingController(text: unit?.landline ?? '');
+    final survey = _readSurvey();
+    if (survey != null) {
+      _initializeIfNeeded(survey);
+    }
   }
 
-  ApartmentUnitDraft? _readCurrentUnit() {
-    if (!_isStandalone) return null;
-    final state = context.read<BuildingSurveyCubit>().state;
-    return switch (state) {
-      BuildingSurveyLoaded(:final survey) => survey.currentApartment,
-      BuildingSurveyFailure(:final survey) => survey.currentApartment,
-      BuildingSurveySaving(:final survey) => survey.currentApartment,
-      _ => null,
-    };
+  void _initializeIfNeeded(BuildingSurvey survey) {
+    if (_initialized) return;
+
+    final floorLocalId = widget.navigationContext?.floorLocalId;
+    final floor = floorLocalId != null
+        ? survey.floorByLocalId(floorLocalId)
+        : null;
+
+    final existingApts = floor?.apartments ?? [];
+
+    _apartmentDrafts = List.generate(widget.apartmentsCount, (index) {
+      if (index < existingApts.length) {
+        return existingApts[index];
+      } else {
+        return ApartmentUnitDraft(
+          localId: 'apt_${floorLocalId ?? 'temp'}_$index',
+        );
+      }
+    });
+
+    _waterMeterControllers = _apartmentDrafts
+        .map((apt) => TextEditingController(text: apt.waterMeter))
+        .toList();
+    _electricityMeterControllers = _apartmentDrafts
+        .map((apt) => TextEditingController(text: apt.electricityMeter))
+        .toList();
+    _landlineControllers = _apartmentDrafts
+        .map((apt) => TextEditingController(text: apt.landline))
+        .toList();
+
+    _initialized = true;
   }
 
   BuildingSurvey? _readSurvey() {
@@ -68,17 +95,24 @@ class ApartmentScreenState extends State<ApartmentScreen> {
     };
   }
 
-  void _syncText() {
-    if (!_isStandalone) return;
-    context.read<BuildingSurveyCubit>().updateCurrentApartment(
-          waterMeter: _waterMeterController.text.trim(),
-          electricityMeter: _electricityMeterController.text.trim(),
-          landline: _landlineController.text.trim(),
-        );
+  void _syncAllText() {
+    if (!_initialized) return;
+    for (int i = 0; i < widget.apartmentsCount; i++) {
+      _apartmentDrafts[i] = _apartmentDrafts[i].copyWith(
+        waterMeter: _waterMeterControllers[i].text.trim(),
+        electricityMeter: _electricityMeterControllers[i].text.trim(),
+        landline: _landlineControllers[i].text.trim(),
+      );
+    }
   }
 
-  Future<void> _goToPeople() async {
-    _syncText();
+  Future<void> _goToFamily(int index) async {
+    _syncAllText();
+    final cubit = context.read<BuildingSurveyCubit>();
+    await cubit.updateFloorApartments(_apartmentDrafts);
+    await cubit.setCurrentApartment(_apartmentDrafts[index]);
+
+    if (!mounted) return;
     final nav = widget.navigationContext!;
     await context.push(
       '/people',
@@ -86,28 +120,55 @@ class ApartmentScreenState extends State<ApartmentScreen> {
     );
   }
 
+  Future<void> _saveAllApartments() async {
+    _syncAllText();
+    final cubit = context.read<BuildingSurveyCubit>();
+    await cubit.updateFloorApartments(_apartmentDrafts);
+
+    final success = await cubit.saveAllFloorApartments(_apartmentDrafts);
+    if (!mounted) return;
+
+    if (success) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('تم حفظ بيانات شقق الطابق بنجاح'),
+        ),
+      );
+      if (Navigator.of(context).canPop()) {
+        Navigator.of(context).pop();
+      }
+    } else {
+      final state = cubit.state;
+      if (state is BuildingSurveyFailure) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(state.message)),
+        );
+      }
+    }
+  }
+
   @override
   void dispose() {
-    _waterMeterController.dispose();
-    _electricityMeterController.dispose();
-    _landlineController.dispose();
+    if (_initialized) {
+      for (final controller in _waterMeterControllers) {
+        controller.dispose();
+      }
+      for (final controller in _electricityMeterControllers) {
+        controller.dispose();
+      }
+      for (final controller in _landlineControllers) {
+        controller.dispose();
+      }
+    }
     super.dispose();
   }
 
   Widget _buildForm(BuildContext context) {
     final survey = _readSurvey();
-    final unit = _readCurrentUnit();
     final floorLocalId = widget.navigationContext?.floorLocalId;
     final floor = floorLocalId != null && survey != null
         ? survey.floorByLocalId(floorLocalId)
         : null;
-
-    final floorTypeLabel = _floorTypes.entries
-        .firstWhere(
-          (entry) => entry.value == unit?.floorType,
-          orElse: () => const MapEntry('سكني', 'residential'),
-        )
-        .key;
 
     return SingleChildScrollView(
       physics: const BouncingScrollPhysics(),
@@ -134,70 +195,133 @@ class ApartmentScreenState extends State<ApartmentScreen> {
               iconColor: AppColors.primaryForest,
             ),
           ],
-          FormSectionCard(
-            title: 'تفاصيل الوحدة',
-            badge: _isStandalone ? 'مسح ميداني' : 'قيد الإدخال',
-            badgeColor: AppColors.primaryGoldenWheat,
-            child: Column(
-              children: [
-                FormDropdownField(
-                  label: 'نوع الوحدة',
-                  items: _floorTypes.keys.toList(),
-                  value: floorTypeLabel,
-                  onChanged: (label) {
-                    if (label == null) return;
-                    context
-                        .read<BuildingSurveyCubit>()
-                        .updateCurrentApartment(floorType: _floorTypes[label]);
-                  },
-                ),
-                SizedBox(height: 18.h(context)),
-                FormInputField(
-                  label: 'رقم عداد المياه',
-                  hint: 'أدخل رقم عداد المياه',
-                  controller: _waterMeterController,
-                  prefixIcon: Icons.water_drop_outlined,
-                  onChanged: (_) => _syncText(),
-                ),
-                SizedBox(height: 18.h(context)),
-                FormInputField(
-                  label: 'رقم عداد الكهرباء',
-                  hint: 'أدخل رقم عداد الكهرباء',
-                  controller: _electricityMeterController,
-                  prefixIcon: Icons.electric_bolt_outlined,
-                  onChanged: (_) => _syncText(),
-                ),
-                SizedBox(height: 18.h(context)),
-                FormInputField(
-                  label: 'الهاتف الأرضي (اختياري)',
-                  hint: 'أدخل رقم الهاتف الأرضي',
-                  controller: _landlineController,
-                  prefixIcon: Icons.call_outlined,
-                  keyboardType: TextInputType.phone,
-                  onChanged: (_) => _syncText(),
-                ),
-                SizedBox(height: 8.h(context)),
-                SwitchListTile.adaptive(
-                  value: unit?.isSealed ?? false,
-                  onChanged: (value) => context
-                      .read<BuildingSurveyCubit>()
-                      .updateCurrentApartment(isSealed: value),
-                  activeThumbColor: AppColors.primaryForest,
-                  contentPadding: EdgeInsets.zero,
-                  title: Text(
-                    'الوحدة مغلقة / مختومة',
-                    textDirection: TextDirection.rtl,
-                    textAlign: TextAlign.right,
-                    style: TextStyle(
-                      fontSize: 13.s(context),
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.secondaryCharcoal,
+          if (_initialized)
+            ...List.generate(widget.apartmentsCount, (index) {
+              final unit = _apartmentDrafts[index];
+              final floorTypeLabel = _floorTypes.entries
+                  .firstWhere(
+                    (entry) => entry.value == unit.floorType,
+                    orElse: () => const MapEntry('سكني', 'residential'),
+                  )
+                  .key;
+
+              return FormSectionCard(
+                title: 'تفاصيل الشقة ${index + 1}',
+                badge: unit.isSaved ? 'تم الحفظ' : 'مسح ميداني',
+                badgeColor: unit.isSaved ? AppColors.primaryForest : AppColors.primaryGoldenWheat,
+                child: Column(
+                  children: [
+                    FormDropdownField(
+                      label: 'نوع الوحدة',
+                      items: _floorTypes.keys.toList(),
+                      value: floorTypeLabel,
+                      onChanged: (label) {
+                        if (label == null) return;
+                        setState(() {
+                          _apartmentDrafts[index] = _apartmentDrafts[index].copyWith(
+                            floorType: _floorTypes[label],
+                          );
+                        });
+                        _syncAllText();
+                        context.read<BuildingSurveyCubit>().updateFloorApartments(_apartmentDrafts);
+                      },
                     ),
-                  ),
+                    SizedBox(height: 18.h(context)),
+                    FormInputField(
+                      label: 'رقم عداد المياه',
+                      hint: 'أدخل رقم عداد المياه',
+                      controller: _waterMeterControllers[index],
+                      prefixIcon: Icons.water_drop_outlined,
+                      onChanged: (_) {
+                        _syncAllText();
+                        context.read<BuildingSurveyCubit>().updateFloorApartments(_apartmentDrafts);
+                      },
+                    ),
+                    SizedBox(height: 18.h(context)),
+                    FormInputField(
+                      label: 'رقم عداد الكهرباء',
+                      hint: 'أدخل رقم عداد الكهرباء',
+                      controller: _electricityMeterControllers[index],
+                      prefixIcon: Icons.electric_bolt_outlined,
+                      onChanged: (_) {
+                        _syncAllText();
+                        context.read<BuildingSurveyCubit>().updateFloorApartments(_apartmentDrafts);
+                      },
+                    ),
+                    SizedBox(height: 18.h(context)),
+                    FormInputField(
+                      label: 'الهاتف الأرضي (اختياري)',
+                      hint: 'أدخل رقم الهاتف الأرضي',
+                      controller: _landlineControllers[index],
+                      prefixIcon: Icons.call_outlined,
+                      keyboardType: TextInputType.phone,
+                      onChanged: (_) {
+                        _syncAllText();
+                        context.read<BuildingSurveyCubit>().updateFloorApartments(_apartmentDrafts);
+                      },
+                    ),
+                    SizedBox(height: 18.h(context)),
+                    FormDropdownField(
+                      label: 'حالة الشقة',
+                      items: const ['مسكونة', 'فارغة', 'مغلقة', 'قيد الإكساء'],
+                      value: unit.status.isEmpty ? 'فارغة' : unit.status,
+                      onChanged: (newStatus) {
+                        if (newStatus == null) return;
+                        setState(() {
+                          _apartmentDrafts[index] = _apartmentDrafts[index].copyWith(
+                            status: newStatus,
+                            isSealed: newStatus == 'مغلقة' ? true : unit.isSealed,
+                          );
+                        });
+                        _syncAllText();
+                        context.read<BuildingSurveyCubit>().updateFloorApartments(_apartmentDrafts);
+                      },
+                    ),
+                    SizedBox(height: 8.h(context)),
+                    SwitchListTile.adaptive(
+                      value: unit.isSealed,
+                      onChanged: (value) {
+                        setState(() {
+                          _apartmentDrafts[index] = _apartmentDrafts[index].copyWith(
+                            isSealed: value,
+                          );
+                        });
+                        _syncAllText();
+                        context.read<BuildingSurveyCubit>().updateFloorApartments(_apartmentDrafts);
+                      },
+                      activeThumbColor: AppColors.primaryForest,
+                      contentPadding: EdgeInsets.zero,
+                      title: Text(
+                        'الوحدة مغلقة / مختومة',
+                        textDirection: TextDirection.rtl,
+                        textAlign: TextAlign.right,
+                        style: TextStyle(
+                          fontSize: 13.s(context),
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.secondaryCharcoal,
+                        ),
+                      ),
+                    ),
+                    if (unit.status == 'مسكونة') ...[
+                      SizedBox(height: 12.h(context)),
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton.icon(
+                          onPressed: () => _goToFamily(index),
+                          icon: const Icon(Icons.people_outline, color: Colors.white),
+                          label: const Text('إضافة بيانات الأسرة'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.primaryGoldenWheat,
+                            foregroundColor: Colors.white,
+                            padding: EdgeInsets.symmetric(vertical: 12.h(context)),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ],
                 ),
-              ],
-            ),
-          ),
+              );
+            }),
           SizedBox(height: 20.h(context)),
         ],
       ),
@@ -209,6 +333,21 @@ class ApartmentScreenState extends State<ApartmentScreen> {
     return BlocBuilder<BuildingSurveyCubit, BuildingSurveyState>(
       buildWhen: (previous, current) => previous != current,
       builder: (context, state) {
+        final survey = switch (state) {
+          BuildingSurveyLoaded(:final survey) => survey,
+          BuildingSurveyFailure(:final survey) => survey,
+          BuildingSurveySaving(:final survey) => survey,
+          _ => null,
+        };
+
+        if (survey == null) {
+          return const Scaffold(
+            body: Center(child: CircularProgressIndicator()),
+          );
+        }
+
+        _initializeIfNeeded(survey);
+
         if (!_isStandalone) {
           return Stack(
             children: [
@@ -226,6 +365,8 @@ class ApartmentScreenState extends State<ApartmentScreen> {
             ],
           );
         }
+
+        final isSaving = state is BuildingSurveySaving;
 
         return Container(
           decoration: const BoxDecoration(
@@ -250,13 +391,22 @@ class ApartmentScreenState extends State<ApartmentScreen> {
                     child: SizedBox(
                       width: double.infinity,
                       child: ElevatedButton(
-                        onPressed: _goToPeople,
+                        onPressed: isSaving ? null : _saveAllApartments,
                         style: ElevatedButton.styleFrom(
                           backgroundColor: AppColors.primaryForest,
                           foregroundColor: Colors.white,
                           padding: EdgeInsets.symmetric(vertical: 14.h(context)),
                         ),
-                        child: const Text('التالي: بيانات الأسرة'),
+                        child: isSaving
+                            ? const SizedBox(
+                                height: 22,
+                                width: 22,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: Colors.white,
+                                ),
+                              )
+                            : const Text('حفظ شقق الطابق'),
                       ),
                     ),
                   ),

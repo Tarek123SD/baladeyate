@@ -21,7 +21,7 @@ class FloorHubScreen extends StatelessWidget {
   final String pinId;
   final String floorLocalId;
 
-  Future<void> _openAddApartment(BuildContext context) async {
+  Future<void> _openAddApartment(BuildContext context, int apartmentsCount) async {
     await context.read<BuildingSurveyCubit>().startNewApartment(floorLocalId);
     if (!context.mounted) return;
     await context.push(
@@ -29,6 +29,7 @@ class FloorHubScreen extends StatelessWidget {
       extra: SurveyNavigationContext(
         pinId: pinId,
         floorLocalId: floorLocalId,
+        apartmentsCount: apartmentsCount,
       ),
     );
     if (!context.mounted) return;
@@ -38,6 +39,7 @@ class FloorHubScreen extends StatelessWidget {
   Future<void> _openEditApartment(
     BuildContext context,
     String apartmentLocalId,
+    int apartmentsCount,
   ) async {
     await context.read<BuildingSurveyCubit>().editApartmentUnit(
           floorLocalId: floorLocalId,
@@ -49,6 +51,7 @@ class FloorHubScreen extends StatelessWidget {
       extra: SurveyNavigationContext(
         pinId: pinId,
         floorLocalId: floorLocalId,
+        apartmentsCount: apartmentsCount,
       ),
     );
     if (!context.mounted) return;
@@ -116,7 +119,10 @@ class FloorHubScreen extends StatelessWidget {
                             title: 'الشقق',
                             count: floor.apartments.length,
                             action: TextButton.icon(
-                              onPressed: () => _openAddApartment(context),
+                              onPressed: () => _openAddApartment(
+                                context,
+                                int.tryParse(floor.expectedApartmentCount) ?? 0,
+                              ),
                               style: TextButton.styleFrom(
                                 foregroundColor: AppColors.green,
                               ),
@@ -144,7 +150,10 @@ class FloorHubScreen extends StatelessWidget {
                             horizontal: horizontalPadding,
                           ),
                           child: _EmptyApartmentsState(
-                            onAddApartment: () => _openAddApartment(context),
+                            onAddApartment: () => _openAddApartment(
+                              context,
+                              int.tryParse(floor.expectedApartmentCount) ?? 0,
+                            ),
                           ),
                         ),
                       )
@@ -168,6 +177,7 @@ class FloorHubScreen extends StatelessWidget {
                               onTap: () => _openEditApartment(
                                 context,
                                 apt.localId,
+                                int.tryParse(floor.expectedApartmentCount) ?? 0,
                               ),
                             )
                                 .animate()

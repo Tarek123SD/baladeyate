@@ -48,6 +48,9 @@ class PeopleScreenState extends State<PeopleScreen> {
   late TextEditingController _familyBookController;
   late TextEditingController _unemployedCountController;
   late TextEditingController _studentsCountController;
+  late TextEditingController _familyMembersCountController;
+  late TextEditingController _residentsCountController;
+  late TextEditingController _compositionController;
 
   bool get _isStandalone => widget.navigationContext != null;
 
@@ -60,6 +63,12 @@ class PeopleScreenState extends State<PeopleScreen> {
         TextEditingController(text: unit?.unemployedCount ?? '');
     _studentsCountController =
         TextEditingController(text: unit?.studentsCount ?? '');
+    _familyMembersCountController =
+        TextEditingController(text: unit?.familyMembersCount ?? '');
+    _residentsCountController =
+        TextEditingController(text: unit?.residentsCount ?? '');
+    _compositionController =
+        TextEditingController(text: unit?.composition ?? '');
   }
 
   ApartmentUnitDraft? _readCurrentUnit() {
@@ -91,6 +100,9 @@ class PeopleScreenState extends State<PeopleScreen> {
           familyBook: _familyBookController.text.trim(),
           unemployedCount: _unemployedCountController.text.trim(),
           studentsCount: _studentsCountController.text.trim(),
+          familyMembersCount: _familyMembersCountController.text.trim(),
+          residentsCount: _residentsCountController.text.trim(),
+          composition: _compositionController.text.trim(),
         );
   }
 
@@ -157,6 +169,9 @@ class PeopleScreenState extends State<PeopleScreen> {
     _familyBookController.dispose();
     _unemployedCountController.dispose();
     _studentsCountController.dispose();
+    _familyMembersCountController.dispose();
+    _residentsCountController.dispose();
+    _compositionController.dispose();
     super.dispose();
   }
 
@@ -280,6 +295,33 @@ class PeopleScreenState extends State<PeopleScreen> {
                   controller: _studentsCountController,
                   prefixIcon: Icons.school_outlined,
                   keyboardType: TextInputType.number,
+                  onChanged: (_) => _syncText(),
+                ),
+                SizedBox(height: 18.h(context)),
+                FormInputField(
+                  label: 'عدد أفراد العائلة',
+                  hint: 'أدخل عدد أفراد العائلة',
+                  controller: _familyMembersCountController,
+                  prefixIcon: Icons.groups_outlined,
+                  keyboardType: TextInputType.number,
+                  onChanged: (_) => _syncText(),
+                ),
+                SizedBox(height: 18.h(context)),
+                FormInputField(
+                  label: 'عدد القاطنين الفعلي',
+                  hint: 'أدخل عدد القاطنين الفعلي',
+                  controller: _residentsCountController,
+                  prefixIcon: Icons.home_outlined,
+                  keyboardType: TextInputType.number,
+                  onChanged: (_) => _syncText(),
+                ),
+                SizedBox(height: 18.h(context)),
+                FormInputField(
+                  label: 'تكوين الأسرة',
+                  hint: 'مثال: أب، أم، 3 أبناء',
+                  controller: _compositionController,
+                  prefixIcon: Icons.account_tree_outlined,
+                  maxLines: 3,
                   onChanged: (_) => _syncText(),
                 ),
                 SizedBox(height: 18.h(context)),

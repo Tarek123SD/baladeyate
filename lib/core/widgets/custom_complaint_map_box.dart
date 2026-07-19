@@ -24,8 +24,12 @@ Future<Position?> _resolveCurrentPosition(
   if (permission == LocationPermission.denied) {
     permission = await Geolocator.requestPermission();
   }
-  if (permission == LocationPermission.denied ||
-      permission == LocationPermission.deniedForever) {
+  if (permission == LocationPermission.deniedForever) {
+    onError('تم رفض إذن الموقع بشكل دائم. يرجى تفعيله من إعدادات التطبيق.');
+    await Geolocator.openAppSettings();
+    return null;
+  }
+  if (permission == LocationPermission.denied) {
     onError('تم رفض إذن الوصول إلى الموقع');
     return null;
   }

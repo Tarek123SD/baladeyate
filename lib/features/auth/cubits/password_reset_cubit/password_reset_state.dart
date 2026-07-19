@@ -28,6 +28,19 @@ final class PasswordResetOtpSent extends PasswordResetState {
   List<Object?> get props => [email, message];
 }
 
+final class PasswordResetOtpVerified extends PasswordResetState {
+  const PasswordResetOtpVerified({
+    required this.email,
+    required this.resetToken,
+  });
+
+  final String email;
+  final String resetToken;
+
+  @override
+  List<Object?> get props => [email, resetToken];
+}
+
 final class PasswordResetSuccess extends PasswordResetState {
   const PasswordResetSuccess({required this.message});
 

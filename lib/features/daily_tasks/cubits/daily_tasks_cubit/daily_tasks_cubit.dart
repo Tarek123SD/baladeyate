@@ -96,8 +96,15 @@ class DailyTasksCubit extends Cubit<DailyTasksState> {
       permission = await Geolocator.requestPermission();
     }
 
-    if (permission == LocationPermission.denied ||
-        permission == LocationPermission.deniedForever) {
+    if (permission == LocationPermission.deniedForever) {
+      emit(state.copyWith(
+        locationMessage: 'تم رفض إذن الموقع بشكل دائم. يرجى تفعيله من إعدادات التطبيق',
+      ));
+      await Geolocator.openAppSettings();
+      return;
+    }
+
+    if (permission == LocationPermission.denied) {
       emit(state.copyWith(locationMessage: 'لم يتم منح إذن الموقع'));
       return;
     }

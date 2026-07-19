@@ -10,6 +10,7 @@ class EndPoints {
   static const String login = 'v1/login';
   static const String logout = 'v1/logout';
   static const String forgotPassword = 'v1/auth/forgot-password';
+  static const String verifyOtp = 'v1/auth/verify-otp';
   static const String resetPassword = 'v1/auth/reset-password';
 
   // Citizen

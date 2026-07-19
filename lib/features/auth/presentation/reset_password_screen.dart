@@ -123,7 +123,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
   Future<void> _submit() async {
     if (!(_formKey.currentState?.validate() ?? false)) return;
 
-    final success = await context.read<PasswordResetCubit>().resetPassword(
+    final success = await context.read<PasswordResetCubit>().resetPasswordLegacy(
           email: _emailController.text.trim(),
           otp: _otpController.text.trim(),
           password: _passwordController.text,

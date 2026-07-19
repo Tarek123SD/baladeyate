@@ -117,19 +117,54 @@ class AuthRepository {
     }
   }
 
-  /// Resets the password using the OTP from [forgotPassword].
-  Future<String> resetPassword({
+  /// Verifies the 6-digit OTP and returns the `reset_token` for the final step.
+  Future<String> verifyOtp({
     required String email,
     required String otp,
+  }) async {
+    try {
+      final response = await _apiService.post(
+        EndPoints.verifyOtp,
+        data: {'email': email, 'otp': otp},
+      );
+      final data = response.data;
+      if (data is Map<String, dynamic>) {
+        final success = data['success'];
+        if (success == false) {
+          final message = data['message'];
+          throw Exception(
+            message is String && message.isNotEmpty
+                ? message
+                : 'رمز التحقق غير صحيح',
+          );
+        }
+        final token = data['data']?['reset_token'];
+        if (token is String && token.isNotEmpty) return token;
+      }
+      throw Exception('لم يتم استلام رمز إعادة التعيين');
+    } catch (error) {
+      throw _mapToAuthException(error, fallback: 'فشل التحقق من الرمز');
+    }
+  }
+
+  /// Resets the password using the `reset_token` obtained from [verifyOtp].
+  Future<String> resetPassword({
+    required String email,
     required String password,
     required String passwordConfirmation,
+    /// Token returned by the verify-otp step (new 3-step flow).
+    String? resetToken,
+    /// Raw OTP (legacy single-step flow – kept for backward compatibility).
+    String? otp,
   }) async {
     try {
       final response = await _apiService.post(
         EndPoints.resetPassword,
         data: {
           'email': email,
-          'otp': otp,
+          if (resetToken != null && resetToken.isNotEmpty)
+            'reset_token': resetToken,
+          if (otp != null && otp.isNotEmpty) 'otp': otp,
           'password': password,
           'password_confirmation': passwordConfirmation,
         },

@@ -307,6 +307,9 @@ class DelegateRepository {
     int? unemployedCount,
     int? studentsCount,
     String? occupancyType,
+    int? familyMembersCount,
+    int? residentsCount,
+    String? composition,
   }) async {
     try {
       final response = await _apiService.put(
@@ -319,6 +322,9 @@ class DelegateRepository {
           if (unemployedCount != null) 'unemployed_count': unemployedCount,
           if (studentsCount != null) 'students_count': studentsCount,
           if (occupancyType != null) 'occupancy_type': occupancyType,
+          if (familyMembersCount != null) 'family_members_count': familyMembersCount,
+          if (residentsCount != null) 'residents_count': residentsCount,
+          if (composition != null) 'composition': composition,
         },
       );
 
@@ -522,6 +528,11 @@ class DelegateRepository {
           'students_count':
               int.tryParse(unit.studentsCount) ?? unit.studentsCount,
           'occupancy_type': unit.occupancyType,
+          'family_members_count':
+              int.tryParse(unit.familyMembersCount) ?? unit.familyMembersCount,
+          'residents_count':
+              int.tryParse(unit.residentsCount) ?? unit.residentsCount,
+          'composition': unit.composition.isNotEmpty ? unit.composition : null,
         },
       );
       final familyId = _readEntityId(familyResponse.data, 'family');
@@ -563,6 +574,9 @@ class DelegateRepository {
         unemployedCount: int.tryParse(unit.unemployedCount),
         studentsCount: int.tryParse(unit.studentsCount),
         occupancyType: unit.occupancyType,
+        familyMembersCount: int.tryParse(unit.familyMembersCount),
+        residentsCount: int.tryParse(unit.residentsCount),
+        composition: unit.composition.isNotEmpty ? unit.composition : null,
       );
       return (apartmentId: apartmentId, familyId: familyId);
     } catch (error) {

@@ -438,7 +438,10 @@ GoRouter _createAppRouter() {
 
             },
 
-            child: ApartmentScreen(navigationContext: nav),
+            child: ApartmentScreen(
+              navigationContext: nav,
+              apartmentsCount: nav?.apartmentsCount ?? 0,
+            ),
 
           );
 

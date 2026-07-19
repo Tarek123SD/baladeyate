@@ -289,8 +289,8 @@ class _ComplaintDetailSheetState extends State<_ComplaintDetailSheet> {
                                 : parts.subject)
                             : parts.details,
                         style: TextStyle(
-                          color:
-                              AppColors.secondaryCharcoal.withValues(alpha: 0.9),
+                          color: AppColors.secondaryCharcoal
+                              .withValues(alpha: 0.9),
                           fontSize: 14.f(context),
                           height: 1.6,
                         ),
