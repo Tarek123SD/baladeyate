@@ -1,4 +1,5 @@
 import 'package:baladeyate/config/theme/app_colors.dart';
+import 'package:baladeyate/core/utils/app_snackbar.dart';
 import 'package:baladeyate/config/validator/validator.dart';
 import 'package:baladeyate/core/widgets/custom_form_field_label.dart';
 import 'package:baladeyate/core/widgets/password_input_field.dart';
@@ -47,9 +48,7 @@ class _AuthScreenState extends State<AuthScreen> {
         if (state is AuthSuccess) {
           context.go(homeRouteFor(state.user));
         } else if (state is AuthFailure) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(state.message)),
-          );
+          AppSnackBar.showError(context, state.message);
         }
       },
       child: AuthScreenScaffold(

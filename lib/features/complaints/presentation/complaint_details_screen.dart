@@ -1,4 +1,5 @@
 import 'package:baladeyate/config/theme/app_colors.dart';
+import 'package:baladeyate/core/utils/app_snackbar.dart';
 import 'package:baladeyate/features/complaints/cubits/complaint_detail_cubit/complaint_detail_cubit.dart';
 import 'package:baladeyate/features/complaints/cubits/complaint_detail_cubit/complaint_detail_state.dart';
 import 'package:baladeyate/features/complaints/cubits/complaints_cubit/complaints_cubit.dart';
@@ -382,7 +383,6 @@ class ComplaintDetailsScreen extends StatelessWidget {
     final detailCubit = _tryRead<ComplaintDetailCubit>(context);
     final complaintsCubit = _tryRead<ComplaintsCubit>(context);
     final navigator = Navigator.of(context);
-    final messenger = ScaffoldMessenger.of(context);
 
     final confirmed = await showDialog<bool>(
       context: context,
@@ -489,9 +489,9 @@ class ComplaintDetailsScreen extends StatelessWidget {
 
     if (success) {
       navigator.pop();
-      messenger.showSnackBar(
-        const SnackBar(content: Text('تم حذف الشكوى بنجاح')),
-      );
+      if (context.mounted) {
+        AppSnackBar.showSuccess(context, 'تم حذف الشكوى بنجاح');
+      }
     }
   }
 }

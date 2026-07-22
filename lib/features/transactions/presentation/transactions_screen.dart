@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:responsive_x_toolkit/responsive_x.dart';
 
 import 'package:baladeyate/config/theme/app_colors.dart';
+import 'package:baladeyate/core/utils/app_snackbar.dart';
 import 'package:baladeyate/core/constants/app_assets.dart';
 import 'package:baladeyate/core/responsive/responsive_helper.dart';
 import 'package:baladeyate/core/services/service_locator.dart';
@@ -132,12 +133,7 @@ class _TransactionsViewState extends State<TransactionsView> {
     return BlocListener<TransactionsCubit, TransactionsState>(
       listener: (context, state) {
         if (state is TransactionsError) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(state.message),
-              backgroundColor: AppColors.alertRed,
-            ),
-          );
+          AppSnackBar.showError(context, state.message);
         }
       },
       child: Container(

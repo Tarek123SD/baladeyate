@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:responsive_x_toolkit/responsive_x.dart';
 import 'package:baladeyate/config/theme/app_colors.dart';
+import 'package:baladeyate/core/utils/app_snackbar.dart';
 import 'package:baladeyate/core/constants/app_assets.dart';
 import 'package:baladeyate/core/services/service_locator.dart';
 import 'package:baladeyate/core/widgets/custom_app_bar.dart';
@@ -205,24 +206,11 @@ class _SubmitTransactionFormState extends State<SubmitTransactionForm> {
     return BlocConsumer<SubmitTransactionCubit, SubmitTransactionState>(
       listener: (context, state) {
         if (state is SubmitTransactionFailure) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                state.error,
-                textDirection: TextDirection.rtl,
-              ),
-              backgroundColor: AppColors.alertRed,
-            ),
-          );
+          AppSnackBar.showError(context, state.error);
         } else if (state is SubmitTransactionSuccess) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                'تم تقديم الطلب بنجاح. رقم المعاملة: ${state.transactionNumber}',
-                textDirection: TextDirection.rtl,
-              ),
-              backgroundColor: Colors.green,
-            ),
+          AppSnackBar.showSuccess(
+            context,
+            'تم تقديم الطلب بنجاح. رقم المعاملة: ${state.transactionNumber}',
           );
           if (context.canPop()) {
             context.pop();

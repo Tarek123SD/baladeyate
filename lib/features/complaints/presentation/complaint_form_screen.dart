@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:baladeyate/core/utils/app_snackbar.dart';
 import 'package:baladeyate/core/widgets/custom_complaint_input_field.dart';
 import 'package:baladeyate/core/widgets/custom_complaint_map_box.dart';
 import 'package:baladeyate/core/widgets/custom_complaint_priority_button.dart';
@@ -42,12 +43,7 @@ class _ComplaintFormScreenState extends State<ComplaintFormScreen> {
     return BlocConsumer<ComplaintsCubit, ComplaintsState>(
       listener: (context, state) {
         if (state is ComplaintCreated) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('تم إرسال الشكوى بنجاح'),
-              backgroundColor: Colors.green,
-            ),
-          );
+          AppSnackBar.showSuccess(context, 'تم إرسال الشكوى بنجاح');
           context.go('/track');
         } else if (state is ComplaintsFailure) {
           // Shown inline in the form.
@@ -288,9 +284,7 @@ class _ComplaintFormScreenState extends State<ComplaintFormScreen> {
     final details = _detailsController.text.trim();
 
     if (details.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('يرجى كتابة تفاصيل الشكوى')),
-      );
+      AppSnackBar.showError(context, 'يرجى كتابة تفاصيل الشكوى');
       return;
     }
 

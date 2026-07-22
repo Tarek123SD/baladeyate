@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:baladeyate/core/utils/app_snackbar.dart';
 import 'package:baladeyate/core/widgets/custom_form_field_label.dart';
 import 'package:baladeyate/core/widgets/custom_textfield.dart';
 import 'package:baladeyate/core/widgets/password_input_field.dart';
@@ -73,12 +74,7 @@ class _SignupScreenState extends State<SignupScreen> {
             context.go(homeRouteFor(state.user));
           }
         } else if (state is AuthFailure) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(state.message),
-              backgroundColor: Colors.red,
-            ),
-          );
+          AppSnackBar.showError(context, state.message);
         }
       },
       child: AuthScreenScaffold(
@@ -427,9 +423,7 @@ class _SignupScreenState extends State<SignupScreen> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('خطأ في اختيار الصورة: $e')),
-        );
+        AppSnackBar.showError(context, 'خطأ في اختيار الصورة: $e');
       }
     }
   }
@@ -437,9 +431,7 @@ class _SignupScreenState extends State<SignupScreen> {
   void _handleCreateAccount() {
     final identityImage = context.read<AuthFormCubit>().state.identityImage;
     if (identityImage == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('يرجى اختيار صورة الهوية')),
-      );
+      AppSnackBar.showError(context, 'يرجى اختيار صورة الهوية');
       return;
     }
 
