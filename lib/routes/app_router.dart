@@ -37,6 +37,8 @@ import 'package:baladeyate/features/complaints/presentation/complaints_guard_scr
 import 'package:baladeyate/features/complaints/presentation/identity_verification_screen.dart';
 
 import 'package:baladeyate/features/complaints/presentation/track_complaints_screen.dart';
+import 'package:baladeyate/core/widgets/custom_complaint_map_box.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 import 'package:baladeyate/features/daily_tasks/cubits/daily_tasks_cubit/daily_tasks_cubit.dart';
 
@@ -60,6 +62,8 @@ import 'package:baladeyate/features/people/presentation/people_screen.dart';
 import 'package:baladeyate/features/profile/cubits/profile_cubit/profile_cubit.dart';
 
 import 'package:baladeyate/features/profile/presentation/profile_screen.dart';
+import 'package:baladeyate/features/transactions/cubits/submit_transaction_cubit/submit_transaction_cubit.dart';
+import 'package:baladeyate/features/transactions/presentation/submit_transaction_screen.dart';
 
 import 'package:baladeyate/features/settings/presentation/settings_screen.dart';
 
@@ -265,6 +269,16 @@ GoRouter _createAppRouter() {
           child: const ComplaintsGuardScreen(),
 
         ),
+
+        routes: [
+          GoRoute(
+            path: 'map-picker',
+            builder: (context, state) {
+              final initialLocation = state.extra as LatLng?;
+              return MapPickerScreen(initialLocation: initialLocation);
+            },
+          ),
+        ],
 
       ),
 
@@ -605,27 +619,27 @@ GoRouter _createAppRouter() {
           ),
 
           StatefulShellBranch(
-
             routes: [
-
               GoRoute(
-
                 path: '/track',
-
                 builder: (context, state) => BlocProvider(
-
                   create: (_) => sl<ComplaintsCubit>()..loadComplaints(),
-
                   child: const TrackComplaintsScreen(),
-
                 ),
-
               ),
-
             ],
-
           ),
-
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/transactions/submit',
+                builder: (context, state) => BlocProvider(
+                  create: (_) => sl<SubmitTransactionCubit>(),
+                  child: const SubmitTransactionScreen(),
+                ),
+              ),
+            ],
+          ),
         ],
 
       ),

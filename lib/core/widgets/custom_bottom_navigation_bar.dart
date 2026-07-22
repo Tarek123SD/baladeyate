@@ -17,6 +17,7 @@ class CustomBottomNavigationBar extends StatelessWidget {
     'الملف الشخصي',
     'التبرعات',
     'الشكاوي',
+    'المعاملات',
   ];
 
   static const _icons = [
@@ -24,6 +25,7 @@ class CustomBottomNavigationBar extends StatelessWidget {
     Icons.person_outline,
     Icons.volunteer_activism_outlined,
     Icons.support_agent_outlined,
+    Icons.assignment_outlined,
   ];
 
   static const _activeIcons = [
@@ -31,6 +33,7 @@ class CustomBottomNavigationBar extends StatelessWidget {
     Icons.person_rounded,
     Icons.volunteer_activism_rounded,
     Icons.support_agent_rounded,
+    Icons.assignment,
   ];
 
   @override

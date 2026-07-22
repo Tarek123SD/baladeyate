@@ -25,6 +25,8 @@ import 'package:baladeyate/features/notifications/cubits/notifications_cubit/not
 import 'package:baladeyate/features/notifications/repo/notifications_repository.dart';
 import 'package:baladeyate/features/profile/cubits/profile_cubit/profile_cubit.dart';
 import 'package:baladeyate/features/profile/repo/citizen_repository.dart';
+import 'package:baladeyate/features/transactions/cubits/submit_transaction_cubit/submit_transaction_cubit.dart';
+import 'package:baladeyate/features/transactions/repo/transactions_repository.dart';
 
 import 'api_services.dart';
 import 'package:get_it/get_it.dart';
@@ -82,6 +84,10 @@ Future<void> setupServiceLocator() async {
     () => CitizenRepository(apiService: sl()),
   );
 
+  sl.registerLazySingleton<TransactionsRepository>(
+    () => TransactionsRepository(apiService: sl()),
+  );
+
   sl.registerLazySingleton<ComplaintsRepository>(
     () => ComplaintsRepository(apiService: sl()),
   );
@@ -130,6 +136,10 @@ Future<void> setupServiceLocator() async {
 
   sl.registerFactory<ComplaintsCubit>(
     () => ComplaintsCubit(complaintsRepository: sl<ComplaintsRepository>()),
+  );
+
+  sl.registerFactory<SubmitTransactionCubit>(
+    () => SubmitTransactionCubit(transactionsRepository: sl<TransactionsRepository>()),
   );
 
   sl.registerFactory<DonationsCubit>(

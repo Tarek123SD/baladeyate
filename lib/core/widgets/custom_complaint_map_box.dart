@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:responsive_x_toolkit/responsive_x.dart';
+import 'package:go_router/go_router.dart';
 
 const LatLng _kFallbackLocation = LatLng(30.0444, 31.2357); // Cairo
 
@@ -83,13 +84,9 @@ class _CustomComplaintMapBoxState extends State<CustomComplaintMapBox> {
   }
 
   Future<void> _openMapPicker() async {
-    final result = await Navigator.of(context).push<LatLng>(
-      MaterialPageRoute(
-        fullscreenDialog: true,
-        builder: (_) => _MapPickerScreen(
-          initialLocation: _selected ?? widget.initialLocation,
-        ),
-      ),
+    final result = await context.push<LatLng>(
+      '/complains/map-picker',
+      extra: _selected ?? widget.initialLocation,
     );
 
     if (result == null || !mounted) return;
@@ -270,16 +267,16 @@ class _CustomComplaintMapBoxState extends State<CustomComplaintMapBox> {
 }
 
 /// Full-screen map used to precisely pick a location.
-class _MapPickerScreen extends StatefulWidget {
-  const _MapPickerScreen({this.initialLocation});
+class MapPickerScreen extends StatefulWidget {
+  const MapPickerScreen({super.key, this.initialLocation});
 
   final LatLng? initialLocation;
 
   @override
-  State<_MapPickerScreen> createState() => _MapPickerScreenState();
+  State<MapPickerScreen> createState() => _MapPickerScreenState();
 }
 
-class _MapPickerScreenState extends State<_MapPickerScreen> {
+class _MapPickerScreenState extends State<MapPickerScreen> {
   final Completer<GoogleMapController> _controller = Completer();
   LatLng? _selected;
   bool _locating = false;
@@ -424,9 +421,8 @@ class _MapPickerScreenState extends State<_MapPickerScreen> {
             child: SizedBox(
               height: 52.h(context),
               child: ElevatedButton.icon(
-                onPressed: _selected == null
-                    ? null
-                    : () => Navigator.of(context).pop(_selected),
+                onPressed:
+                    _selected == null ? null : () => context.pop(_selected),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.green,
                   foregroundColor: Colors.white,
