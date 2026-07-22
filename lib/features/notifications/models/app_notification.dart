@@ -74,6 +74,8 @@ class AppNotification {
         return 'إشعار عام';
       case 'IdentityVerificationNotification':
         return 'توثيق الحساب';
+        case 'TransactionStatusUpdatedNotification':
+  return 'تحديث حالة المعاملة';
       case 'BulkNotification':
         return 'إشعار جماعي';
       default:

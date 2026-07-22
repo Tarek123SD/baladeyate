@@ -14,6 +14,10 @@ class FileAttachmentsList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (files.isEmpty) return const SizedBox.shrink();
+
+    final primaryColor = Theme.of(context).colorScheme.primary;
+
     return ListView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
@@ -23,66 +27,53 @@ class FileAttachmentsList extends StatelessWidget {
         final isPdf = file.extension?.toLowerCase() == 'pdf';
 
         return Card(
-          margin: EdgeInsets.only(bottom: 8.h(context)),
           elevation: 0,
+          color: Colors.grey.shade100,
+          margin: EdgeInsets.only(bottom: 8.h(context)),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10.r(context)),
-            side: BorderSide(color: Colors.grey.shade200),
+            borderRadius: BorderRadius.circular(12.r(context)),
           ),
-          child: Padding(
-            padding: EdgeInsets.symmetric(
+          child: ListTile(
+            contentPadding: EdgeInsets.symmetric(
               horizontal: 12.w(context),
-              vertical: 8.h(context),
+              vertical: 4.h(context),
             ),
-            child: Row(
+            leading: Container(
+              padding: EdgeInsets.all(8.r(context)),
+              decoration: BoxDecoration(
+                color: isPdf
+                    ? Colors.red.withValues(alpha: 0.1)
+                    : primaryColor.withValues(alpha: 0.1),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                isPdf ? Icons.picture_as_pdf : Icons.image,
+                color: isPdf ? Colors.red : primaryColor,
+                size: 22.s(context),
+              ),
+            ),
+            title: Text(
+              file.name,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
               textDirection: TextDirection.rtl,
-              children: [
-                Container(
-                  padding: EdgeInsets.all(8.r(context)),
-                  decoration: BoxDecoration(
-                    color: isPdf
-                        ? Colors.red.withValues(alpha: 0.1)
-                        : Colors.blue.withValues(alpha: 0.1),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(
-                    isPdf ? Icons.picture_as_pdf : Icons.image,
-                    color: isPdf ? Colors.red : Colors.blue,
-                    size: 20.s(context),
-                  ),
-                ),
-                SizedBox(width: 12.w(context)),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      Text(
-                        file.name,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        textDirection: TextDirection.rtl,
-                        style: TextStyle(
-                          fontSize: 13.s(context),
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      SizedBox(height: 2.h(context)),
-                      Text(
-                        _formatFileSize(file.size),
-                        textDirection: TextDirection.rtl,
-                        style: TextStyle(
-                          fontSize: 11.s(context),
-                          color: Colors.grey[500],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.delete_outline, color: Colors.red),
-                  onPressed: () => onRemove(index),
-                ),
-              ],
+              style: TextStyle(
+                fontSize: 13.s(context),
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            subtitle: Text(
+              _formatFileSize(file.size),
+              textDirection: TextDirection.rtl,
+              style: TextStyle(
+                fontSize: 11.s(context),
+                color: Colors.grey[600],
+              ),
+            ),
+            trailing: IconButton(
+              icon: const Icon(Icons.delete_outline, color: Colors.red),
+              onPressed: () => onRemove(index),
+              tooltip: 'حذف الملف',
             ),
           ),
         );

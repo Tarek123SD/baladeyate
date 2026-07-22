@@ -5,64 +5,70 @@ import 'package:responsive_x_toolkit/responsive_x.dart';
 class FilePickerContainer extends StatelessWidget {
   final VoidCallback onTap;
   final String label;
+  final String? subtitle;
 
   const FilePickerContainer({
     super.key,
     required this.onTap,
     required this.label,
+    this.subtitle,
   });
 
   @override
   Widget build(BuildContext context) {
-    final primaryColor = Theme.of(context).primaryColor;
-    return GestureDetector(
-      onTap: onTap,
-      child: CustomPaint(
-        painter: _DashedRectPainter(
-          color: primaryColor,
-          strokeWidth: 1.5,
-          gap: 6,
-          radius: 12.r(context),
-        ),
-        child: Container(
-          width: double.infinity,
-          padding: EdgeInsets.symmetric(
-            vertical: 24.h(context),
-            horizontal: 16.w(context),
-          ),
-          decoration: BoxDecoration(
-            color: primaryColor.withValues(alpha: 0.03),
-            borderRadius: BorderRadius.circular(12.r(context)),
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                Icons.cloud_upload_outlined,
-                size: 36.s(context),
-                color: primaryColor,
-              ),
-              SizedBox(height: 12.h(context)),
-              Text(
-                label,
-                textDirection: TextDirection.rtl,
-                style: TextStyle(
-                  fontSize: 14.s(context),
-                  fontWeight: FontWeight.bold,
+    final primaryColor = Theme.of(context).colorScheme.primary;
+
+    return CustomPaint(
+      painter: _DashedRectPainter(
+        color: primaryColor,
+        strokeWidth: 1.5,
+        gap: 6,
+        radius: 12.r(context),
+      ),
+      child: Material(
+        color: primaryColor.withValues(alpha: 0.05),
+        borderRadius: BorderRadius.circular(12.r(context)),
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(12.r(context)),
+          child: Container(
+            width: double.infinity,
+            padding: EdgeInsets.symmetric(
+              vertical: 24.h(context),
+              horizontal: 16.w(context),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Icons.cloud_upload_outlined,
+                  size: 38.s(context),
                   color: primaryColor,
                 ),
-              ),
-              SizedBox(height: 6.h(context)),
-              Text(
-                'الحد الأقصى لحجم الملف 5 ميجابايت (PDF, JPG, PNG)',
-                textDirection: TextDirection.rtl,
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 11.s(context),
-                  color: Colors.grey[600],
+                SizedBox(height: 10.h(context)),
+                Text(
+                  label,
+                  textDirection: TextDirection.rtl,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 14.s(context),
+                    fontWeight: FontWeight.bold,
+                    color: primaryColor,
+                  ),
                 ),
-              ),
-            ],
+                SizedBox(height: 6.h(context)),
+                Text(
+                  subtitle ??
+                      'الحد الأقصى لحجم الملف 5 ميجابايت (PDF, JPG, PNG)',
+                  textDirection: TextDirection.rtl,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 11.s(context),
+                    color: Colors.grey[600],
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -78,9 +84,9 @@ class _DashedRectPainter extends CustomPainter {
 
   _DashedRectPainter({
     required this.color,
-    this.strokeWidth = 2.0,
-    this.gap = 5.0,
-    this.radius = 10.0,
+    this.strokeWidth = 1.5,
+    this.gap = 6.0,
+    this.radius = 12.0,
   });
 
   @override

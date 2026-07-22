@@ -1,15 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:responsive_x_toolkit/responsive_x.dart';
 import 'package:baladeyate/config/theme/app_colors.dart';
-import 'package:baladeyate/config/validator/validator.dart';
 import 'package:baladeyate/core/constants/app_assets.dart';
 import 'package:baladeyate/core/services/service_locator.dart';
 import 'package:baladeyate/core/widgets/custom_app_bar.dart';
-import 'package:baladeyate/core/widgets/form_dropdown_field.dart';
-import 'package:baladeyate/core/widgets/form_input_field.dart';
 import 'package:baladeyate/core/widgets/form_section_card.dart';
 import 'package:baladeyate/core/widgets/responsive_body.dart';
 
@@ -49,209 +45,163 @@ class SubmitTransactionForm extends StatefulWidget {
 class _SubmitTransactionFormState extends State<SubmitTransactionForm> {
   final _formKey = GlobalKey<FormState>();
 
-  String? _selectedTypeDisplay;
-  final Map<String, String> _transactionTypes = {
-    'رخصة تجارية': 'commercial_license',
-    'تصريح بناء': 'building_permit',
-  };
-
-  final _shopAreaController = TextEditingController();
-  final _activityTypeController = TextEditingController();
-
-  @override
-  void dispose() {
-    _shopAreaController.dispose();
-    _activityTypeController.dispose();
-    super.dispose();
-  }
-
-  void _resetForm(BuildContext context) {
-    _shopAreaController.clear();
-    _activityTypeController.clear();
-    setState(() {
-      _selectedTypeDisplay = null;
-    });
-    context.read<SubmitTransactionCubit>().reset();
-  }
-
-  void _submit(BuildContext context) {
-    if (_selectedTypeDisplay == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            'يرجى اختيار نوع المعاملة أولاً',
-            textDirection: TextDirection.rtl,
-          ),
-          backgroundColor: AppColors.alertRed,
-        ),
-      );
-      return;
-    }
-
-    if (_formKey.currentState?.validate() ?? false) {
-      final cubit = context.read<SubmitTransactionCubit>();
-
-      // Build form data map for submission
-      final Map<String, dynamic> formData = {};
-      if (_transactionTypes[_selectedTypeDisplay] == 'commercial_license') {
-        formData['shop_area'] = _shopAreaController.text.trim();
-        formData['activity_type'] = _activityTypeController.text.trim();
-      }
-
-      cubit.submitTransaction(
-        type: _transactionTypes[_selectedTypeDisplay]!,
-        formData: formData,
-        buildingId: widget.buildingId,
-      );
-    }
-  }
-
-  void _showSuccessDialog(BuildContext context, String transactionNumber) {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (dialogContext) {
-        return Directionality(
-          textDirection: TextDirection.rtl,
-          child: AlertDialog(
-            backgroundColor: Colors.white,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(20.r(context)),
-            ),
-            title: Column(
-              children: [
-                Container(
-                  padding: EdgeInsets.all(16.r(context)),
-                  decoration: BoxDecoration(
-                    color: Colors.green.withValues(alpha: 0.1),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(
-                    Icons.check_circle_rounded,
-                    color: Colors.green,
-                    size: 48.s(context),
-                  ),
-                ),
-                SizedBox(height: 16.h(context)),
-                Text(
-                  'تم تقديم الطلب بنجاح',
-                  style: TextStyle(
-                    fontSize: 18.s(context),
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.primaryForest,
-                  ),
-                ),
-              ],
-            ),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  'تم تسجيل معاملتك في النظام بنجاح. يرجى الاحتفاظ برقم المعاملة لمتابعة حالة الطلب لاحقاً.',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 13.s(context),
-                    color: AppColors.secondaryCharcoal,
-                  ),
-                ),
-                SizedBox(height: 16.h(context)),
-                Container(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: 12.w(context),
-                    vertical: 10.h(context),
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.grey[50],
-                    borderRadius: BorderRadius.circular(10.r(context)),
-                    border: Border.all(color: Colors.grey.shade200),
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        'رقم المعاملة:',
-                        style: TextStyle(
-                          fontSize: 13.s(context),
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.secondaryCharcoal,
-                        ),
-                      ),
-                      Row(
-                        children: [
-                          SelectableText(
-                            transactionNumber,
-                            style: TextStyle(
-                              fontSize: 14.s(context),
-                              fontWeight: FontWeight.bold,
-                              color: AppColors.primaryForest,
-                            ),
-                          ),
-                          SizedBox(width: 8.w(context)),
-                          IconButton(
-                            icon: Icon(
-                              Icons.copy_rounded,
-                              size: 18.s(context),
-                              color: AppColors.primaryForest,
-                            ),
-                            onPressed: () {
-                              Clipboard.setData(
-                                  ClipboardData(text: transactionNumber));
-                              ScaffoldMessenger.of(dialogContext).showSnackBar(
-                                const SnackBar(
-                                  content: Text(
-                                    'تم نسخ رقم المعاملة إلى الحافظة',
-                                    textDirection: TextDirection.rtl,
-                                  ),
-                                ),
-                              );
-                            },
-                            constraints: const BoxConstraints(),
-                            padding: EdgeInsets.zero,
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-            actions: [
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primaryForest,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12.r(context)),
-                    ),
-                    padding: EdgeInsets.symmetric(vertical: 12.h(context)),
-                  ),
-                  onPressed: () {
-                    Navigator.of(dialogContext).pop(); // Dismiss success dialog
-                    _resetForm(context);
-                    if (context.canPop()) {
-                      context.pop();
-                    }
-                  },
-                  child: Text(
-                    'موافق',
-                    style: TextStyle(
-                      fontSize: 14.s(context),
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        );
-      },
+  InputDecoration _buildInputDecoration(
+    BuildContext context, {
+    required String labelText,
+    String? hintText,
+    IconData? prefixIcon,
+  }) {
+    final primaryColor = Theme.of(context).colorScheme.primary;
+    return InputDecoration(
+      labelText: labelText,
+      labelStyle: TextStyle(
+        color: Colors.grey[700],
+        fontSize: 14.s(context),
+      ),
+      hintText: hintText,
+      hintStyle: TextStyle(
+        color: Colors.grey[600],
+        fontSize: 14.s(context),
+      ),
+      alignLabelWithHint: true,
+      filled: true,
+      fillColor: Colors.grey.shade100,
+      prefixIcon: prefixIcon != null ? Icon(prefixIcon, color: primaryColor) : null,
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12.r(context)),
+        borderSide: BorderSide.none,
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12.r(context)),
+        borderSide: BorderSide.none,
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12.r(context)),
+        borderSide: BorderSide(color: primaryColor, width: 1.5),
+      ),
+      errorBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12.r(context)),
+        borderSide: const BorderSide(color: Colors.red, width: 1),
+      ),
+      focusedErrorBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12.r(context)),
+        borderSide: const BorderSide(color: Colors.red, width: 1.5),
+      ),
+      contentPadding: EdgeInsets.symmetric(
+        horizontal: 16.w(context),
+        vertical: 16.h(context),
+      ),
     );
+  }
+
+  Widget _buildDynamicFields(
+    BuildContext context,
+    SubmitTransactionState state,
+    bool isLoading,
+  ) {
+    final cubit = context.read<SubmitTransactionCubit>();
+
+    if (state.selectedType == 'commercial_license') {
+      return Column(
+        key: const ValueKey('commercial_license_fields'),
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(height: 16.h(context)),
+          TextFormField(
+            initialValue: state.formData['commercial_name'] as String?,
+            enabled: !isLoading,
+            style: TextStyle(
+              color: Colors.black87,
+              fontSize: 15.s(context),
+              fontWeight: FontWeight.w500,
+            ),
+            textDirection: TextDirection.rtl,
+            decoration: _buildInputDecoration(
+              context,
+              labelText: 'الاسم التجاري',
+              hintText: 'مثال: متجر الأمل للمواد الغذائية',
+              prefixIcon: Icons.storefront_outlined,
+            ),
+            onChanged: (val) => cubit.updateFormField('commercial_name', val),
+            validator: (val) => (val == null || val.trim().isEmpty) ? 'يرجى إدخال الاسم التجاري' : null,
+          ),
+          SizedBox(height: 16.h(context)),
+          TextFormField(
+            initialValue: state.formData['shop_area'] as String?,
+            enabled: !isLoading,
+            style: TextStyle(
+              color: Colors.black87,
+              fontSize: 15.s(context),
+              fontWeight: FontWeight.w500,
+            ),
+            keyboardType: TextInputType.number,
+            textDirection: TextDirection.rtl,
+            decoration: _buildInputDecoration(
+              context,
+              labelText: 'مساحة المحل (بالمتر المربع)',
+              hintText: 'مثال: 45',
+              prefixIcon: Icons.square_foot_outlined,
+            ),
+            onChanged: (val) => cubit.updateFormField('shop_area', val),
+            validator: (val) => (val == null || val.trim().isEmpty) ? 'يرجى إدخال مساحة المحل' : null,
+          ),
+        ],
+      );
+    } else if (state.selectedType == 'building_permit') {
+      return Column(
+        key: const ValueKey('building_permit_fields'),
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(height: 16.h(context)),
+          TextFormField(
+            initialValue: state.formData['building_type'] as String?,
+            enabled: !isLoading,
+            style: TextStyle(
+              color: Colors.black87,
+              fontSize: 15.s(context),
+              fontWeight: FontWeight.w500,
+            ),
+            textDirection: TextDirection.rtl,
+            decoration: _buildInputDecoration(
+              context,
+              labelText: 'نوع البناء',
+              hintText: 'مثال: سكني، تجاري، فلة',
+              prefixIcon: Icons.domain_outlined,
+            ),
+            onChanged: (val) => cubit.updateFormField('building_type', val),
+            validator: (val) => (val == null || val.trim().isEmpty) ? 'يرجى إدخال نوع البناء' : null,
+          ),
+          SizedBox(height: 16.h(context)),
+          TextFormField(
+            initialValue: state.formData['building_area'] as String?,
+            enabled: !isLoading,
+            style: TextStyle(
+              color: Colors.black87,
+              fontSize: 15.s(context),
+              fontWeight: FontWeight.w500,
+            ),
+            keyboardType: TextInputType.number,
+            textDirection: TextDirection.rtl,
+            decoration: _buildInputDecoration(
+              context,
+              labelText: 'مساحة البناء الإجمالية (م²)',
+              hintText: 'مثال: 250',
+              prefixIcon: Icons.straighten_outlined,
+            ),
+            onChanged: (val) => cubit.updateFormField('building_area', val),
+            validator: (val) => (val == null || val.trim().isEmpty) ? 'يرجى إدخال مساحة البناء' : null,
+          ),
+        ],
+      );
+    }
+
+    return const SizedBox.shrink(key: ValueKey('empty_fields'));
   }
 
   @override
   Widget build(BuildContext context) {
+    final primaryColor = Theme.of(context).colorScheme.primary;
+
     return BlocConsumer<SubmitTransactionCubit, SubmitTransactionState>(
       listener: (context, state) {
         if (state is SubmitTransactionFailure) {
@@ -265,7 +215,18 @@ class _SubmitTransactionFormState extends State<SubmitTransactionForm> {
             ),
           );
         } else if (state is SubmitTransactionSuccess) {
-          _showSuccessDialog(context, state.transactionNumber);
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                'تم تقديم الطلب بنجاح. رقم المعاملة: ${state.transactionNumber}',
+                textDirection: TextDirection.rtl,
+              ),
+              backgroundColor: Colors.green,
+            ),
+          );
+          if (context.canPop()) {
+            context.pop();
+          }
         }
       },
       builder: (context, state) {
@@ -297,78 +258,77 @@ class _SubmitTransactionFormState extends State<SubmitTransactionForm> {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.stretch,
                               children: [
-                                FormDropdownField(
-                                  label: 'نوع المعاملة',
-                                  items: _transactionTypes.keys.toList(),
-                                  value: _selectedTypeDisplay,
+                                // Dropdown for transaction type with prefix icon & dark typography
+                                DropdownButtonFormField<String>(
+                                  initialValue: state.selectedType,
+                                  dropdownColor: Colors.white,
+                                  borderRadius: BorderRadius.circular(12.r(context)),
+                                  elevation: 4,
+                                  style: TextStyle(
+                                    color: Colors.black87,
+                                    fontSize: 15.s(context),
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                  decoration: _buildInputDecoration(
+                                    context,
+                                    labelText: 'نوع المعاملة',
+                                    hintText: 'اختر نوع المعاملة',
+                                    prefixIcon: Icons.assignment_outlined,
+                                  ),
+                                  icon: Icon(
+                                    Icons.arrow_drop_down,
+                                    color: primaryColor,
+                                  ),
+                                  items: [
+                                    DropdownMenuItem(
+                                      value: 'commercial_license',
+                                      child: Text(
+                                        'رخصة تجارية',
+                                        style: TextStyle(
+                                          color: Colors.black87,
+                                          fontSize: 15.s(context),
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                      ),
+                                    ),
+                                    DropdownMenuItem(
+                                      value: 'building_permit',
+                                      child: Text(
+                                        'تصريح بناء',
+                                        style: TextStyle(
+                                          color: Colors.black87,
+                                          fontSize: 15.s(context),
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
                                   onChanged: isLoading
                                       ? null
                                       : (value) {
-                                          setState(() {
-                                            _selectedTypeDisplay = value;
-                                          });
+                                          if (value != null) {
+                                            cubit.changeTransactionType(value);
+                                          }
                                         },
+                                  validator: (val) => val == null || val.isEmpty
+                                      ? 'يرجى اختيار نوع المعاملة'
+                                      : null,
                                 ),
-                                SizedBox(height: 20.h(context)),
 
-                                // Dynamic fields for 'commercial_license'
-                                if (_transactionTypes[_selectedTypeDisplay] ==
-                                    'commercial_license') ...[
-                                  Text(
-                                    'تفاصيل الرخصة التجارية',
-                                    style: TextStyle(
-                                      fontSize: 14.s(context),
-                                      fontWeight: FontWeight.bold,
-                                      color: AppColors.secondaryForest,
-                                    ),
+                                // Dynamic Form Fields based on selected type using AnimatedSize
+                                AnimatedSize(
+                                  duration: const Duration(milliseconds: 300),
+                                  curve: Curves.easeInOut,
+                                  child: _buildDynamicFields(
+                                    context,
+                                    state,
+                                    isLoading,
                                   ),
-                                  SizedBox(height: 12.h(context)),
-                                  FormInputField(
-                                    label: 'مساحة المحل (بالمتر المربع)',
-                                    hint: 'مثال: 45',
-                                    controller: _shopAreaController,
-                                    keyboardType: TextInputType.number,
-                                    enabled: !isLoading,
-                                    validator: (val) => Validator.required(val,
-                                        message: 'مساحة المحل مطلوبة'),
-                                  ),
-                                  SizedBox(height: 16.h(context)),
-                                  FormInputField(
-                                    label: 'نوع النشاط',
-                                    hint: 'مثال: سوبرماركت، مكتب خدمات',
-                                    controller: _activityTypeController,
-                                    enabled: !isLoading,
-                                    validator: (val) => Validator.required(val,
-                                        message: 'نوع النشاط مطلوب'),
-                                  ),
-                                  SizedBox(height: 20.h(context)),
-                                ] else if (_transactionTypes[
-                                        _selectedTypeDisplay] ==
-                                    'building_permit') ...[
-                                  Container(
-                                    padding: EdgeInsets.all(12.r(context)),
-                                    decoration: BoxDecoration(
-                                      color: AppColors.thirdGoldenWheat
-                                          .withValues(alpha: 0.5),
-                                      borderRadius:
-                                          BorderRadius.circular(12.r(context)),
-                                      border: Border.all(
-                                          color: AppColors.secondaryGoldenWheat
-                                              .withValues(alpha: 0.3)),
-                                    ),
-                                    child: Text(
-                                      'سيتم تطبيق شروط رخص البناء والبلدية على هذا الطلب. يرجى إرفاق المخططات والوثائق الهندسية أدناه.',
-                                      style: TextStyle(
-                                        fontSize: 12.s(context),
-                                        color: AppColors.secondaryCharcoal,
-                                        height: 1.5,
-                                      ),
-                                    ),
-                                  ),
-                                  SizedBox(height: 20.h(context)),
-                                ],
+                                ),
 
-                                // File Attachments Section
+                                SizedBox(height: 24.h(context)),
+
+                                // File Picker Section
                                 Text(
                                   'المستندات والوثائق المرفقة',
                                   style: TextStyle(
@@ -378,43 +338,48 @@ class _SubmitTransactionFormState extends State<SubmitTransactionForm> {
                                   ),
                                 ),
                                 SizedBox(height: 10.h(context)),
+
                                 FilePickerContainer(
-                                  label: 'انقر هنا لإرفاق المستندات',
+                                  label: 'انقر هنا لإرفاق المستندات والملفات',
                                   onTap: isLoading
                                       ? () {}
                                       : () => cubit.pickFiles(),
                                 ),
                                 SizedBox(height: 12.h(context)),
 
-                                // Selected Files list
-                                if (cubit.attachments.isNotEmpty) ...[
-                                  FileAttachmentsList(
-                                    files: cubit.attachments,
-                                    onRemove: isLoading
-                                        ? (_) {}
-                                        : (index) => cubit.removeFile(index),
-                                  ),
-                                  SizedBox(height: 16.h(context)),
-                                ],
+                                // Selected Files List
+                                FileAttachmentsList(
+                                  files: state.attachedFiles,
+                                  onRemove: isLoading
+                                      ? (_) {}
+                                      : (index) => cubit.removeFile(index),
+                                ),
 
-                                SizedBox(height: 16.h(context)),
+                                SizedBox(height: 24.h(context)),
 
-                                // Submit Button
+                                // Full Width Submit Button
                                 SizedBox(
                                   width: double.infinity,
-                                  height: 52.h(context),
+                                  height: 54.h(context),
                                   child: ElevatedButton(
                                     style: ElevatedButton.styleFrom(
-                                      backgroundColor: AppColors.primaryForest,
+                                      backgroundColor: primaryColor,
+                                      elevation: 0,
                                       shape: RoundedRectangleBorder(
                                         borderRadius: BorderRadius.circular(
-                                            14.r(context)),
+                                          12.r(context),
+                                        ),
                                       ),
-                                      elevation: 2,
                                     ),
                                     onPressed: isLoading
                                         ? null
-                                        : () => _submit(context),
+                                        : () {
+                                            if (_formKey.currentState?.validate() ?? false) {
+                                              cubit.submitTransaction(
+                                                buildingId: widget.buildingId,
+                                              );
+                                            }
+                                          },
                                     child: isLoading
                                         ? const SizedBox(
                                             width: 24,
@@ -427,7 +392,7 @@ class _SubmitTransactionFormState extends State<SubmitTransactionForm> {
                                         : Text(
                                             'تقديم الطلب',
                                             style: TextStyle(
-                                              fontSize: 15.s(context),
+                                              fontSize: 16.s(context),
                                               fontWeight: FontWeight.bold,
                                               color: Colors.white,
                                             ),
