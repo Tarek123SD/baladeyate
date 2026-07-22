@@ -5,10 +5,14 @@ class AppColors {
   AppColors._();
 
   // Forest Colors
-  static const Color primaryForest = Color(0xFF002623);
+  static const Color primaryForest = Color(0xFF0B4D3C);
   static const Color secondaryForest = Color(0xFF054239);
   static const Color thirdForest = Color(0xFF428177);
-  static const Color green = Color(0xFF0F3D2E);
+  static const Color green = Color(0xFF0B4D3C);
+
+  // Background & Surface
+  static const Color scaffoldBackground = Color(0xFFF8F9FA);
+  static const Color surfaceWhite = Color(0xFFFFFFFF);
 
   // Golden Wheat Colors
   static const Color primaryGoldenWheat = Color(0xFF988561);
@@ -30,10 +34,10 @@ class AppColors {
 
   // Input Field Colors
   /// Soft mist-green background used for text fields.
-  static const Color inputFill = Color(0xFFEAEFEC);
+  static const Color inputFill = Color(0xFFFAFAFA);
 
   /// Subtle resting border for text fields.
-  static const Color inputBorder = Color(0xFFC7D2CC);
+  static const Color inputBorder = Color(0xFFE5E7EB);
 
   /// Border color when a text field is focused.
   static const Color inputFocusedBorder = green;
