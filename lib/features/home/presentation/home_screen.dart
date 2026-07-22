@@ -2,11 +2,14 @@ import 'package:baladeyate/features/auth/presentation/widgets/signup_success_dia
 import 'package:baladeyate/features/auth/cubits/auth_cubit/auth_cubit.dart';
 import 'package:baladeyate/features/auth/cubits/auth_cubit/auth_state.dart';
 import 'package:baladeyate/features/complaints/cubits/complaints_cubit/complaints_cubit.dart';
-import 'package:baladeyate/features/home/models/update_model.dart';
 import 'package:baladeyate/features/home/presentation/components/greeting_card.dart';
 import 'package:baladeyate/features/home/presentation/components/section_header.dart';
 import 'package:baladeyate/features/home/presentation/components/stats_overview.dart';
 import 'package:baladeyate/features/home/presentation/components/verification_banner.dart';
+import 'package:baladeyate/features/notifications/cubits/notifications_cubit/notifications_cubit.dart';
+import 'package:baladeyate/features/notifications/cubits/notifications_cubit/notifications_state.dart';
+import 'package:baladeyate/features/notifications/models/app_notification.dart';
+import 'package:baladeyate/features/notifications/utils/notification_display.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -27,7 +30,6 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   String _selectedFilter = 'all';
-  late List<UpdateModel> _updates;
 
   static const Map<String, String> _filterOptions = {
     'all': 'الكل',
@@ -39,18 +41,37 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
-    _updates = List<UpdateModel>.from(dummyUpdatesList);
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      maybeShowPendingSignupSuccessDialog(context);
+      if (mounted) {
+        context.read<NotificationsCubit>().fetchNotifications();
+        maybeShowPendingSignupSuccessDialog(context);
+      }
     });
+  }
+
+  List<AppNotification> _filterNotifications(
+    List<AppNotification> notifications,
+  ) {
+    if (_selectedFilter == 'all') return notifications;
+    return notifications.where((notification) {
+      final typeLower = notification.type.toLowerCase();
+      if (_selectedFilter == 'transaction') {
+        return typeLower.contains('transaction');
+      }
+      if (_selectedFilter == 'complaint') {
+        return typeLower.contains('complaint');
+      }
+      if (_selectedFilter == 'alert') {
+        return !typeLower.contains('transaction') &&
+            !typeLower.contains('complaint');
+      }
+      return true;
+    }).toList();
   }
 
   @override
   Widget build(BuildContext context) {
     final paddingVal = Dimensions.pad(24, context);
-    final filteredUpdates = _selectedFilter == 'all'
-        ? _updates
-        : _updates.where((u) => u.type == _selectedFilter).toList();
 
     return AppBackground(
       child: Scaffold(
@@ -200,26 +221,55 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                   ),
 
-                  // Dynamic Latest Updates SliverList or Empty State
-                  if (filteredUpdates.isEmpty)
-                    SliverPadding(
-                      padding: EdgeInsets.symmetric(horizontal: paddingVal),
-                      sliver: SliverToBoxAdapter(
-                        child: _buildEmptyState(),
-                      ),
-                    )
-                  else
-                    SliverPadding(
-                      padding: EdgeInsets.symmetric(horizontal: paddingVal),
-                      sliver: SliverList.builder(
-                        itemCount: filteredUpdates.length,
-                        itemBuilder: (context, index) {
-                          return _buildDismissibleUpdateCard(
-                            filteredUpdates[index],
-                          );
-                        },
-                      ),
-                    ),
+                  // Dynamic Latest Updates using BlocBuilder
+                  BlocBuilder<NotificationsCubit, NotificationsState>(
+                    builder: (context, state) {
+                      if (state is NotificationsLoading) {
+                        return SliverPadding(
+                          padding: EdgeInsets.symmetric(horizontal: paddingVal),
+                          sliver: SliverToBoxAdapter(
+                            child: _buildLoadingState(),
+                          ),
+                        );
+                      }
+
+                      if (state is NotificationsError) {
+                        return SliverPadding(
+                          padding: EdgeInsets.symmetric(horizontal: paddingVal),
+                          sliver: SliverToBoxAdapter(
+                            child: _buildErrorState(state.message),
+                          ),
+                        );
+                      }
+
+                      final notifications = state is NotificationsLoaded
+                          ? state.notifications
+                          : <AppNotification>[];
+
+                      final filteredUpdates =
+                          _filterNotifications(notifications);
+
+                      if (filteredUpdates.isEmpty) {
+                        return SliverPadding(
+                          padding:
+                              EdgeInsets.symmetric(horizontal: paddingVal),
+                          sliver: SliverToBoxAdapter(
+                            child: _buildEmptyState(),
+                          ),
+                        );
+                      }
+
+                      return SliverPadding(
+                        padding: EdgeInsets.symmetric(horizontal: paddingVal),
+                        sliver: SliverList.builder(
+                          itemCount: filteredUpdates.length,
+                          itemBuilder: (context, index) {
+                            return _buildUpdateCard(filteredUpdates[index]);
+                          },
+                        ),
+                      );
+                    },
+                  ),
 
                   // Heritage Section
                   SliverPadding(
@@ -365,100 +415,35 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  /// Wrap card with Dismissible for swipe-to-remove animation
-  Widget _buildDismissibleUpdateCard(UpdateModel update) {
-    return Dismissible(
-      key: ValueKey(update.id),
-      direction: DismissDirection.endToStart,
-      background: Container(
-        alignment: Alignment.centerLeft,
-        margin: EdgeInsets.only(bottom: 16.h(context)),
-        padding: EdgeInsets.symmetric(horizontal: 20.s(context)),
-        decoration: BoxDecoration(
-          color: Colors.red[600],
-          borderRadius: BorderRadius.circular(16.r(context)),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.end,
-          children: [
-            Text(
-              'حذف',
-              style: TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-                fontSize: 14.f(context),
-              ),
-            ),
-            SizedBox(width: 8.w(context)),
-            Icon(
-              Icons.delete_outline,
-              color: Colors.white,
-              size: 24.ic(context),
-            ),
-          ],
-        ),
-      ),
-      onDismissed: (_) {
-        final removedIndex = _updates.indexWhere((e) => e.id == update.id);
-        setState(() {
-          _updates.removeWhere((e) => e.id == update.id);
-        });
-
-        ScaffoldMessenger.of(context).clearSnackBars();
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              'تم إزالة التحديث "${update.title}"',
-              textDirection: TextDirection.rtl,
-              style: TextStyle(fontSize: 13.f(context)),
-            ),
-            action: SnackBarAction(
-              label: 'تراجع',
-              onPressed: () {
-                setState(() {
-                  if (removedIndex >= 0 && removedIndex <= _updates.length) {
-                    _updates.insert(removedIndex, update);
-                  } else {
-                    _updates.add(update);
-                  }
-                });
-              },
-            ),
-            duration: const Duration(seconds: 4),
-          ),
-        );
-      },
-      child: _buildUpdateCard(update),
-    );
-  }
-
-  /// Material 3 Update Card component
-  Widget _buildUpdateCard(UpdateModel update) {
+  /// Material 3 Update Card component for real AppNotification
+  Widget _buildUpdateCard(AppNotification notification) {
+    final typeLower = notification.type.toLowerCase();
     IconData icon;
     Color iconColor;
     Color bgColor;
 
-    switch (update.type) {
-      case 'transaction':
-        icon = Icons.check_circle_outline;
-        iconColor = const Color(0xFF2E7D32);
-        bgColor = const Color(0xFFE8F5E9);
-        break;
-      case 'complaint':
-        icon = Icons.radar_outlined;
-        iconColor = const Color(0xFF1565C0);
-        bgColor = const Color(0xFFE3F2FD);
-        break;
-      case 'alert':
-      default:
-        icon = Icons.campaign_outlined;
-        iconColor = const Color(0xFFC62828);
-        bgColor = const Color(0xFFFFEBEE);
-        break;
+    if (typeLower.contains('transaction')) {
+      icon = Icons.check_circle_outline;
+      iconColor = const Color(0xFF2E7D32);
+      bgColor = const Color(0xFFE8F5E9);
+    } else if (typeLower.contains('complaint')) {
+      icon = Icons.radar_outlined;
+      iconColor = const Color(0xFF1565C0);
+      bgColor = const Color(0xFFE3F2FD);
+    } else {
+      icon = Icons.campaign_outlined;
+      iconColor = const Color(0xFFC62828);
+      bgColor = const Color(0xFFFFEBEE);
     }
 
-    final String ctaText =
-        update.type == 'transaction' ? 'تحميل الوثيقة' : 'عرض التفاصيل';
+    final String ctaText = typeLower.contains('transaction')
+        ? 'عرض المعاملة'
+        : typeLower.contains('complaint')
+            ? 'عرض الشكوى'
+            : 'عرض التفاصيل';
+
+    final formattedTime = formatNotificationTime(notification.createdAt);
+    final subtitle = notificationDescription(notification);
 
     return Card(
       margin: EdgeInsets.only(bottom: 16.h(context)),
@@ -508,7 +493,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         children: [
                           Expanded(
                             child: Text(
-                              update.title,
+                              notification.title,
                               style: TextStyle(
                                 fontSize: 14.f(context),
                                 fontWeight: FontWeight.bold,
@@ -520,7 +505,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           ),
                           SizedBox(width: 8.w(context)),
                           Text(
-                            update.date,
+                            formattedTime,
                             style: TextStyle(
                               fontSize: 11.f(context),
                               color: Colors.grey[500],
@@ -532,7 +517,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       SizedBox(height: 8.h(context)),
                       // Subtitle
                       Text(
-                        update.subtitle,
+                        subtitle,
                         style: TextStyle(
                           fontSize: 12.f(context),
                           color: Colors.grey[700],
@@ -546,44 +531,132 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ],
             ),
-            if (update.hasAction) ...[
-              SizedBox(height: 12.h(context)),
-              Divider(
-                height: 1.h(context),
-                thickness: 0.6,
-                color: Colors.grey[200],
-              ),
-              SizedBox(height: 8.h(context)),
-              Align(
-                alignment: AlignmentDirectional.centerEnd,
-                child: TextButton.icon(
-                  onPressed: () {
-                    // Navigate to details if needed
-                  },
-                  style: TextButton.styleFrom(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: 12.s(context),
-                      vertical: 4.s(context),
-                    ),
-                    minimumSize: Size.zero,
-                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            SizedBox(height: 12.h(context)),
+            Divider(
+              height: 1.h(context),
+              thickness: 0.6,
+              color: Colors.grey[200],
+            ),
+            SizedBox(height: 8.h(context)),
+            Align(
+              alignment: AlignmentDirectional.centerEnd,
+              child: TextButton.icon(
+                onPressed: () {
+                  context.push('/notifications');
+                },
+                style: TextButton.styleFrom(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: 12.s(context),
+                    vertical: 4.s(context),
                   ),
-                  icon: Icon(
-                    Icons.chevron_left,
-                    size: 18.ic(context),
+                  minimumSize: Size.zero,
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                ),
+                icon: Icon(
+                  Icons.chevron_left,
+                  size: 18.ic(context),
+                  color: Theme.of(context).colorScheme.primary,
+                ),
+                label: Text(
+                  ctaText,
+                  style: TextStyle(
+                    fontSize: 12.f(context),
+                    fontWeight: FontWeight.bold,
                     color: Theme.of(context).colorScheme.primary,
-                  ),
-                  label: Text(
-                    ctaText,
-                    style: TextStyle(
-                      fontSize: 12.f(context),
-                      fontWeight: FontWeight.bold,
-                      color: Theme.of(context).colorScheme.primary,
-                    ),
                   ),
                 ),
               ),
-            ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Loading state widget
+  Widget _buildLoadingState() {
+    return Padding(
+      padding: EdgeInsets.symmetric(vertical: 32.h(context)),
+      child: Center(
+        child: Column(
+          children: [
+            SizedBox(
+              width: 36.s(context),
+              height: 36.s(context),
+              child: CircularProgressIndicator(
+                strokeWidth: 3,
+                color: Theme.of(context).colorScheme.primary,
+              ),
+            ),
+            SizedBox(height: 16.h(context)),
+            Text(
+              'جاري تحميل التحديثات...',
+              style: TextStyle(
+                fontSize: 13.f(context),
+                color: Colors.grey[600],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Error state widget
+  Widget _buildErrorState(String message) {
+    return Padding(
+      padding: EdgeInsets.symmetric(vertical: 24.h(context)),
+      child: Container(
+        padding: EdgeInsets.all(20.s(context)),
+        decoration: BoxDecoration(
+          color: Colors.red.withValues(alpha: 0.05),
+          borderRadius: BorderRadius.circular(16.r(context)),
+          border: Border.all(
+            color: Colors.red.withValues(alpha: 0.2),
+          ),
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.error_outline,
+              color: Colors.red,
+              size: 44.ic(context),
+            ),
+            SizedBox(height: 12.h(context)),
+            Text(
+              message,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 13.f(context),
+                fontWeight: FontWeight.w500,
+                color: Colors.red[700],
+              ),
+              textDirection: TextDirection.rtl,
+            ),
+            SizedBox(height: 12.h(context)),
+            ElevatedButton.icon(
+              onPressed: () {
+                context.read<NotificationsCubit>().fetchNotifications();
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red[700],
+                foregroundColor: Colors.white,
+                elevation: 0,
+                padding: EdgeInsets.symmetric(
+                  horizontal: 16.s(context),
+                  vertical: 8.h(context),
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12.r(context)),
+                ),
+              ),
+              icon: Icon(Icons.refresh_rounded, size: 16.ic(context)),
+              label: Text(
+                'إعادة المحاولة',
+                style: TextStyle(fontSize: 12.f(context)),
+              ),
+            ),
           ],
         ),
       ),

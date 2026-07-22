@@ -40,63 +40,62 @@ class _ComplaintFormScreenState extends State<ComplaintFormScreen> {
   @override
   Widget build(BuildContext context) {
     return BlocConsumer<ComplaintsCubit, ComplaintsState>(
-        listener: (context, state) {
-          if (state is ComplaintCreated) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('تم إرسال الشكوى بنجاح'),
-                backgroundColor: Colors.green,
-              ),
-            );
-            context.go('/track');
-          } else if (state is ComplaintsFailure) {
-            // Shown inline in the form.
-          }
-        },
-        builder: (context, state) {
-          final isSubmitting = state is ComplaintsLoading;
-          final errorMessage =
-              state is ComplaintsFailure ? state.message : null;
-          final isUrgent = state is ComplaintsLoaded ? state.isUrgent : false;
-
-          return Container(
-            decoration: const BoxDecoration(
-              image: DecorationImage(
-                image: AssetImage(AppAssets.backgroundWhite),
-                fit: BoxFit.cover,
-              ),
+      listener: (context, state) {
+        if (state is ComplaintCreated) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('تم إرسال الشكوى بنجاح'),
+              backgroundColor: Colors.green,
             ),
-            child: Scaffold(
-              backgroundColor: Colors.transparent,
-              appBar: _buildAppBar(context),
-              body: SafeArea(
-                child: Column(
-                  children: [
-                    Expanded(
-                      child: SingleChildScrollView(
-                        padding: EdgeInsets.all(16.s(context)),
-                        child: Center(
-                          child: ConstrainedBox(
-                            constraints: BoxConstraints(
-                              maxWidth: 700.w(context),
-                            ),
-                            child: _buildFormCard(
-                              context,
-                              isSubmitting,
-                              errorMessage,
-                              isUrgent,
-                            ),
+          );
+          context.go('/track');
+        } else if (state is ComplaintsFailure) {
+          // Shown inline in the form.
+        }
+      },
+      builder: (context, state) {
+        final isSubmitting = state is ComplaintsLoading;
+        final errorMessage = state is ComplaintsFailure ? state.message : null;
+        final isUrgent = state is ComplaintsLoaded ? state.isUrgent : false;
+
+        return Container(
+          decoration: const BoxDecoration(
+            image: DecorationImage(
+              image: AssetImage(AppAssets.backgroundWhite),
+              fit: BoxFit.cover,
+            ),
+          ),
+          child: Scaffold(
+            backgroundColor: Colors.transparent,
+            appBar: _buildAppBar(context),
+            body: SafeArea(
+              child: Column(
+                children: [
+                  Expanded(
+                    child: SingleChildScrollView(
+                      padding: EdgeInsets.all(16.s(context)),
+                      child: Center(
+                        child: ConstrainedBox(
+                          constraints: BoxConstraints(
+                            maxWidth: 700.w(context),
+                          ),
+                          child: _buildFormCard(
+                            context,
+                            isSubmitting,
+                            errorMessage,
+                            isUrgent,
                           ),
                         ),
                       ),
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ),
-          );
-        },
-      );
+          ),
+        );
+      },
+    );
   }
 
   PreferredSizeWidget _buildAppBar(BuildContext context) {
@@ -423,7 +422,8 @@ class _ComplaintFormScreenState extends State<ComplaintFormScreen> {
     final subject = _subjectController.text.trim();
     final details = _detailsController.text.trim();
 
-    final buffer = StringBuffer(subject.isEmpty ? details : '$subject\n$details');
+    final buffer =
+        StringBuffer(subject.isEmpty ? details : '$subject\n$details');
 
     if (_addressText.isNotEmpty) {
       buffer.write('\nعنوان الموقع: $_addressText');
