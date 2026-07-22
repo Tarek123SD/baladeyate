@@ -26,6 +26,7 @@ import 'package:baladeyate/features/notifications/repo/notifications_repository.
 import 'package:baladeyate/features/profile/cubits/profile_cubit/profile_cubit.dart';
 import 'package:baladeyate/features/profile/repo/citizen_repository.dart';
 import 'package:baladeyate/features/transactions/cubits/submit_transaction_cubit/submit_transaction_cubit.dart';
+import 'package:baladeyate/features/transactions/cubits/transactions_cubit/transactions_cubit.dart';
 import 'package:baladeyate/features/transactions/repo/transactions_repository.dart';
 
 import 'api_services.dart';
@@ -140,6 +141,10 @@ Future<void> setupServiceLocator() async {
 
   sl.registerFactory<SubmitTransactionCubit>(
     () => SubmitTransactionCubit(transactionsRepository: sl<TransactionsRepository>()),
+  );
+
+  sl.registerFactory<TransactionsCubit>(
+    () => TransactionsCubit(transactionsRepository: sl<TransactionsRepository>()),
   );
 
   sl.registerFactory<DonationsCubit>(

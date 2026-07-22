@@ -4,10 +4,41 @@ import 'package:baladeyate/core/services/api_services.dart';
 import 'package:baladeyate/core/services/end_points.dart';
 import 'package:baladeyate/core/utils/api_response_parser.dart';
 
+import 'package:baladeyate/features/transactions/models/transaction_model.dart';
+
 class TransactionsRepository {
   final ApiService _apiService;
 
   TransactionsRepository({required ApiService apiService}) : _apiService = apiService;
+
+  /// Fetches citizen transactions from GET /api/v1/transactions with optional type/status filters.
+  Future<List<TransactionModel>> getTransactions({
+    String? type,
+    String? status,
+  }) async {
+    try {
+      final Map<String, dynamic> queryParams = {};
+      if (type != null && type.isNotEmpty) {
+        queryParams['type'] = type;
+      }
+      if (status != null && status.isNotEmpty) {
+        queryParams['status'] = status;
+      }
+
+      final response = await _apiService.get(
+        EndPoints.transactions,
+        queryParams: queryParams.isNotEmpty ? queryParams : null,
+      );
+
+      return ApiResponseParser.parseList<TransactionModel>(
+        response.data,
+        fromJson: TransactionModel.fromJson,
+        fallback: 'فشل جلب قائمة المعاملات',
+      );
+    } catch (error) {
+      throw ApiResponseParser.mapError(error, fallback: 'فشل جلب قائمة المعاملات');
+    }
+  }
 
   /// Submits a municipal transaction with attachments.
   Future<String> submitTransaction({

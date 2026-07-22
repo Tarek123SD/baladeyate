@@ -170,16 +170,16 @@ class _HomeScreenState extends State<HomeScreen> {
                     sliver: SliverGrid(
                       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                         crossAxisCount: 2,
-                        mainAxisSpacing: 16.s(context),
-                        crossAxisSpacing: 16.s(context),
-                        childAspectRatio: 1.1,
+                        mainAxisSpacing: 12.s(context),
+                        crossAxisSpacing: 12.s(context),
+                        childAspectRatio: 1.45,
                       ),
                       delegate: SliverChildListDelegate(
                         [
                           _buildServiceCard(
-                            title: 'تقديم معاملة',
-                            icon: Icons.assignment_add,
-                            onTap: () => context.push('/transactions/submit'),
+                            title: 'المعاملات والرخص',
+                            icon: Icons.assignment_turned_in_outlined,
+                            onTap: () => context.push('/transactions'),
                           ),
                           _buildServiceCard(
                             title: 'الوثائق الرقمية',
@@ -369,48 +369,52 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _buildFilterChips() {
     final primaryColor = Theme.of(context).colorScheme.primary;
 
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      physics: const BouncingScrollPhysics(),
-      child: Row(
-        children: _filterOptions.entries.map((entry) {
-          final isSelected = _selectedFilter == entry.key;
-          return Padding(
-            padding: EdgeInsets.only(left: 8.s(context)),
-            child: ChoiceChip(
-              label: Text(
-                entry.value,
-                style: TextStyle(
-                  fontSize: 13.f(context),
-                  fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
-                  color: isSelected ? Colors.white : Colors.grey[700],
+    return Directionality(
+      textDirection: TextDirection.rtl,
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        physics: const BouncingScrollPhysics(),
+        child: Row(
+          textDirection: TextDirection.rtl,
+          children: _filterOptions.entries.map((entry) {
+            final isSelected = _selectedFilter == entry.key;
+            return Padding(
+              padding: EdgeInsetsDirectional.only(end: 8.s(context)),
+              child: ChoiceChip(
+                label: Text(
+                  entry.value,
+                  style: TextStyle(
+                    fontSize: 13.f(context),
+                    fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                    color: isSelected ? Colors.white : Colors.grey[700],
+                  ),
                 ),
-              ),
-              selected: isSelected,
-              onSelected: (selected) {
-                if (selected) {
-                  setState(() {
-                    _selectedFilter = entry.key;
-                  });
-                }
-              },
-              selectedColor: primaryColor,
-              backgroundColor: Colors.grey[200],
-              elevation: isSelected ? 1 : 0,
-              padding: EdgeInsets.symmetric(
-                horizontal: 10.s(context),
-                vertical: 6.s(context),
-              ),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(20.r(context)),
-                side: BorderSide(
-                  color: isSelected ? primaryColor : Colors.transparent,
+                selected: isSelected,
+                onSelected: (selected) {
+                  if (selected) {
+                    setState(() {
+                      _selectedFilter = entry.key;
+                    });
+                  }
+                },
+                selectedColor: primaryColor,
+                backgroundColor: Colors.grey[200],
+                elevation: isSelected ? 1 : 0,
+                padding: EdgeInsets.symmetric(
+                  horizontal: 10.s(context),
+                  vertical: 6.s(context),
                 ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20.r(context)),
+                  side: BorderSide(
+                    color: isSelected ? primaryColor : Colors.transparent,
+                  ),
+                ),
+                showCheckmark: false,
               ),
-              showCheckmark: false,
-            ),
-          );
-        }).toList(),
+            );
+          }).toList(),
+        ),
       ),
     );
   }
@@ -445,129 +449,123 @@ class _HomeScreenState extends State<HomeScreen> {
     final formattedTime = formatNotificationTime(notification.createdAt);
     final subtitle = notificationDescription(notification);
 
-    return Card(
-      margin: EdgeInsets.only(bottom: 16.h(context)),
-      color: Colors.white,
-      surfaceTintColor: Colors.white,
-      elevation: 1,
-      shadowColor: Colors.black.withValues(alpha: 0.1),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16.r(context)),
-        side: BorderSide(
-          color: Colors.grey.withValues(alpha: 0.15),
-          width: 0.8.w(context),
+    return Directionality(
+      textDirection: TextDirection.rtl,
+      child: Card(
+        margin: EdgeInsets.only(bottom: 16.h(context)),
+        color: Colors.white,
+        surfaceTintColor: Colors.white,
+        elevation: 1,
+        shadowColor: Colors.black.withValues(alpha: 0.1),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16.r(context)),
+          side: BorderSide(
+            color: Colors.grey.withValues(alpha: 0.15),
+            width: 0.8.w(context),
+          ),
         ),
-      ),
-      child: Padding(
-        padding: EdgeInsets.all(16.s(context)),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Colored Circular Container (Icon)
-                Container(
-                  width: 48.s(context),
-                  height: 48.s(context),
-                  decoration: BoxDecoration(
-                    color: bgColor,
-                    shape: BoxShape.circle,
+        child: Padding(
+          padding: EdgeInsets.all(16.s(context)),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // 1. FIRST CHILD: Circular colored Icon container (on the right in RTL)
+                  Container(
+                    width: 48.s(context),
+                    height: 48.s(context),
+                    decoration: BoxDecoration(
+                      color: bgColor,
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      icon,
+                      color: iconColor,
+                      size: 24.ic(context),
+                    ),
                   ),
-                  child: Icon(
-                    icon,
-                    color: iconColor,
-                    size: 24.ic(context),
-                  ),
-                ),
-                SizedBox(width: 16.w(context)),
-                // Text Column
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Header Row: Title & Date
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Expanded(
-                            child: Text(
-                              notification.title,
-                              style: TextStyle(
-                                fontSize: 14.f(context),
-                                fontWeight: FontWeight.bold,
-                                color: const Color(0xFF212121),
-                              ),
-                              overflow: TextOverflow.ellipsis,
-                              maxLines: 1,
-                            ),
+                  SizedBox(width: 16.w(context)),
+                  // 2. SECOND CHILD: Expanded Column containing Title and Subtitle
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          notification.title,
+                          style: TextStyle(
+                            fontSize: 14.f(context),
+                            fontWeight: FontWeight.bold,
+                            color: const Color(0xFF212121),
                           ),
-                          SizedBox(width: 8.w(context)),
-                          Text(
-                            formattedTime,
-                            style: TextStyle(
-                              fontSize: 11.f(context),
-                              color: Colors.grey[500],
-                              fontWeight: FontWeight.w400,
-                            ),
-                          ),
-                        ],
-                      ),
-                      SizedBox(height: 8.h(context)),
-                      // Subtitle
-                      Text(
-                        subtitle,
-                        style: TextStyle(
-                          fontSize: 12.f(context),
-                          color: Colors.grey[700],
-                          height: 1.4,
+                          overflow: TextOverflow.ellipsis,
+                          maxLines: 1,
                         ),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ],
+                        SizedBox(height: 6.h(context)),
+                        Text(
+                          subtitle,
+                          style: TextStyle(
+                            fontSize: 12.f(context),
+                            color: Colors.grey[700],
+                            height: 1.4,
+                          ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-              ],
-            ),
-            SizedBox(height: 12.h(context)),
-            Divider(
-              height: 1.h(context),
-              thickness: 0.6,
-              color: Colors.grey[200],
-            ),
-            SizedBox(height: 8.h(context)),
-            Align(
-              alignment: AlignmentDirectional.centerEnd,
-              child: TextButton.icon(
-                onPressed: () {
-                  context.push('/notifications');
-                },
-                style: TextButton.styleFrom(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: 12.s(context),
-                    vertical: 4.s(context),
+                  SizedBox(width: 8.w(context)),
+                  // 3. THIRD CHILD: Date Text (pushed to the far left)
+                  Text(
+                    formattedTime,
+                    style: TextStyle(
+                      fontSize: 11.f(context),
+                      color: Colors.grey[500],
+                      fontWeight: FontWeight.w400,
+                    ),
                   ),
-                  minimumSize: Size.zero,
-                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                ),
-                icon: Icon(
-                  Icons.chevron_left,
-                  size: 18.ic(context),
-                  color: Theme.of(context).colorScheme.primary,
-                ),
-                label: Text(
-                  ctaText,
-                  style: TextStyle(
-                    fontSize: 12.f(context),
-                    fontWeight: FontWeight.bold,
+                ],
+              ),
+              SizedBox(height: 12.h(context)),
+              Divider(
+                height: 1.h(context),
+                thickness: 0.6,
+                color: Colors.grey[200],
+              ),
+              SizedBox(height: 8.h(context)),
+              Align(
+                alignment: Alignment.centerLeft,
+                child: TextButton.icon(
+                  onPressed: () {
+                    context.push('/notifications');
+                  },
+                  style: TextButton.styleFrom(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: 12.s(context),
+                      vertical: 4.s(context),
+                    ),
+                    minimumSize: Size.zero,
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  ),
+                  icon: Icon(
+                    Icons.chevron_left,
+                    size: 18.ic(context),
                     color: Theme.of(context).colorScheme.primary,
+                  ),
+                  label: Text(
+                    ctaText,
+                    style: TextStyle(
+                      fontSize: 12.f(context),
+                      fontWeight: FontWeight.bold,
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
                   ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -723,38 +721,38 @@ class _HomeScreenState extends State<HomeScreen> {
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(16.r(context)),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              width: 56.w(context),
-              height: 56.h(context),
-              decoration: const BoxDecoration(
-                color: Color(0xFFE8F5E9),
-                shape: BoxShape.circle,
+        child: Padding(
+          padding: EdgeInsets.all(12.s(context)),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                width: 48.s(context),
+                height: 48.s(context),
+                decoration: const BoxDecoration(
+                  color: Color(0xFFE8F5E9),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  icon,
+                  color: const Color(0xFF0B4D3C),
+                  size: 24.ic(context),
+                ),
               ),
-              child: Icon(
-                icon,
-                color: const Color(0xFF0B4D3C),
-                size: 28.ic(context),
-              ),
-            ),
-            SizedBox(height: 12.h(context)),
-            Padding(
-              padding: EdgeInsets.symmetric(horizontal: 8.s(context)),
-              child: Text(
+              SizedBox(height: 8.h(context)),
+              Text(
                 title,
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   color: const Color(0xFF212121),
-                  fontSize: 15.f(context),
+                  fontSize: 14.f(context),
                   fontWeight: FontWeight.bold,
                 ),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

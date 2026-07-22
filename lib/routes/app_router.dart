@@ -63,7 +63,9 @@ import 'package:baladeyate/features/profile/cubits/profile_cubit/profile_cubit.d
 
 import 'package:baladeyate/features/profile/presentation/profile_screen.dart';
 import 'package:baladeyate/features/transactions/cubits/submit_transaction_cubit/submit_transaction_cubit.dart';
+import 'package:baladeyate/features/transactions/cubits/transactions_cubit/transactions_cubit.dart';
 import 'package:baladeyate/features/transactions/presentation/submit_transaction_screen.dart';
+import 'package:baladeyate/features/transactions/presentation/transactions_screen.dart';
 
 import 'package:baladeyate/features/settings/presentation/settings_screen.dart';
 
@@ -632,11 +634,20 @@ GoRouter _createAppRouter() {
           StatefulShellBranch(
             routes: [
               GoRoute(
-                path: '/transactions/submit',
+                path: '/transactions',
                 builder: (context, state) => BlocProvider(
-                  create: (_) => sl<SubmitTransactionCubit>(),
-                  child: const SubmitTransactionScreen(),
+                  create: (_) => sl<TransactionsCubit>()..fetchTransactions(),
+                  child: const TransactionsScreen(),
                 ),
+                routes: [
+                  GoRoute(
+                    path: 'submit',
+                    builder: (context, state) => BlocProvider(
+                      create: (_) => sl<SubmitTransactionCubit>(),
+                      child: const SubmitTransactionScreen(),
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
