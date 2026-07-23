@@ -39,6 +39,7 @@ dependencies:
   google_maps_cluster_manager_2: ^3.2.0
   geocoding: ^5.0.0
   file_picker: ^8.1.1
+  qr_flutter: ^4.1.0
 
 dev_dependencies:
   flutter_test:

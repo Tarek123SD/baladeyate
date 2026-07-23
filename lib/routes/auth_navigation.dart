@@ -14,6 +14,7 @@ const citizenShellRoutes = {
   '/donations',
   '/track',
   '/complains',
+  '/transactions',
 };
 
 /// Delegate field-work routes.
@@ -49,7 +50,9 @@ const sharedAuthenticatedRoutes = {
 bool isCitizenRoute(String path) =>
     citizenShellRoutes.contains(path) ||
     path.startsWith('/complains') ||
-    path.startsWith('/track');
+    path.startsWith('/track') ||
+    path.startsWith('/transactions') ||
+    path.startsWith('/digital-documents');
 
 bool isDelegateRoute(String path) =>
     delegateRoutes.contains(path) || path.startsWith('/building/');

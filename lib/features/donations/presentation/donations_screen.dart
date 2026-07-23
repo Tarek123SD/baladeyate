@@ -98,35 +98,40 @@ class _DonationsScreenState extends State<DonationsScreen> {
                 alignment: Alignment.topCenter,
                 child: ConstrainedBox(
                   constraints: BoxConstraints(maxWidth: maxContentWidth),
-                  child: SingleChildScrollView(
-                    physics: const AlwaysScrollableScrollPhysics(),
-                    padding: EdgeInsets.symmetric(
-                      horizontal: horizontalPadding,
-                      vertical: 18.h(context),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        // Hero Card (Featured Campaign)
-                        _buildHeroCard(context),
-                        SizedBox(height: 24.h(context)),
+                  child: RefreshIndicator(
+                    onRefresh: () async {
+                      await context.read<DonationsCubit>().fetchDonations();
+                    },
+                    child: SingleChildScrollView(
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      padding: EdgeInsets.symmetric(
+                        horizontal: horizontalPadding,
+                        vertical: 18.h(context),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          // Hero Card (Featured Campaign)
+                          _buildHeroCard(context),
+                          SizedBox(height: 24.h(context)),
 
-                        // Stats Grid (Stateless Widget)
-                        const _DonationStatsGrid(),
-                        SizedBox(height: 28.h(context)),
+                          // Stats Grid (Stateless Widget)
+                          const _DonationStatsGrid(),
+                          SizedBox(height: 28.h(context)),
 
-                        // Active Campaigns Section
-                        const _SectionHeader(
-                          title: 'الحملات النشطة',
-                          actionLabel: 'عرض الكل',
-                        ),
-                        SizedBox(height: 16.h(context)),
-                        _buildCampaignsSection(context),
-                        SizedBox(height: 28.h(context)),
+                          // Active Campaigns Section
+                          const _SectionHeader(
+                            title: 'الحملات النشطة',
+                            actionLabel: 'عرض الكل',
+                          ),
+                          SizedBox(height: 16.h(context)),
+                          _buildCampaignsSection(context),
+                          SizedBox(height: 28.h(context)),
 
-                        // Quick Payment / Amount Section
-                        _buildAmountSection(context),
-                      ],
+                          // Quick Payment / Amount Section
+                          _buildAmountSection(context),
+                        ],
+                      ),
                     ),
                   ),
                 ),

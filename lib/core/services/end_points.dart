@@ -20,6 +20,7 @@ class EndPoints {
   static const String complaints = 'v1/complaints';
   static String complaintById(int id) => 'v1/complaints/$id';
   static const String transactions = 'v1/citizen/transactions';
+  static const String digitalDocuments = 'v1/citizen/digital-documents';
 
   // Delegate
   static const String buildings = 'v1/buildings';

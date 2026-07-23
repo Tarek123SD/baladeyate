@@ -29,7 +29,7 @@ class CustomDonationCampaignCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final clamped = progress.clamp(0.0, 1.0);
-    final percent = (clamped * 100).round();
+    final percent = (clamped * 100).toInt();
 
     return Container(
       decoration: BoxDecoration(

@@ -69,6 +69,8 @@ import 'package:baladeyate/features/transactions/cubits/submit_transaction_cubit
 import 'package:baladeyate/features/transactions/cubits/transactions_cubit/transactions_cubit.dart';
 import 'package:baladeyate/features/transactions/presentation/submit_transaction_screen.dart';
 import 'package:baladeyate/features/transactions/presentation/transactions_screen.dart';
+import 'package:baladeyate/features/digital_documents/cubits/digital_documents_cubit/digital_documents_cubit.dart';
+import 'package:baladeyate/features/digital_documents/presentation/digital_documents_screen.dart';
 
 import 'package:baladeyate/features/settings/presentation/settings_screen.dart';
 
@@ -250,7 +252,22 @@ GoRouter _createAppRouter() {
       ),
 
       GoRoute(
+        path: '/transactions/submit',
+        builder: (context, state) => BlocProvider(
+          create: (_) => sl<SubmitTransactionCubit>(),
+          child: const SubmitTransactionScreen(),
+        ),
+      ),
 
+      GoRoute(
+        path: '/digital-documents',
+        builder: (context, state) => BlocProvider(
+          create: (_) => sl<DigitalDocumentsCubit>()..fetchDigitalDocuments(),
+          child: const DigitalDocumentsScreen(),
+        ),
+      ),
+
+      GoRoute(
         path: '/notifications',
 
         builder: (context, state) => const NotificationsScreen(),
@@ -660,15 +677,6 @@ GoRouter _createAppRouter() {
                   create: (_) => sl<TransactionsCubit>()..fetchTransactions(),
                   child: const TransactionsScreen(),
                 ),
-                routes: [
-                  GoRoute(
-                    path: 'submit',
-                    builder: (context, state) => BlocProvider(
-                      create: (_) => sl<SubmitTransactionCubit>(),
-                      child: const SubmitTransactionScreen(),
-                    ),
-                  ),
-                ],
               ),
             ],
           ),

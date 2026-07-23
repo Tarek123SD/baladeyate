@@ -32,8 +32,12 @@ class DonationModel {
   final String city;
   final String area;
 
-  // Alias for backward compatibility
+  // Aliases for backward compatibility and snake_case backend getters
   double get raisedAmount => collectedAmount;
+  // ignore: non_constant_identifier_names
+  double? get target_amount => targetAmount;
+  // ignore: non_constant_identifier_names
+  double? get collected_amount => collectedAmount;
 
   factory DonationModel.fromJson(Map<String, dynamic> json) {
     final location = json['location'];
@@ -58,9 +62,9 @@ class DonationModel {
       category:
           (json['category'] as String?) ?? (json['type'] as String?) ?? '',
       type: (json['type'] as String?) ?? '',
-      targetAmount: _toDouble(json['target_amount'] ?? json['required_amount']),
+      targetAmount: _toDouble(json['target_amount'] ?? json['required_amount'] ?? json['targetAmount']),
       collectedAmount:
-          _toDouble(json['collected_amount'] ?? json['raised_amount']),
+          _toDouble(json['collected_amount'] ?? json['raised_amount'] ?? json['collectedAmount']),
       currency: (json['currency'] as String?) ?? 'SYP',
       status: (json['status'] as String?) ?? '',
       importanceLevel: (json['importance_level'] as String?) ?? '',
@@ -72,17 +76,21 @@ class DonationModel {
   }
 
   static double _toDouble(dynamic value) {
+    if (value == null) return 0.0;
     if (value is num) return value.toDouble();
-    if (value is String) return double.tryParse(value) ?? 0;
-    return 0;
+    if (value is String) return double.tryParse(value) ?? 0.0;
+    return 0.0;
   }
 
   double get progress {
-    if (targetAmount <= 0) return 0;
-    return (collectedAmount / targetAmount).clamp(0.0, 1.0);
+    if (target_amount == null || target_amount! <= 0) return 0.0;
+    return (collected_amount ?? 0) / target_amount!;
   }
 
-  int get progressPercentage => (progress * 100).round();
+  int get progressPercentage {
+    return (progress.clamp(0.0, 1.0) * 100).toInt();
+  }
+
   int get progressPercent => progressPercentage;
 
   String get currencySymbol {

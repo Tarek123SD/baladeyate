@@ -460,6 +460,44 @@ class _TransactionsViewState extends State<TransactionsView> {
               ],
             ),
           ),
+          SizedBox(width: 8.w(context)),
+          InkWell(
+            onTap: () => context.push('/digital-documents'),
+            borderRadius: BorderRadius.circular(12.r(context)),
+            child: Container(
+              padding: EdgeInsets.symmetric(
+                horizontal: 10.w(context),
+                vertical: 6.h(context),
+              ),
+              decoration: BoxDecoration(
+                color: const Color(0xFFD4AF37).withValues(alpha: 0.25),
+                borderRadius: BorderRadius.circular(12.r(context)),
+                border: Border.all(
+                  color: const Color(0xFFD4AF37),
+                  width: 1,
+                ),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    Icons.account_balance_wallet_rounded,
+                    color: const Color(0xFFFFE082),
+                    size: 16.ic(context),
+                  ),
+                  SizedBox(width: 4.w(context)),
+                  Text(
+                    'المحفظة',
+                    style: TextStyle(
+                      color: const Color(0xFFFFE082),
+                      fontSize: 12.f(context),
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
         ],
       ),
     );
