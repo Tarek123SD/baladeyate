@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:go_router/go_router.dart';
 import 'package:responsive_x_toolkit/responsive_x.dart';
 import 'package:baladeyate/config/theme/app_colors.dart';
 import 'package:baladeyate/core/utils/app_snackbar.dart';
@@ -212,9 +211,7 @@ class _SubmitTransactionFormState extends State<SubmitTransactionForm> {
             context,
             'تم تقديم الطلب بنجاح. رقم المعاملة: ${state.transactionNumber}',
           );
-          if (context.canPop()) {
-            context.pop();
-          }
+          Navigator.pop(context, true);
         }
       },
       builder: (context, state) {

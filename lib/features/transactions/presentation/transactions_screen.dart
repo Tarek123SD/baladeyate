@@ -47,6 +47,83 @@ class _TransactionsViewState extends State<TransactionsView> {
     (label: 'رخصة بناء', typeKey: 'building_permit'),
   ];
 
+  static const Map<String, String> _formDataLabels = {
+    'commercial_name': 'الاسم التجاري',
+    'shop_area': 'المساحة',
+    'activity_type': 'نوع النشاط',
+    'building_type': 'نوع البناء',
+    'building_area': 'مساحة البناء',
+    'floors_count': 'عدد الطوابق',
+    'apartment_number': 'رقم الشقة',
+    'notes': 'ملاحظات',
+    'address': 'العنوان',
+  };
+
+  String _formatFormDataValue(String key, dynamic value) {
+    final strValue = value?.toString() ?? '';
+    if (strValue.isEmpty) return strValue;
+    if ((key == 'shop_area' || key == 'building_area') && !strValue.contains('م')) {
+      return '$strValue م²';
+    }
+    return strValue;
+  }
+
+  String _formatFormDataPair(String key, dynamic value) {
+    final label = _formDataLabels[key] ?? key;
+    final formattedVal = _formatFormDataValue(key, value);
+    return '$label: $formattedVal';
+  }
+
+  Widget _buildFooterFormData(
+    BuildContext context,
+    Map<String, dynamic>? rawFormData,
+  ) {
+    if (rawFormData == null || rawFormData.isEmpty) {
+      return const Spacer();
+    }
+
+    final entries = rawFormData.entries
+        .where((e) => e.value != null && e.value.toString().trim().isNotEmpty)
+        .take(2)
+        .toList();
+
+    if (entries.isEmpty) {
+      return const Spacer();
+    }
+
+    return Expanded(
+      child: Text.rich(
+        TextSpan(
+          children: entries.asMap().entries.map((indexed) {
+            final isLast = indexed.key == entries.length - 1;
+            final entry = indexed.value;
+            final formattedPair = _formatFormDataPair(entry.key, entry.value);
+
+            return TextSpan(
+              children: [
+                TextSpan(text: formattedPair),
+                if (!isLast)
+                  TextSpan(
+                    text: '  •  ',
+                    style: TextStyle(
+                      color: Colors.grey.shade400,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+              ],
+            );
+          }).toList(),
+        ),
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: TextStyle(
+          fontSize: 12.f(context),
+          color: Colors.grey.shade600,
+        ),
+      ),
+    );
+  }
+
   @override
   void initState() {
     super.initState();
@@ -149,8 +226,11 @@ class _TransactionsViewState extends State<TransactionsView> {
           appBar: const CustomAppBar(),
           floatingActionButton: FloatingActionButton.extended(
             heroTag: 'new_transaction_fab',
-            onPressed: () {
-              context.push('/transactions/submit');
+            onPressed: () async {
+              final result = await context.push<bool>('/transactions/submit');
+              if (result == true && context.mounted) {
+                context.read<TransactionsCubit>().fetchTransactions();
+              }
             },
             backgroundColor: primaryColor,
             elevation: 3,
@@ -613,24 +693,7 @@ class _TransactionsViewState extends State<TransactionsView> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              if (transaction.formData != null &&
-                  transaction.formData!.isNotEmpty)
-                Expanded(
-                  child: Text(
-                    transaction.formData!.entries
-                        .take(2)
-                        .map((e) => '${e.key}: ${e.value}')
-                        .join(' • '),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      fontSize: 11.f(context),
-                      color: Colors.grey.shade600,
-                    ),
-                  ),
-                )
-              else
-                const Spacer(),
+              _buildFooterFormData(context, transaction.formData),
               SizedBox(width: 8.w(context)),
               InkWell(
                 onTap: () => _showTransactionDetailsBottomSheet(
@@ -770,12 +833,15 @@ class _TransactionsViewState extends State<TransactionsView> {
                   ),
                   SizedBox(height: 8.h(context)),
                   ...transaction.formData!.entries.map((entry) {
+                    final label = _formDataLabels[entry.key] ?? entry.key;
+                    final formattedVal =
+                        _formatFormDataValue(entry.key, entry.value);
                     return Padding(
                       padding: EdgeInsets.only(bottom: 6.h(context)),
                       child: Row(
                         children: [
                           Text(
-                            '• ${entry.key}: ',
+                            '• $label: ',
                             style: TextStyle(
                               fontWeight: FontWeight.w600,
                               fontSize: 13.f(context),
@@ -783,7 +849,7 @@ class _TransactionsViewState extends State<TransactionsView> {
                           ),
                           Expanded(
                             child: Text(
-                              '${entry.value}',
+                              formattedVal,
                               style: TextStyle(
                                 color: Colors.grey.shade700,
                                 fontSize: 13.f(context),

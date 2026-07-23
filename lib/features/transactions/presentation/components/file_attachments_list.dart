@@ -60,14 +60,17 @@ class FileAttachmentsList extends StatelessWidget {
               style: TextStyle(
                 fontSize: 13.s(context),
                 fontWeight: FontWeight.w600,
+                color: Colors.black87,
               ),
             ),
             subtitle: Text(
               _formatFileSize(file.size),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
               textDirection: TextDirection.rtl,
               style: TextStyle(
                 fontSize: 11.s(context),
-                color: Colors.grey[600],
+                color: Colors.grey.shade800,
               ),
             ),
             trailing: IconButton(
