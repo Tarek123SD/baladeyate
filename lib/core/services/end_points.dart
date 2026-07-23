@@ -34,6 +34,7 @@ class EndPoints {
   static String delegateMyTaskById(int id) => 'v1/delegate/my-tasks/$id';
   static String delegateMyTaskStatus(int id) =>
       'v1/delegate/my-tasks/$id/status';
+  static const String verifyDocument = 'v1/delegate/verify-document';
 
   // Admin
   static const String shops = 'v1/shops';

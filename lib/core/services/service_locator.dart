@@ -30,7 +30,9 @@ import 'package:baladeyate/features/transactions/cubits/submit_transaction_cubit
 import 'package:baladeyate/features/transactions/cubits/transactions_cubit/transactions_cubit.dart';
 import 'package:baladeyate/features/transactions/repo/transactions_repository.dart';
 import 'package:baladeyate/features/digital_documents/cubits/digital_documents_cubit/digital_documents_cubit.dart';
+import 'package:baladeyate/features/digital_documents/cubits/scanner_cubit/scanner_cubit.dart';
 import 'package:baladeyate/features/digital_documents/repo/digital_documents_repository.dart';
+
 
 import 'api_services.dart';
 import 'package:get_it/get_it.dart';
@@ -157,6 +159,11 @@ Future<void> setupServiceLocator() async {
   sl.registerFactory<DigitalDocumentsCubit>(
     () => DigitalDocumentsCubit(digitalDocumentsRepository: sl<DigitalDocumentsRepository>()),
   );
+
+  sl.registerFactory<ScannerCubit>(
+    () => ScannerCubit(repository: sl<DigitalDocumentsRepository>()),
+  );
+
 
   sl.registerFactory<DonationsCubit>(
     () => DonationsCubit(donationsRepository: sl<DonationsRepository>()),

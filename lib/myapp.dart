@@ -32,12 +32,19 @@ class MyApp extends StatelessWidget {
         },
         child: MaterialApp.router(
           debugShowCheckedModeBanner: false,
+          locale: const Locale('en', 'US'),
           onGenerateTitle: (context) => AppLocalizations.of(context)!.appTitle,
           theme: AppTheme.light,
           darkTheme: AppTheme.dark,
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
           routerConfig: appRouter,
+          builder: (context, child) {
+            return Directionality(
+              textDirection: TextDirection.ltr,
+              child: child!,
+            );
+          },
         ),
       ),
     );

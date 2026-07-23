@@ -133,6 +133,14 @@ class DelegateHomeScreen extends StatefulWidget {
           children: [
             Expanded(
               child: tile(
+                'فحص الوثائق',
+                Icons.qr_code_scanner_rounded,
+                () => context.push('/delegate/verify-document'),
+              ),
+            ),
+            SizedBox(width: gap),
+            Expanded(
+              child: tile(
                 'مسح جديد',
                 Icons.add_location_alt_rounded,
                 () {
@@ -141,19 +149,13 @@ class DelegateHomeScreen extends StatefulWidget {
                 },
               ),
             ),
-            SizedBox(width: gap),
-            Expanded(
-              child: tile(
-                'الإشعارات',
-                Icons.notifications_none_rounded,
-                () => context.push('/notifications'),
-              ),
-            ),
           ],
         ),
       ],
     );
   }
+
+
 
   List<Widget> _buildPriorityTasks(
     BuildContext context,

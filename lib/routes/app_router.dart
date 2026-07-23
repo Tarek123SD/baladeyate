@@ -42,7 +42,9 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 import 'package:baladeyate/features/daily_tasks/cubits/daily_tasks_cubit/daily_tasks_cubit.dart';
 
+import 'package:baladeyate/features/digital_documents/presentation/document_scanner_screen.dart';
 import 'package:baladeyate/features/delegate/cubits/building_survey_cubit/building_survey_cubit.dart';
+
 
 import 'package:baladeyate/features/delegate/models/survey_location.dart';
 
@@ -539,7 +541,18 @@ GoRouter _createAppRouter() {
               GoRoute(
                 path: '/delegate/home',
                 builder: (context, state) => const DelegateHomeScreen(),
+                routes: [
+                  GoRoute(
+                    path: 'verify-document',
+                    builder: (context, state) => const DocumentScannerScreen(),
+                  ),
+                ],
               ),
+              GoRoute(
+                path: '/delegate/verify-document',
+                builder: (context, state) => const DocumentScannerScreen(),
+              ),
+
             ],
           ),
           StatefulShellBranch(
