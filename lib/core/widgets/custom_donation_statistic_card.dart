@@ -8,61 +8,88 @@ class CustomDonationStatisticCard extends StatelessWidget {
     this.width,
     required this.value,
     required this.label,
+    this.icon,
   });
 
   final double? width;
   final String value;
   final String label;
+  final IconData? icon;
 
   @override
   Widget build(BuildContext context) {
     return SizedBox(
       width: width,
       child: Container(
-        padding: EdgeInsets.symmetric(
-          vertical: 22.h(context),
-          horizontal: 16.w(context),
-        ),
         decoration: BoxDecoration(
-          border: Border.all(color: AppColors.primaryCharcoal, width: 0.3),
           color: Colors.white,
-          borderRadius: BorderRadius.circular(20.r(context)),
+          borderRadius: BorderRadius.circular(16.r(context)),
+          border: Border.all(
+            color: Colors.grey.shade200,
+            width: 1.0,
+          ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.05),
-              blurRadius: 14,
-              offset: const Offset(0, 8),
+              color: Colors.black.withValues(alpha: 0.03),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
             ),
           ],
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.end,
-          children: [
-            FittedBox(
-              fit: BoxFit.scaleDown,
-              alignment: Alignment.centerRight,
-              child: Text(
-                value,
-                textAlign: TextAlign.right,
-                style: TextStyle(
-                  color: AppColors.primaryForest,
-                  fontSize: 24.f(context),
-                  fontWeight: FontWeight.bold,
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(16.r(context)),
+          child: Stack(
+            children: [
+              if (icon != null)
+                Positioned(
+                  left: -12.w(context),
+                  bottom: -12.h(context),
+                  child: Icon(
+                    icon,
+                    size: 64.ic(context),
+                    color: AppColors.primaryForest.withValues(alpha: 0.06),
+                  ),
+                ),
+              Padding(
+                padding: EdgeInsets.symmetric(
+                  vertical: 18.h(context),
+                  horizontal: 16.w(context),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    FittedBox(
+                      fit: BoxFit.scaleDown,
+                      alignment: Alignment.centerRight,
+                      child: Text(
+                        value,
+                        textAlign: TextAlign.right,
+                        style: TextStyle(
+                          color: AppColors.primaryForest,
+                          fontSize: 22.f(context),
+                          fontWeight: FontWeight.bold,
+                          height: 1.1,
+                        ),
+                      ),
+                    ),
+                    SizedBox(height: 6.h(context)),
+                    Text(
+                      label,
+                      textAlign: TextAlign.right,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        color: const Color(0xFF616161),
+                        fontSize: 12.5.f(context),
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
                 ),
               ),
-            ),
-            SizedBox(height: 8.h(context)),
-            Text(
-              label,
-              textAlign: TextAlign.right,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                color: const Color(0xFF7A7A7A),
-                fontSize: 13.f(context),
-              ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

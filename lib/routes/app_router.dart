@@ -48,7 +48,10 @@ import 'package:baladeyate/features/delegate/models/survey_location.dart';
 
 import 'package:baladeyate/features/delegate/models/survey_navigation_context.dart';
 
+import 'package:baladeyate/features/donations/cubits/donate_cubit/donate_cubit.dart';
 import 'package:baladeyate/features/donations/cubits/donations_cubit/donations_cubit.dart';
+import 'package:baladeyate/features/donations/models/donation_case.dart';
+import 'package:baladeyate/features/donations/presentation/donation_payment_screen.dart';
 import 'package:baladeyate/features/donations/presentation/donations_screen.dart';
 
 import 'package:baladeyate/features/floor/presentation/floor_screen.dart';
@@ -613,6 +616,24 @@ GoRouter _createAppRouter() {
                   create: (_) => sl<DonationsCubit>()..loadCases(),
                   child: const DonationsScreen(),
                 ),
+
+                routes: [
+                  GoRoute(
+                    path: 'pay',
+                    builder: (context, state) {
+                      final extra = state.extra;
+                      final donationCase = extra is DonationCase ? extra : null;
+                      final campaignTitle = extra is String ? extra : null;
+                      return BlocProvider(
+                        create: (_) => sl<DonateCubit>(),
+                        child: DonationPaymentScreen(
+                          donationCase: donationCase,
+                          campaignTitle: campaignTitle,
+                        ),
+                      );
+                    },
+                  ),
+                ],
 
               ),
 
