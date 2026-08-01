@@ -23,6 +23,7 @@ const delegateRoutes = {
   '/delegate/map',
   '/delegate/tasks',
   '/delegate/buildings',
+  '/delegate/cemetery-map',
   '/tasks',
   '/info',
   '/floor',
@@ -55,7 +56,9 @@ bool isCitizenRoute(String path) =>
     path.startsWith('/digital-documents');
 
 bool isDelegateRoute(String path) =>
-    delegateRoutes.contains(path) || path.startsWith('/building/');
+    delegateRoutes.contains(path) ||
+    path.startsWith('/delegate/') ||
+    path.startsWith('/building/');
 
 bool isPublicRoute(String path) => publicRoutes.contains(path);
 

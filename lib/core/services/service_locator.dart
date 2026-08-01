@@ -11,6 +11,8 @@ import 'package:baladeyate/features/admin/repo/admin_repository.dart';
 import 'package:baladeyate/features/auth/cubits/auth_cubit/auth_cubit.dart';
 import 'package:baladeyate/features/auth/cubits/auth_form_cubit/auth_form_cubit.dart';
 import 'package:baladeyate/features/auth/cubits/password_reset_cubit/password_reset_cubit.dart';
+import 'package:baladeyate/features/cemetery_map/cubits/cemetery_map_cubit/cemetery_map_cubit.dart';
+import 'package:baladeyate/features/cemetery_map/repo/cemetery_map_repository.dart';
 import 'package:baladeyate/features/daily_tasks/cubits/daily_tasks_cubit/daily_tasks_cubit.dart';
 import 'package:baladeyate/features/auth/repo/auth_repository.dart';
 import 'package:baladeyate/features/complaints/cubits/complaints_cubit/complaints_cubit.dart';
@@ -125,6 +127,10 @@ Future<void> setupServiceLocator() async {
     () => AdminRepository(apiService: sl()),
   );
 
+  sl.registerLazySingleton<CemeteryMapRepository>(
+    () => CemeteryMapRepository(apiService: sl()),
+  );
+
   sl.registerLazySingleton<NotificationsRepository>(
     () => NotificationsRepository(apiService: sl()),
   );
@@ -175,6 +181,12 @@ Future<void> setupServiceLocator() async {
 
   sl.registerFactory<GravesCubit>(
     () => GravesCubit(adminRepository: sl<AdminRepository>()),
+  );
+
+  sl.registerFactory<CemeteryMapCubit>(
+    () => CemeteryMapCubit(
+      cemeteryMapRepository: sl<CemeteryMapRepository>(),
+    ),
   );
 
   sl.registerLazySingleton<DailyTasksCubit>(

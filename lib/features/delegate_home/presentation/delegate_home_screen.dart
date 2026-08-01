@@ -115,7 +115,7 @@ class DelegateHomeScreen extends StatefulWidget {
               child: tile(
                 'الخريطة',
                 Icons.map_rounded,
-                () => context.go('/delegate/map'),
+                () => context.push('/delegate/map'),
               ),
             ),
             SizedBox(width: gap),
@@ -123,7 +123,7 @@ class DelegateHomeScreen extends StatefulWidget {
               child: tile(
                 'المهام',
                 Icons.assignment_rounded,
-                () => context.go('/delegate/tasks'),
+                () => context.push('/delegate/tasks'),
               ),
             ),
           ],
@@ -135,7 +135,7 @@ class DelegateHomeScreen extends StatefulWidget {
               child: tile(
                 'فحص الوثائق',
                 Icons.qr_code_scanner_rounded,
-                () => context.push('/delegate/verify-document'),
+                () => context.push('/delegate/home/verify-document'),
               ),
             ),
             SizedBox(width: gap),
@@ -145,11 +145,17 @@ class DelegateHomeScreen extends StatefulWidget {
                 Icons.add_location_alt_rounded,
                 () {
                   context.read<DailyTasksCubit>().enableAddPinMode();
-                  context.go('/delegate/map');
+                  context.push('/delegate/map');
                 },
               ),
             ),
           ],
+        ),
+        SizedBox(height: gap),
+        tile(
+          'خريطة المقبرة',
+          Icons.park_rounded,
+          () => context.push('/delegate/cemetery-map'),
         ),
       ],
     );
