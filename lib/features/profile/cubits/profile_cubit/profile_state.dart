@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:baladeyate/features/auth/models/user.dart';
+import 'package:baladeyate/features/delegate/models/registered_household.dart';
 import 'package:equatable/equatable.dart';
 
 sealed class ProfileState extends Equatable {
@@ -24,12 +25,18 @@ final class ProfileLoaded extends ProfileState {
     this.selectedTab = 0,
     this.identityImage,
     this.showResubmitForm = false,
+    this.household,
+    this.householdMessage,
   });
 
   final User user;
   final int selectedTab;
   final File? identityImage;
   final bool showResubmitForm;
+  final RegisteredHousehold? household;
+
+  /// Soft message when household is unavailable (404 / not verified), not a hard failure.
+  final String? householdMessage;
 
   ProfileLoaded copyWith({
     User? user,
@@ -37,6 +44,10 @@ final class ProfileLoaded extends ProfileState {
     File? identityImage,
     bool clearIdentityImage = false,
     bool? showResubmitForm,
+    RegisteredHousehold? household,
+    bool clearHousehold = false,
+    String? householdMessage,
+    bool clearHouseholdMessage = false,
   }) {
     return ProfileLoaded(
       user: user ?? this.user,
@@ -44,12 +55,22 @@ final class ProfileLoaded extends ProfileState {
       identityImage:
           clearIdentityImage ? null : (identityImage ?? this.identityImage),
       showResubmitForm: showResubmitForm ?? this.showResubmitForm,
+      household: clearHousehold ? null : (household ?? this.household),
+      householdMessage: clearHouseholdMessage
+          ? null
+          : (householdMessage ?? this.householdMessage),
     );
   }
 
   @override
-  List<Object?> get props =>
-      [user, selectedTab, identityImage, showResubmitForm];
+  List<Object?> get props => [
+        user,
+        selectedTab,
+        identityImage,
+        showResubmitForm,
+        household,
+        householdMessage,
+      ];
 }
 
 final class ProfileVerificationDraft extends ProfileState {

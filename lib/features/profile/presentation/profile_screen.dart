@@ -7,6 +7,7 @@ import 'package:baladeyate/features/auth/cubits/auth_cubit/auth_cubit.dart';
 import 'package:baladeyate/features/auth/cubits/auth_cubit/auth_state.dart';
 import 'package:baladeyate/features/profile/cubits/profile_cubit/profile_cubit.dart';
 import 'package:baladeyate/features/profile/cubits/profile_cubit/profile_state.dart';
+import 'package:baladeyate/features/profile/presentation/components/profile_household_section.dart';
 import 'package:baladeyate/features/profile/presentation/components/profile_personal_details_section.dart';
 import 'package:baladeyate/features/profile/presentation/components/profile_user_header.dart';
 import 'package:baladeyate/features/profile/presentation/components/profile_verification_card.dart';
@@ -67,6 +68,10 @@ class ProfileScreen extends StatelessWidget {
                             }
 
                             final user = authState.user;
+                            final loaded = profileState is ProfileLoaded
+                                ? profileState
+                                : null;
+
                             return Column(
                               crossAxisAlignment: CrossAxisAlignment.stretch,
                               children: [
@@ -83,6 +88,17 @@ class ProfileScreen extends StatelessWidget {
                                 ProfilePersonalDetailsSection(user: user)
                                     .animate()
                                     .fadeIn(duration: 350.ms, delay: 200.ms)
+                                    .slideY(begin: 0.08, end: 0),
+                                SizedBox(height: 24.h(context)),
+                                ProfileHouseholdSection(
+                                  household: loaded?.household,
+                                  message: loaded?.householdMessage ??
+                                      (profileState is ProfileLoading
+                                          ? 'جاري تحميل السجل السكني...'
+                                          : null),
+                                )
+                                    .animate()
+                                    .fadeIn(duration: 350.ms, delay: 300.ms)
                                     .slideY(begin: 0.08, end: 0),
                               ],
                             );

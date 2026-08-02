@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:baladeyate/features/auth/cubits/auth_cubit/auth_cubit.dart';
 import 'package:baladeyate/features/auth/cubits/auth_cubit/auth_state.dart';
+import 'package:baladeyate/features/delegate/models/registered_household.dart';
 import 'package:baladeyate/features/profile/cubits/profile_cubit/profile_state.dart';
 import 'package:baladeyate/features/profile/repo/citizen_repository.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -43,15 +44,29 @@ class ProfileCubit extends Cubit<ProfileState> {
     try {
       await _authCubit.refreshUser();
       final authState = _authCubit.state;
-      if (authState is AuthSuccess) {
-        emit(ProfileLoaded(
-          user: authState.user,
-          selectedTab: previousTab,
-          identityImage: previousImage,
-        ));
-      } else {
+      if (authState is! AuthSuccess) {
         emit(const ProfileFailure(message: 'يجب تسجيل الدخول أولاً'));
+        return;
       }
+
+      RegisteredHousehold? household;
+      String? householdMessage;
+      try {
+        household = await _citizenRepository.getMyHousehold();
+        if (household == null) {
+          householdMessage = 'لا يوجد سجل سكني مرتبط بحسابك بعد.';
+        }
+      } catch (error) {
+        householdMessage = _messageFromError(error);
+      }
+
+      emit(ProfileLoaded(
+        user: authState.user,
+        selectedTab: previousTab,
+        identityImage: previousImage,
+        household: household,
+        householdMessage: householdMessage,
+      ));
     } catch (error) {
       emit(ProfileFailure(message: _messageFromError(error)));
     }
