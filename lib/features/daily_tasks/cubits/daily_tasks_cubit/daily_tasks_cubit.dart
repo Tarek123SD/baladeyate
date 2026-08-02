@@ -170,24 +170,41 @@ class DailyTasksCubit extends Cubit<DailyTasksState> {
     emit(
       pinId == null
           ? state.copyWith(clearSelectedPinId: true)
-          : state.copyWith(selectedPinId: pinId),
+          : state.copyWith(selectedPinId: pinId, isAddPinMode: false),
     );
   }
 
+  void setPinStatusFilter(SurveyPinStatus? filter) {
+    final selectedId = state.selectedPinId;
+    final keepSelection = selectedId == null ||
+        filter == null ||
+        state.pins.any((pin) => pin.id == selectedId && pin.status == filter);
+
+    emit(state.copyWith(
+      pinStatusFilter: filter,
+      clearPinStatusFilter: filter == null,
+      clearSelectedPinId: !keepSelection,
+    ));
+  }
+
   void toggleAddPinMode() {
-    emit(state.copyWith(isAddPinMode: !state.isAddPinMode));
+    final enabling = !state.isAddPinMode;
+    emit(state.copyWith(
+      isAddPinMode: enabling,
+      clearSelectedPinId: enabling,
+    ));
   }
 
   void enableAddPinMode() {
     if (!state.isAddPinMode) {
-      emit(state.copyWith(isAddPinMode: true));
+      emit(state.copyWith(isAddPinMode: true, clearSelectedPinId: true));
     }
   }
 
   void toggleMapType() {
     emit(state.copyWith(
       mapType: state.mapType == MapType.normal
-          ? MapType.satellite
+          ? MapType.hybrid
           : MapType.normal,
     ));
   }

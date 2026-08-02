@@ -33,6 +33,21 @@ class DelegateBottomNavigationBar extends StatelessWidget {
     Icons.apartment_rounded,
   ];
 
+  /// Vertical space occupied by the floating nav (bar + outer bottom margin).
+  static double clearance(BuildContext context) {
+    final bottomMargin = 14.h(context);
+    final barPaddingV = 8.h(context);
+    final pillH = 30.h(context);
+    final labelSize = 11.f(context);
+    final safeBottom = MediaQuery.paddingOf(context).bottom;
+    return bottomMargin +
+        safeBottom +
+        (barPaddingV * 2) +
+        pillH +
+        2.h(context) +
+        (labelSize * 1.15);
+  }
+
   @override
   Widget build(BuildContext context) {
     final radius = 28.r(context);

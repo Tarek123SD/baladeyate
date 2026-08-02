@@ -1,3 +1,4 @@
+import 'package:baladeyate/core/navigation/delegate_shell_indices.dart';
 import 'package:baladeyate/core/responsive/dimensions.dart';
 import 'package:baladeyate/core/widgets/app_background.dart';
 import 'package:baladeyate/core/widgets/delegate_bottom_navigation_bar.dart';
@@ -15,9 +16,14 @@ class DelegateNavigationScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isMapTab =
+        navigationShell.currentIndex == DelegateShellIndices.map;
+
     return AppBackground(
       child: Scaffold(
         backgroundColor: Colors.transparent,
+        // Let the map paint under the floating nav (no white strip).
+        extendBody: isMapTab,
         resizeToAvoidBottomInset: false,
         body: LayoutBuilder(
           builder: (context, constraints) {
@@ -38,9 +44,12 @@ class DelegateNavigationScreen extends StatelessWidget {
             );
           },
         ),
-        bottomNavigationBar: DelegateBottomNavigationBar(
-          currentIndex: navigationShell.currentIndex,
-          onTap: navigationShell.goBranch,
+        bottomNavigationBar: Material(
+          type: MaterialType.transparency,
+          child: DelegateBottomNavigationBar(
+            currentIndex: navigationShell.currentIndex,
+            onTap: navigationShell.goBranch,
+          ),
         ),
       ),
     );
