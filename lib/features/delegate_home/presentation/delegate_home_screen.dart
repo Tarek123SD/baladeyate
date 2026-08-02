@@ -141,21 +141,12 @@ class DelegateHomeScreen extends StatefulWidget {
             SizedBox(width: gap),
             Expanded(
               child: tile(
-                'مسح جديد',
-                Icons.add_location_alt_rounded,
-                () {
-                  context.read<DailyTasksCubit>().enableAddPinMode();
-                  context.push('/delegate/map');
-                },
+                'خريطة المقبرة',
+                Icons.park_rounded,
+                () => context.push('/delegate/cemetery-map'),
               ),
             ),
           ],
-        ),
-        SizedBox(height: gap),
-        tile(
-          'خريطة المقبرة',
-          Icons.park_rounded,
-          () => context.push('/delegate/cemetery-map'),
         ),
       ],
     );
