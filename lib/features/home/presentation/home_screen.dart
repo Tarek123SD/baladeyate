@@ -116,7 +116,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           HomeServiceCard(
                             title: 'الوثائق الرقمية',
                             icon: AppIcons.digitalDocs,
-                            onTap: () => context.go('/profile'),
+                            onTap: () => context.push('/digital-documents'),
                           ),
                           HomeServiceCard(
                             title: 'تقديم شكوى',

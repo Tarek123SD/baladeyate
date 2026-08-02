@@ -64,10 +64,10 @@ void showPinInfoSheet(BuildContext context, SurveyPin pin) {
     builder: (sheetContext) {
       return Padding(
         padding: EdgeInsets.fromLTRB(
-          20.w(context),
-          8.h(context),
-          20.w(context),
-          24.h(context),
+          20.w(sheetContext),
+          8.h(sheetContext),
+          20.w(sheetContext),
+          24.h(sheetContext) + MediaQuery.viewPaddingOf(sheetContext).bottom,
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -78,26 +78,26 @@ void showPinInfoSheet(BuildContext context, SurveyPin pin) {
               textDirection: TextDirection.rtl,
               style: TextStyle(
                 color: AppColors.primaryForest,
-                fontSize: 17.f(context),
+                fontSize: 17.f(sheetContext),
                 fontWeight: FontWeight.w700,
               ),
             ),
-            SizedBox(height: 8.h(context)),
+            SizedBox(height: 8.h(sheetContext)),
             Text(
               pin.displayLocation,
               textDirection: TextDirection.rtl,
               style: TextStyle(
                 color: AppColors.secondaryCharcoal.withValues(alpha: 0.8),
-                fontSize: 14.f(context),
+                fontSize: 14.f(sheetContext),
               ),
             ),
-            SizedBox(height: 8.h(context)),
+            SizedBox(height: 8.h(sheetContext)),
             Text(
               'الحالة: ${statusLabelForPin(pin)}',
               textDirection: TextDirection.rtl,
               style: TextStyle(
                 color: AppColors.secondaryCharcoal.withValues(alpha: 0.7),
-                fontSize: 13.f(context),
+                fontSize: 13.f(sheetContext),
               ),
             ),
           ],
@@ -486,7 +486,8 @@ class DelegateSelectedPinCard extends StatelessWidget {
                     child: Icon(
                       Icons.close_rounded,
                       size: 18.ic(context),
-                      color: AppColors.secondaryCharcoal.withValues(alpha: 0.55),
+                      color:
+                          AppColors.secondaryCharcoal.withValues(alpha: 0.55),
                     ),
                   ),
                 ),
