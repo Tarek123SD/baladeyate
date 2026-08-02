@@ -81,13 +81,21 @@ class ApiResponseParser {
   }) {
     if (error is DioException) {
       final statusCode = error.response?.statusCode;
+      if (statusCode == 401 || statusCode == 403) {
+        return Exception(
+          'انتهت صلاحية الجلسة أو لا تملك صلاحية للوصول. يرجى تسجيل الدخول مجدداً.',
+        );
+      }
       if (statusCode == 413) {
         return Exception('حجم الملف كبير جدًا، يرجى اختيار صورة أصغر');
       }
 
       final data = error.response?.data;
       if (data is Map<String, dynamic>) {
-        return Exception(extractMessage(data) ?? fallback);
+        final extractedMsg = extractMessage(data);
+        if (extractedMsg != null && extractedMsg.isNotEmpty) {
+          return Exception(extractedMsg);
+        }
       }
 
       switch (error.type) {

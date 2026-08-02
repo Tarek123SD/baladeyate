@@ -9,6 +9,9 @@ class Family {
     this.unemployedCount,
     this.studentsCount,
     this.occupancyType,
+    this.familyMembersCount,
+    this.residentsCount,
+    this.composition,
   });
 
   final int id;
@@ -20,6 +23,9 @@ class Family {
   final int? unemployedCount;
   final int? studentsCount;
   final String? occupancyType;
+  final int? familyMembersCount;
+  final int? residentsCount;
+  final String? composition;
 
   factory Family.fromJson(Map<String, dynamic> json) {
     return Family(
@@ -32,6 +38,9 @@ class Family {
       unemployedCount: json['unemployed_count'] as int?,
       studentsCount: json['students_count'] as int?,
       occupancyType: json['occupancy_type'] as String?,
+      familyMembersCount: json['family_members_count'] as int?,
+      residentsCount: json['residents_count'] as int?,
+      composition: json['composition'] as String?,
     );
   }
 }

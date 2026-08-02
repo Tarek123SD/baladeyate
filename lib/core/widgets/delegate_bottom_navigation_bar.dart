@@ -1,4 +1,5 @@
 import 'package:baladeyate/config/theme/app_colors.dart';
+import 'package:baladeyate/config/theme/app_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:responsive_x_toolkit/responsive_x.dart';
 
@@ -20,18 +21,33 @@ class DelegateBottomNavigationBar extends StatelessWidget {
   ];
 
   static const _icons = [
-    Icons.home_outlined,
-    Icons.map_outlined,
-    Icons.assignment_outlined,
-    Icons.apartment_outlined,
+    AppIcons.navHome,
+    AppIcons.navMap,
+    AppIcons.navTasks,
+    AppIcons.navBuildings,
   ];
 
   static const _activeIcons = [
-    Icons.home_rounded,
-    Icons.map_rounded,
-    Icons.assignment_rounded,
-    Icons.apartment_rounded,
+    AppIcons.navHomeActive,
+    AppIcons.navMapActive,
+    AppIcons.navTasksActive,
+    AppIcons.navBuildingsActive,
   ];
+
+  /// Vertical space occupied by the floating nav (bar + outer bottom margin).
+  static double clearance(BuildContext context) {
+    final bottomMargin = 14.h(context);
+    final barPaddingV = 8.h(context);
+    final pillH = 30.h(context);
+    final labelSize = 11.f(context);
+    final safeBottom = MediaQuery.paddingOf(context).bottom;
+    return bottomMargin +
+        safeBottom +
+        (barPaddingV * 2) +
+        pillH +
+        2.h(context) +
+        (labelSize * 1.15);
+  }
 
   @override
   Widget build(BuildContext context) {

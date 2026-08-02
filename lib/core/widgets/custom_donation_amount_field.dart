@@ -18,11 +18,11 @@ class CustomDonationAmountField extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.center,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text(
           'مبلغ مخصص (ل.س)',
-          textAlign: TextAlign.center,
+          textAlign: TextAlign.right,
           style: TextStyle(
             color: AppColors.primaryForest,
             fontSize: 14.f(context),
@@ -35,7 +35,7 @@ class CustomDonationAmountField extends StatelessWidget {
           onChanged: onChanged,
           onTap: onTap,
           keyboardType: TextInputType.number,
-          textAlign: TextAlign.center,
+          textAlign: TextAlign.right,
           inputFormatters: [FilteringTextInputFormatter.digitsOnly],
           style: TextStyle(
             fontSize: 15.f(context),
@@ -44,36 +44,34 @@ class CustomDonationAmountField extends StatelessWidget {
           ),
           decoration: InputDecoration(
             filled: true,
-            fillColor: Colors.white,
-            hintText: 'أدخل القيمة يدوياً',
+            fillColor: Colors.grey.shade50,
+            hintText: 'أدخل المبلغ بالليرة السورية',
             hintStyle: TextStyle(
-              color: AppColors.secondaryCharcoal.withValues(alpha: 0.6),
-              fontSize: 13.f(context),
+              color: Colors.grey.shade500,
+              fontSize: 13.5.f(context),
               fontWeight: FontWeight.normal,
             ),
             contentPadding: EdgeInsets.symmetric(
               horizontal: 16.w(context),
-              vertical: 18.h(context),
+              vertical: 16.h(context),
             ),
             prefixIcon: Icon(
-              Icons.payments_rounded,
-              color: AppColors.primaryGoldenWheat,
+              Icons.payments_outlined,
+              color: AppColors.primaryForest,
               size: 20.ic(context),
             ),
             border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(18.r(context)),
-              borderSide: const BorderSide(
-                color: AppColors.secondaryGoldenWheat,
-              ),
+              borderRadius: BorderRadius.circular(14.r(context)),
+              borderSide: BorderSide(color: Colors.grey.shade200),
             ),
             enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(18.r(context)),
-              borderSide: const BorderSide(color: Color(0xFFD9D2C2)),
+              borderRadius: BorderRadius.circular(14.r(context)),
+              borderSide: BorderSide(color: Colors.grey.shade200),
             ),
             focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(18.r(context)),
+              borderRadius: BorderRadius.circular(14.r(context)),
               borderSide: const BorderSide(
-                color: AppColors.green,
+                color: AppColors.primaryForest,
                 width: 1.6,
               ),
             ),

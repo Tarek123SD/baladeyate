@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:baladeyate/core/services/api_services.dart';
 import 'package:baladeyate/core/services/end_points.dart';
 import 'package:baladeyate/core/utils/api_response_parser.dart';
@@ -46,6 +48,29 @@ class DonationsRepository {
       );
     } catch (error) {
       throw ApiResponseParser.mapError(error, fallback: 'فشل تحميل الحملة');
+    }
+  }
+
+  Future<void> submitDonation({
+    required int id,
+    required num amount,
+    required File receiptImage,
+  }) async {
+    try {
+      final formData = FormData.fromMap({
+        'amount': amount,
+        'receipt_image': await MultipartFile.fromFile(
+          receiptImage.path,
+          filename: receiptImage.path.split(RegExp(r'[/\\]')).last,
+        ),
+      });
+
+      await _apiService.post(
+        EndPoints.donationDonate(id),
+        data: formData,
+      );
+    } catch (error) {
+      throw ApiResponseParser.mapError(error, fallback: 'فشل إرسال التبرع');
     }
   }
 }

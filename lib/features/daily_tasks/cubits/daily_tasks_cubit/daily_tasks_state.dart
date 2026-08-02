@@ -1,4 +1,4 @@
-import 'package:baladeyate/features/daily_tasks/utils/delegate_task_display.dart';
+import 'package:baladeyate/features/daily_tasks/presentation/delegate_task_display.dart';
 import 'package:baladeyate/features/delegate/models/delegate_task.dart';
 import 'package:baladeyate/features/delegate/models/survey_pin.dart';
 import 'package:baladeyate/features/delegate/models/survey_pin_status.dart';
@@ -15,6 +15,7 @@ class DailyTasksState extends Equatable {
     this.isLocating = false,
     this.isAddPinMode = false,
     this.selectedPinId,
+    this.pinStatusFilter,
     this.currentPosition,
     this.locationMessage,
     this.mapType = MapType.normal,
@@ -29,6 +30,7 @@ class DailyTasksState extends Equatable {
   final bool isLocating;
   final bool isAddPinMode;
   final String? selectedPinId;
+  final SurveyPinStatus? pinStatusFilter;
   final LatLng? currentPosition;
   final String? locationMessage;
   final MapType mapType;
@@ -55,6 +57,22 @@ class DailyTasksState extends Equatable {
     return pins.where((pin) => pin.status == filter).toList();
   }
 
+  List<SurveyPin> get visiblePins => filteredPins(pinStatusFilter);
+
+  SurveyPin? get selectedPin {
+    final id = selectedPinId;
+    if (id == null) return null;
+    for (final pin in pins) {
+      if (pin.id == id) return pin;
+    }
+    return null;
+  }
+
+  double get achievementRatio {
+    if (totalTasks == 0) return 0;
+    return (completedTasks / totalTasks).clamp(0.0, 1.0);
+  }
+
   String get achievementPercent {
     if (totalTasks == 0) return '0';
     return ((completedTasks / totalTasks) * 100).round().toString();
@@ -70,6 +88,8 @@ class DailyTasksState extends Equatable {
     bool? isAddPinMode,
     String? selectedPinId,
     bool clearSelectedPinId = false,
+    SurveyPinStatus? pinStatusFilter,
+    bool clearPinStatusFilter = false,
     LatLng? currentPosition,
     String? locationMessage,
     bool clearLocationMessage = false,
@@ -87,6 +107,9 @@ class DailyTasksState extends Equatable {
       isAddPinMode: isAddPinMode ?? this.isAddPinMode,
       selectedPinId:
           clearSelectedPinId ? null : (selectedPinId ?? this.selectedPinId),
+      pinStatusFilter: clearPinStatusFilter
+          ? null
+          : (pinStatusFilter ?? this.pinStatusFilter),
       currentPosition: currentPosition ?? this.currentPosition,
       locationMessage: clearLocationMessage
           ? null
@@ -107,6 +130,7 @@ class DailyTasksState extends Equatable {
         isLocating,
         isAddPinMode,
         selectedPinId,
+        pinStatusFilter,
         currentPosition,
         locationMessage,
         mapType,

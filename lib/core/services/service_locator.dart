@@ -11,20 +11,31 @@ import 'package:baladeyate/features/admin/repo/admin_repository.dart';
 import 'package:baladeyate/features/auth/cubits/auth_cubit/auth_cubit.dart';
 import 'package:baladeyate/features/auth/cubits/auth_form_cubit/auth_form_cubit.dart';
 import 'package:baladeyate/features/auth/cubits/password_reset_cubit/password_reset_cubit.dart';
+import 'package:baladeyate/features/cemetery_map/cubits/cemetery_map_cubit/cemetery_map_cubit.dart';
+import 'package:baladeyate/features/cemetery_map/repo/cemetery_map_repository.dart';
 import 'package:baladeyate/features/daily_tasks/cubits/daily_tasks_cubit/daily_tasks_cubit.dart';
+import 'package:baladeyate/features/daily_tasks/repo/daily_tasks_repository.dart';
 import 'package:baladeyate/features/auth/repo/auth_repository.dart';
 import 'package:baladeyate/features/complaints/cubits/complaints_cubit/complaints_cubit.dart';
 import 'package:baladeyate/features/complaints/repo/complaints_repository.dart';
+import 'package:baladeyate/features/donations/cubits/donate_cubit/donate_cubit.dart';
 import 'package:baladeyate/features/donations/cubits/donations_cubit/donations_cubit.dart';
 import 'package:baladeyate/features/donations/repo/donations_repository.dart';
 import 'package:baladeyate/features/delegate/cubits/building_survey_cubit/building_survey_cubit.dart';
-import 'package:baladeyate/features/delegate/data/local_building_survey_store.dart';
-import 'package:baladeyate/features/delegate/data/local_survey_pin_store.dart';
+import 'package:baladeyate/features/delegate/repo/local_building_survey_store.dart';
+import 'package:baladeyate/features/delegate/repo/local_survey_pin_store.dart';
 import 'package:baladeyate/features/delegate/repo/delegate_repository.dart';
 import 'package:baladeyate/features/notifications/cubits/notifications_cubit/notifications_cubit.dart';
 import 'package:baladeyate/features/notifications/repo/notifications_repository.dart';
 import 'package:baladeyate/features/profile/cubits/profile_cubit/profile_cubit.dart';
 import 'package:baladeyate/features/profile/repo/citizen_repository.dart';
+import 'package:baladeyate/features/transactions/cubits/submit_transaction_cubit/submit_transaction_cubit.dart';
+import 'package:baladeyate/features/transactions/cubits/transactions_cubit/transactions_cubit.dart';
+import 'package:baladeyate/features/transactions/repo/transactions_repository.dart';
+import 'package:baladeyate/features/digital_documents/cubits/digital_documents_cubit/digital_documents_cubit.dart';
+import 'package:baladeyate/features/digital_documents/cubits/scanner_cubit/scanner_cubit.dart';
+import 'package:baladeyate/features/digital_documents/repo/digital_documents_repository.dart';
+
 
 import 'api_services.dart';
 import 'package:get_it/get_it.dart';
@@ -82,6 +93,14 @@ Future<void> setupServiceLocator() async {
     () => CitizenRepository(apiService: sl()),
   );
 
+  sl.registerLazySingleton<TransactionsRepository>(
+    () => TransactionsRepository(apiService: sl()),
+  );
+
+  sl.registerLazySingleton<DigitalDocumentsRepository>(
+    () => DigitalDocumentsRepository(apiService: sl()),
+  );
+
   sl.registerLazySingleton<ComplaintsRepository>(
     () => ComplaintsRepository(apiService: sl()),
   );
@@ -105,8 +124,18 @@ Future<void> setupServiceLocator() async {
     ),
   );
 
+  sl.registerLazySingleton<DailyTasksRepository>(
+    () => DailyTasksRepository(
+      delegateRepository: sl<DelegateRepository>(),
+    ),
+  );
+
   sl.registerLazySingleton<AdminRepository>(
     () => AdminRepository(apiService: sl()),
+  );
+
+  sl.registerLazySingleton<CemeteryMapRepository>(
+    () => CemeteryMapRepository(apiService: sl()),
   );
 
   sl.registerLazySingleton<NotificationsRepository>(
@@ -132,16 +161,45 @@ Future<void> setupServiceLocator() async {
     () => ComplaintsCubit(complaintsRepository: sl<ComplaintsRepository>()),
   );
 
+  sl.registerFactory<SubmitTransactionCubit>(
+    () => SubmitTransactionCubit(transactionsRepository: sl<TransactionsRepository>()),
+  );
+
+  sl.registerFactory<TransactionsCubit>(
+    () => TransactionsCubit(transactionsRepository: sl<TransactionsRepository>()),
+  );
+
+  sl.registerFactory<DigitalDocumentsCubit>(
+    () => DigitalDocumentsCubit(digitalDocumentsRepository: sl<DigitalDocumentsRepository>()),
+  );
+
+  sl.registerFactory<ScannerCubit>(
+    () => ScannerCubit(repository: sl<DigitalDocumentsRepository>()),
+  );
+
+
   sl.registerFactory<DonationsCubit>(
     () => DonationsCubit(donationsRepository: sl<DonationsRepository>()),
+  );
+
+  sl.registerFactory<DonateCubit>(
+    () => DonateCubit(donationsRepository: sl<DonationsRepository>()),
   );
 
   sl.registerFactory<GravesCubit>(
     () => GravesCubit(adminRepository: sl<AdminRepository>()),
   );
 
+  sl.registerFactory<CemeteryMapCubit>(
+    () => CemeteryMapCubit(
+      cemeteryMapRepository: sl<CemeteryMapRepository>(),
+    ),
+  );
+
   sl.registerLazySingleton<DailyTasksCubit>(
-    () => DailyTasksCubit(delegateRepository: sl<DelegateRepository>()),
+    () => DailyTasksCubit(
+      dailyTasksRepository: sl<DailyTasksRepository>(),
+    ),
   );
 
   sl.registerFactory<AuthFormCubit>(() => AuthFormCubit());

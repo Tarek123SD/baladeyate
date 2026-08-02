@@ -18,6 +18,8 @@ class DelegateNavigationScreen extends StatelessWidget {
     return AppBackground(
       child: Scaffold(
         backgroundColor: Colors.transparent,
+        // Floating nav: body (map/pattern) paints behind the bar.
+        extendBody: true,
         resizeToAvoidBottomInset: false,
         body: LayoutBuilder(
           builder: (context, constraints) {
@@ -38,9 +40,12 @@ class DelegateNavigationScreen extends StatelessWidget {
             );
           },
         ),
-        bottomNavigationBar: DelegateBottomNavigationBar(
-          currentIndex: navigationShell.currentIndex,
-          onTap: navigationShell.goBranch,
+        bottomNavigationBar: Material(
+          type: MaterialType.transparency,
+          child: DelegateBottomNavigationBar(
+            currentIndex: navigationShell.currentIndex,
+            onTap: navigationShell.goBranch,
+          ),
         ),
       ),
     );

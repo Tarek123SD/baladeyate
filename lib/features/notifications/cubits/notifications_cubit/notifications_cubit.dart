@@ -15,6 +15,9 @@ class NotificationsCubit extends Cubit<NotificationsState> {
     return current is NotificationsLoaded ? current.unreadCount : 0;
   }
 
+  /// Fetch notifications from backend API
+  Future<void> fetchNotifications() => loadNotifications();
+
   Future<void> loadNotifications() async {
     // Keep the current list visible while refreshing when we already have data.
     if (state is! NotificationsLoaded) {
@@ -24,11 +27,12 @@ class NotificationsCubit extends Cubit<NotificationsState> {
       final notifications = await _notificationsRepository.getNotifications();
       emit(NotificationsLoaded(notifications: notifications));
     } catch (error) {
+      final message = _messageFromError(error);
       if (state is NotificationsLoaded) {
         final current = state as NotificationsLoaded;
-        emit(current.copyWith(actionError: _messageFromError(error)));
+        emit(current.copyWith(actionError: message));
       } else {
-        emit(NotificationsFailure(message: _messageFromError(error)));
+        emit(NotificationsError(message));
       }
     }
   }

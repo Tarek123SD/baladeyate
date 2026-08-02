@@ -1,17 +1,17 @@
 import 'package:baladeyate/features/daily_tasks/cubits/daily_tasks_cubit/daily_tasks_state.dart';
+import 'package:baladeyate/features/daily_tasks/repo/daily_tasks_repository.dart';
 import 'package:baladeyate/features/delegate/models/survey_pin.dart';
 import 'package:baladeyate/features/delegate/models/survey_pin_status.dart';
-import 'package:baladeyate/features/delegate/repo/delegate_repository.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 class DailyTasksCubit extends Cubit<DailyTasksState> {
-  DailyTasksCubit({required DelegateRepository delegateRepository})
-      : _delegateRepository = delegateRepository,
+  DailyTasksCubit({required DailyTasksRepository dailyTasksRepository})
+      : _dailyTasksRepository = dailyTasksRepository,
         super(const DailyTasksState());
 
-  final DelegateRepository _delegateRepository;
+  final DailyTasksRepository _dailyTasksRepository;
   bool _initialized = false;
 
   Future<void> initialize() async {
@@ -34,7 +34,7 @@ class DailyTasksCubit extends Cubit<DailyTasksState> {
   Future<void> loadPins() async {
     emit(state.copyWith(isLoadingPins: true, clearErrorMessage: true));
     try {
-      final pins = await _delegateRepository.getMapPins();
+      final pins = await _dailyTasksRepository.getMapPins();
       emit(state.copyWith(pins: pins, isLoadingPins: false));
     } catch (error) {
       emit(state.copyWith(
@@ -47,7 +47,7 @@ class DailyTasksCubit extends Cubit<DailyTasksState> {
   Future<void> loadTasks() async {
     emit(state.copyWith(isLoadingTasks: true, clearErrorMessage: true));
     try {
-      final tasks = await _delegateRepository.getMyTasks();
+      final tasks = await _dailyTasksRepository.getMyTasks();
       emit(state.copyWith(delegateTasks: tasks, isLoadingTasks: false));
     } catch (error) {
       emit(state.copyWith(
@@ -63,7 +63,7 @@ class DailyTasksCubit extends Cubit<DailyTasksState> {
   }) async {
     emit(state.copyWith(isUpdatingTask: true, clearErrorMessage: true));
     try {
-      final updated = await _delegateRepository.updateMyTaskStatus(
+      final updated = await _dailyTasksRepository.updateMyTaskStatus(
         id: id,
         status: status,
       );
@@ -96,8 +96,15 @@ class DailyTasksCubit extends Cubit<DailyTasksState> {
       permission = await Geolocator.requestPermission();
     }
 
-    if (permission == LocationPermission.denied ||
-        permission == LocationPermission.deniedForever) {
+    if (permission == LocationPermission.deniedForever) {
+      emit(state.copyWith(
+        locationMessage: 'تم رفض إذن الموقع بشكل دائم. يرجى تفعيله من إعدادات التطبيق',
+      ));
+      await Geolocator.openAppSettings();
+      return;
+    }
+
+    if (permission == LocationPermission.denied) {
       emit(state.copyWith(locationMessage: 'لم يتم منح إذن الموقع'));
       return;
     }
@@ -108,9 +115,23 @@ class DailyTasksCubit extends Cubit<DailyTasksState> {
   Future<LatLng?> moveToCurrentLocation() async {
     emit(state.copyWith(isLocating: true));
     try {
+      final position = await Geolocator.getLastKnownPosition();
+      if (position != null) {
+        final latLng = LatLng(position.latitude, position.longitude);
+        emit(state.copyWith(
+          currentPosition: latLng,
+          isLocating: false,
+          clearLocationMessage: true,
+        ));
+        return latLng;
+      }
+    } catch (_) {}
+
+    try {
       final position = await Geolocator.getCurrentPosition(
         locationSettings: const LocationSettings(
           accuracy: LocationAccuracy.high,
+          timeLimit: Duration(seconds: 4),
         ),
       );
       final latLng = LatLng(position.latitude, position.longitude);
@@ -121,11 +142,27 @@ class DailyTasksCubit extends Cubit<DailyTasksState> {
       ));
       return latLng;
     } catch (_) {
-      emit(state.copyWith(
-        isLocating: false,
-        locationMessage: 'تعذر تحديد موقعك الحالي',
-      ));
-      return null;
+      try {
+        final position = await Geolocator.getCurrentPosition(
+          locationSettings: const LocationSettings(
+            accuracy: LocationAccuracy.low,
+            timeLimit: Duration(seconds: 6),
+          ),
+        );
+        final latLng = LatLng(position.latitude, position.longitude);
+        emit(state.copyWith(
+          currentPosition: latLng,
+          isLocating: false,
+          clearLocationMessage: true,
+        ));
+        return latLng;
+      } catch (err) {
+        emit(state.copyWith(
+          isLocating: false,
+          locationMessage: 'تعذر تحديد موقعك الحالي',
+        ));
+        return null;
+      }
     }
   }
 
@@ -133,24 +170,41 @@ class DailyTasksCubit extends Cubit<DailyTasksState> {
     emit(
       pinId == null
           ? state.copyWith(clearSelectedPinId: true)
-          : state.copyWith(selectedPinId: pinId),
+          : state.copyWith(selectedPinId: pinId, isAddPinMode: false),
     );
   }
 
+  void setPinStatusFilter(SurveyPinStatus? filter) {
+    final selectedId = state.selectedPinId;
+    final keepSelection = selectedId == null ||
+        filter == null ||
+        state.pins.any((pin) => pin.id == selectedId && pin.status == filter);
+
+    emit(state.copyWith(
+      pinStatusFilter: filter,
+      clearPinStatusFilter: filter == null,
+      clearSelectedPinId: !keepSelection,
+    ));
+  }
+
   void toggleAddPinMode() {
-    emit(state.copyWith(isAddPinMode: !state.isAddPinMode));
+    final enabling = !state.isAddPinMode;
+    emit(state.copyWith(
+      isAddPinMode: enabling,
+      clearSelectedPinId: enabling,
+    ));
   }
 
   void enableAddPinMode() {
     if (!state.isAddPinMode) {
-      emit(state.copyWith(isAddPinMode: true));
+      emit(state.copyWith(isAddPinMode: true, clearSelectedPinId: true));
     }
   }
 
   void toggleMapType() {
     emit(state.copyWith(
       mapType: state.mapType == MapType.normal
-          ? MapType.satellite
+          ? MapType.hybrid
           : MapType.normal,
     ));
   }
@@ -167,7 +221,7 @@ class DailyTasksCubit extends Cubit<DailyTasksState> {
       status: SurveyPinStatus.inProgress,
       title: 'مسح جديد',
     );
-    await _delegateRepository.saveDraftPin(draftPin);
+    await _dailyTasksRepository.saveDraftPin(draftPin);
     return draftPin;
   }
 

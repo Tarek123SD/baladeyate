@@ -1,4 +1,5 @@
 import 'package:baladeyate/config/theme/app_colors.dart';
+import 'package:baladeyate/config/theme/app_icons.dart';
 import 'package:baladeyate/core/services/service_locator.dart';
 import 'package:baladeyate/features/auth/cubits/auth_cubit/auth_cubit.dart';
 import 'package:baladeyate/features/auth/cubits/auth_cubit/auth_state.dart';
@@ -53,7 +54,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
                 }
               },
               icon: Icon(
-                Icons.arrow_forward_ios,
+                AppIcons.back,
                 color: AppColors.primaryForest,
                 size: 20.s(context),
               ),
@@ -82,7 +83,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
                 context.push('/settings');
               },
               icon: Icon(
-                Icons.settings,
+                AppIcons.settings,
                 color: Colors.black87,
                 size: iconSize,
               ),
@@ -132,8 +133,8 @@ class _NotificationsButton extends StatelessWidget {
             children: [
               Icon(
                 hasUnread
-                    ? Icons.notifications
-                    : Icons.notifications_none,
+                    ? AppIcons.notificationActive
+                    : AppIcons.notification,
                 color: hasUnread ? AppColors.primaryForest : Colors.black87,
                 size: iconSize,
               ),

@@ -2,13 +2,17 @@ import 'package:baladeyate/config/theme/app_colors.dart';
 import 'package:baladeyate/core/responsive/dimensions.dart';
 import 'package:baladeyate/core/responsive/responsive_helper.dart';
 import 'package:baladeyate/core/widgets/custom_daily_task_card.dart';
-import 'package:baladeyate/core/widgets/custom_track_filter_button.dart';
+import 'package:baladeyate/core/widgets/delegate_bottom_navigation_bar.dart';
 import 'package:baladeyate/features/daily_tasks/cubits/daily_tasks_cubit/daily_tasks_cubit.dart';
 import 'package:baladeyate/features/daily_tasks/cubits/daily_tasks_cubit/daily_tasks_state.dart';
-import 'package:baladeyate/features/daily_tasks/utils/delegate_survey_actions.dart';
-import 'package:baladeyate/features/daily_tasks/utils/delegate_task_display.dart';
-import 'package:baladeyate/features/daily_tasks/widgets/delegate_assigned_task_sheet.dart';
-import 'package:baladeyate/features/daily_tasks/widgets/delegate_map_widgets.dart';
+import 'package:baladeyate/features/daily_tasks/presentation/components/delegate_assigned_task_sheet.dart';
+import 'package:baladeyate/features/daily_tasks/presentation/components/delegate_map_widgets.dart';
+import 'package:baladeyate/features/daily_tasks/presentation/components/tasks_empty_state.dart';
+import 'package:baladeyate/features/daily_tasks/presentation/components/tasks_section_header.dart';
+import 'package:baladeyate/features/daily_tasks/presentation/components/tasks_stats_header.dart';
+import 'package:baladeyate/features/daily_tasks/presentation/components/tasks_status_filters.dart';
+import 'package:baladeyate/features/daily_tasks/presentation/delegate_survey_actions.dart';
+import 'package:baladeyate/features/daily_tasks/presentation/delegate_task_display.dart';
 import 'package:baladeyate/features/delegate/models/survey_pin.dart';
 import 'package:baladeyate/features/delegate/models/survey_pin_status.dart';
 import 'package:baladeyate/routes/app_route_observer.dart';
@@ -29,10 +33,21 @@ class _DelegateTasksScreenState extends State<DelegateTasksScreen>
     with RouteAware {
   SurveyPinStatus? _statusFilter;
   bool _routeSubscribed = false;
+  int? _lastShellIndex;
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
+
+    final shell = StatefulNavigationShell.maybeOf(context);
+    if (shell != null) {
+      final index = shell.currentIndex;
+      if (index == 2 && _lastShellIndex != 2) {
+        _refreshTasks();
+      }
+      _lastShellIndex = index;
+    }
+
     if (_routeSubscribed) return;
     final route = ModalRoute.of(context);
     if (route is PageRoute<void>) {
@@ -66,28 +81,20 @@ class _DelegateTasksScreenState extends State<DelegateTasksScreen>
     context.go('/delegate/map');
   }
 
+  Future<void> _clearMapSelection() async {
+    context.read<DailyTasksCubit>().selectPin(null);
+  }
+
   @override
   Widget build(BuildContext context) {
     final horizontalPadding = ResponsiveHelper.horizontalPadding(context);
+    final bottomClearance =
+        DelegateBottomNavigationBar.clearance(context) + 16.h(context);
 
     return Scaffold(
       backgroundColor: Colors.transparent,
-      floatingActionButtonLocation: FloatingActionButtonLocation.startFloat,
-      floatingActionButton: FloatingActionButton.extended(
-        heroTag: null,
-        onPressed: () => context.go('/delegate/map'),
-        backgroundColor: AppColors.green,
-        icon: const Icon(Icons.map_rounded, color: AppColors.thirdGoldenWheat),
-        label: Text(
-          'الخريطة',
-          style: TextStyle(
-            color: AppColors.thirdGoldenWheat,
-            fontWeight: FontWeight.w700,
-            fontSize: 13.f(context),
-          ),
-        ),
-      ),
       body: SafeArea(
+        bottom: false,
         child: Directionality(
           textDirection: TextDirection.rtl,
           child: Center(
@@ -117,35 +124,44 @@ class _DelegateTasksScreenState extends State<DelegateTasksScreen>
                           ),
                           sliver: SliverList(
                             delegate: SliverChildListDelegate([
-                              _buildHeaderCard(context)
+                              TasksStatsHeader(state: state)
                                   .animate()
                                   .fadeIn(duration: 350.ms)
-                                  .slideY(begin: -0.1, end: 0),
-                              SizedBox(height: 22.h(context)),
-                              _buildFilters(context),
+                                  .slideY(begin: -0.08, end: 0),
+                              SizedBox(height: 16.h(context)),
+                              TasksStatusFilters(
+                                state: state,
+                                selected: _statusFilter,
+                                onSelected: (status) =>
+                                    setState(() => _statusFilter = status),
+                              ),
                               if (assignedTasks.isNotEmpty) ...[
-                                SizedBox(height: 22.h(context)),
-                                _buildSectionHeader(
-                                  context,
+                                SizedBox(height: 20.h(context)),
+                                TasksSectionHeader(
                                   title: 'المهام المعيّنة',
                                   count: assignedTasks.length,
+                                  accent: AppColors.primaryForest,
                                 ),
-                                SizedBox(height: 12.h(context)),
+                                SizedBox(height: 10.h(context)),
                                 ...assignedTasks.asMap().entries.map((entry) {
                                   final index = entry.key;
                                   final task = entry.value;
                                   return Padding(
                                     padding: EdgeInsets.only(
-                                      bottom: 14.h(context),
+                                      bottom: 8.h(context),
                                     ),
                                     child: CustomDailyTaskCard(
                                       title: task.title,
                                       location:
                                           locationLabelForDelegateTask(task),
-                                      distance:
+                                      statusLabel:
                                           statusLabelForDelegateTask(task),
-                                      time: timeLabelForDelegateTask(task),
-                                      status: cardStatusForDelegateTask(task),
+                                      metaLabel:
+                                          timeLabelForDelegateTask(task),
+                                      status:
+                                          cardStatusForDelegateTask(task),
+                                      isPriority: task.isInProgress,
+                                      emphasized: true,
                                       startLabel: task.isInProgress
                                           ? 'متابعة المهمة'
                                           : 'بدء المهمة',
@@ -155,7 +171,8 @@ class _DelegateTasksScreenState extends State<DelegateTasksScreen>
                                         task,
                                       ),
                                       onStart: task.isInProgress
-                                          ? () => showDelegateAssignedTaskSheet(
+                                          ? () =>
+                                              showDelegateAssignedTaskSheet(
                                                 context,
                                                 task,
                                               )
@@ -165,33 +182,28 @@ class _DelegateTasksScreenState extends State<DelegateTasksScreen>
                                                 id: task.id,
                                                 status: 'in_progress',
                                               ),
-                                      onInfo: () =>
-                                          showDelegateAssignedTaskSheet(
-                                        context,
-                                        task,
-                                      ),
                                     )
                                         .animate()
                                         .fadeIn(
                                           duration: 300.ms,
                                           delay: (40 * index).ms,
                                         )
-                                        .slideY(begin: 0.08, end: 0),
+                                        .slideY(begin: 0.06, end: 0),
                                   );
                                 }),
                               ],
-                              SizedBox(height: 22.h(context)),
-                              _buildSectionHeader(
-                                context,
-                                title: ' قائمة المهام',
+                              SizedBox(height: 20.h(context)),
+                              TasksSectionHeader(
+                                title: 'قائمة المهام',
                                 count: filteredPins.length,
+                                accent: AppColors.thirdForest,
                               ),
-                              SizedBox(height: 12.h(context)),
+                              SizedBox(height: 10.h(context)),
                             ]),
                           ),
                         ),
                         if (isInitialLoading)
-                          SliverFillRemaining(
+                          const SliverFillRemaining(
                             hasScrollBody: false,
                             child: Center(
                               child: CircularProgressIndicator(
@@ -201,11 +213,16 @@ class _DelegateTasksScreenState extends State<DelegateTasksScreen>
                           )
                         else if (filteredPins.isEmpty)
                           SliverPadding(
-                            padding: EdgeInsets.symmetric(
-                              horizontal: horizontalPadding,
+                            padding: EdgeInsets.fromLTRB(
+                              horizontalPadding,
+                              0,
+                              horizontalPadding,
+                              bottomClearance,
                             ),
                             sliver: SliverToBoxAdapter(
-                              child: _buildEmptyState(context),
+                              child: TasksEmptyState(
+                                hasStatusFilter: _statusFilter != null,
+                              ),
                             ),
                           )
                         else
@@ -214,47 +231,57 @@ class _DelegateTasksScreenState extends State<DelegateTasksScreen>
                               horizontalPadding,
                               0,
                               horizontalPadding,
-                              96.h(context),
+                              bottomClearance,
                             ),
                             sliver: SliverList.builder(
                               itemCount: filteredPins.length,
                               itemBuilder: (context, index) {
                                 final pin = filteredPins[index];
+                                final selected =
+                                    pin.id == state.selectedPinId;
+                                final distance = distanceLabelForPin(
+                                  pin,
+                                  state.currentPosition,
+                                );
                                 return Padding(
                                   padding: EdgeInsets.only(
-                                    bottom: 14.h(context),
+                                    bottom: 8.h(context),
                                   ),
                                   child: CustomDailyTaskCard(
-                                    title: pin.displayTitle,
-                                    location: pin.displayLocation,
-                                    distance: statusLabelForPin(pin),
-                                    time:
-                                        pin.status == SurveyPinStatus.completed
-                                            ? 'محفوظ'
-                                            : 'مفتوح',
+                                    title: friendlyTitleForPin(pin),
+                                    location: friendlyLocationForPin(pin),
+                                    statusLabel: statusLabelForPin(pin),
+                                    metaLabel: distance,
                                     status: cardStatusForPin(pin),
                                     startLabel:
-                                        pin.status == SurveyPinStatus.inProgress
-                                            ? 'متابعة المهمة'
-                                            : 'بدء المهمة',
-                                    isSelected: pin.id == state.selectedPinId,
-                                    onTap: () => _openOnMap(pin),
-                                    onStart: () => resumeDelegateSurvey(
-                                      context,
-                                      pin,
-                                    ),
+                                        pin.status == SurveyPinStatus.completed
+                                            ? 'عرض على الخريطة'
+                                            : actionLabelForPin(pin),
+                                    isSelected: selected,
+                                    selectionHint: selected
+                                        ? 'محددة على الخريطة — اضغط للإلغاء'
+                                        : null,
+                                    onTap: selected
+                                        ? _clearMapSelection
+                                        : () => showPinInfoSheet(
+                                              context,
+                                              pin,
+                                            ),
+                                    onStart: pin.status ==
+                                            SurveyPinStatus.completed
+                                        ? null
+                                        : () => resumeDelegateSurvey(
+                                              context,
+                                              pin,
+                                            ),
                                     onNavigate: () => _openOnMap(pin),
-                                    onInfo: () => showPinInfoSheet(
-                                      context,
-                                      pin,
-                                    ),
                                   )
                                       .animate()
                                       .fadeIn(
                                         duration: 300.ms,
                                         delay: (40 * index).ms,
                                       )
-                                      .slideY(begin: 0.08, end: 0),
+                                      .slideY(begin: 0.06, end: 0),
                                 );
                               },
                             ),
@@ -267,219 +294,6 @@ class _DelegateTasksScreenState extends State<DelegateTasksScreen>
             ),
           ),
         ),
-      ),
-    );
-  }
-
-  Widget _buildHeaderCard(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: EdgeInsets.all(20.s(context)),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          begin: Alignment.topRight,
-          end: Alignment.bottomLeft,
-          colors: [
-            AppColors.primaryForest,
-            AppColors.secondaryForest,
-            AppColors.thirdForest,
-          ],
-        ),
-        borderRadius: BorderRadius.circular(24.r(context)),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.primaryForest.withValues(alpha: 0.28),
-            blurRadius: 22,
-            offset: const Offset(0, 12),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          Container(
-            padding: EdgeInsets.all(12.s(context)),
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.15),
-              borderRadius: BorderRadius.circular(16.r(context)),
-              border: Border.all(
-                color: Colors.white.withValues(alpha: 0.25),
-              ),
-            ),
-            child: Icon(
-              Icons.assignment_rounded,
-              color: Colors.white,
-              size: 30.ic(context),
-            ),
-          ),
-          SizedBox(width: 14.w(context)),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'مركز المهام الميدانية',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 18.f(context),
-                    fontWeight: FontWeight.bold,
-                    height: 1.3,
-                  ),
-                ),
-                SizedBox(height: 8.h(context)),
-                Text(
-                  'تابع المسوحات والمهام المعيّنة، ونفّذها بسرعة من الخريطة أو من هذه القائمة.',
-                  style: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.85),
-                    fontSize: 12.f(context),
-                    height: 1.6,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildFilters(BuildContext context) {
-    return Container(
-      padding: EdgeInsets.all(6.s(context)),
-      decoration: BoxDecoration(
-        color: AppColors.thirdGoldenWheat.withValues(alpha: 0.5),
-        borderRadius: BorderRadius.circular(26.r(context)),
-        border: Border.all(
-          color: AppColors.primaryForest.withValues(alpha: 0.08),
-        ),
-      ),
-      child: Row(
-        children: [
-          CustomTrackFilterButton(
-            label: 'الكل',
-            isSelected: _statusFilter == null,
-            onTap: () => setState(() => _statusFilter = null),
-          ),
-          SizedBox(width: 6.w(context)),
-          CustomTrackFilterButton(
-            label: 'قيد التنفيذ',
-            isSelected: _statusFilter == SurveyPinStatus.inProgress,
-            onTap: () =>
-                setState(() => _statusFilter = SurveyPinStatus.inProgress),
-          ),
-          SizedBox(width: 6.w(context)),
-          CustomTrackFilterButton(
-            label: 'مكتملة',
-            isSelected: _statusFilter == SurveyPinStatus.completed,
-            onTap: () =>
-                setState(() => _statusFilter = SurveyPinStatus.completed),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSectionHeader(
-    BuildContext context, {
-    required String title,
-    required int count,
-  }) {
-    return Row(
-      children: [
-        Container(
-          width: 5.w(context),
-          height: 20.h(context),
-          decoration: BoxDecoration(
-            color: AppColors.green,
-            borderRadius: BorderRadius.circular(4.r(context)),
-          ),
-        ),
-        SizedBox(width: 8.w(context)),
-        Text(
-          title,
-          style: TextStyle(
-            fontSize: 16.f(context),
-            fontWeight: FontWeight.bold,
-            color: AppColors.primaryForest,
-          ),
-        ),
-        const Spacer(),
-        Container(
-          padding: EdgeInsets.symmetric(
-            horizontal: 12.w(context),
-            vertical: 5.h(context),
-          ),
-          decoration: BoxDecoration(
-            color: AppColors.primaryForest.withValues(alpha: 0.08),
-            borderRadius: BorderRadius.circular(20.r(context)),
-          ),
-          child: Text(
-            '$count ${count == 1 ? 'مهمة' : 'مهام'}',
-            style: TextStyle(
-              fontSize: 12.f(context),
-              fontWeight: FontWeight.w700,
-              color: AppColors.primaryForest,
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildEmptyState(BuildContext context) {
-    final message = _statusFilter == null
-        ? 'لا توجد مهام ميدانية بعد.'
-        : 'لا توجد مهام بهذه الحالة.';
-    final hint = _statusFilter == null
-        ? 'ابدأ مسحاً جديداً من الخريطة عبر الزر أدناه.'
-        : 'جرّب تغيير الفلتر لعرض مهام أخرى.';
-
-    return Container(
-      width: double.infinity,
-      padding: EdgeInsets.symmetric(
-        vertical: 40.h(context),
-        horizontal: 20.w(context),
-      ),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.7),
-        borderRadius: BorderRadius.circular(24.r(context)),
-        border: Border.all(
-          color: AppColors.primaryForest.withValues(alpha: 0.08),
-        ),
-      ),
-      child: Column(
-        children: [
-          Container(
-            padding: EdgeInsets.all(18.s(context)),
-            decoration: BoxDecoration(
-              color: AppColors.thirdGoldenWheat.withValues(alpha: 0.5),
-              shape: BoxShape.circle,
-            ),
-            child: Icon(
-              Icons.explore_outlined,
-              size: 40.ic(context),
-              color: AppColors.primaryForest,
-            ),
-          ),
-          SizedBox(height: 16.h(context)),
-          Text(
-            message,
-            style: TextStyle(
-              fontSize: 16.f(context),
-              fontWeight: FontWeight.bold,
-              color: AppColors.primaryForest,
-            ),
-          ),
-          SizedBox(height: 8.h(context)),
-          Text(
-            hint,
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 13.f(context),
-              color: AppColors.secondaryCharcoal.withValues(alpha: 0.75),
-              height: 1.6,
-            ),
-          ),
-        ],
       ),
     );
   }

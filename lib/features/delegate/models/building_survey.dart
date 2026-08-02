@@ -89,6 +89,7 @@ class ApartmentUnitDraft {
     this.electricityMeter = '',
     this.landline = '',
     this.isSealed = false,
+    this.status = 'فارغة',
     // Family fields
     this.familyBook = '',
     this.healthStatus = 'good',
@@ -97,6 +98,9 @@ class ApartmentUnitDraft {
     this.unemployedCount = '',
     this.studentsCount = '',
     this.occupancyType = 'owner',
+    this.familyMembersCount = '',
+    this.residentsCount = '',
+    this.composition = '',
     // Local-only
     this.isDataVerified = false,
     this.apartmentId,
@@ -111,6 +115,7 @@ class ApartmentUnitDraft {
   final String electricityMeter;
   final String landline;
   final bool isSealed;
+  final String status;
 
   final String familyBook;
   final String healthStatus;
@@ -119,6 +124,9 @@ class ApartmentUnitDraft {
   final String unemployedCount;
   final String studentsCount;
   final String occupancyType;
+  final String familyMembersCount;
+  final String residentsCount;
+  final String composition;
 
   final bool isDataVerified;
   final int? apartmentId;
@@ -132,6 +140,7 @@ class ApartmentUnitDraft {
     String? electricityMeter,
     String? landline,
     bool? isSealed,
+    String? status,
     String? familyBook,
     String? healthStatus,
     String? livingStatus,
@@ -139,6 +148,9 @@ class ApartmentUnitDraft {
     String? unemployedCount,
     String? studentsCount,
     String? occupancyType,
+    String? familyMembersCount,
+    String? residentsCount,
+    String? composition,
     bool? isDataVerified,
     int? apartmentId,
     int? familyId,
@@ -151,6 +163,7 @@ class ApartmentUnitDraft {
       electricityMeter: electricityMeter ?? this.electricityMeter,
       landline: landline ?? this.landline,
       isSealed: isSealed ?? this.isSealed,
+      status: status ?? this.status,
       familyBook: familyBook ?? this.familyBook,
       healthStatus: healthStatus ?? this.healthStatus,
       livingStatus: livingStatus ?? this.livingStatus,
@@ -158,6 +171,9 @@ class ApartmentUnitDraft {
       unemployedCount: unemployedCount ?? this.unemployedCount,
       studentsCount: studentsCount ?? this.studentsCount,
       occupancyType: occupancyType ?? this.occupancyType,
+      familyMembersCount: familyMembersCount ?? this.familyMembersCount,
+      residentsCount: residentsCount ?? this.residentsCount,
+      composition: composition ?? this.composition,
       isDataVerified: isDataVerified ?? this.isDataVerified,
       apartmentId: apartmentId ?? this.apartmentId,
       familyId: familyId ?? this.familyId,
@@ -172,6 +188,7 @@ class ApartmentUnitDraft {
         'electricity_meter': electricityMeter,
         'landline': landline,
         'is_sealed': isSealed,
+        'status': status,
         'family_book': familyBook,
         'health_status': healthStatus,
         'living_status': livingStatus,
@@ -179,6 +196,9 @@ class ApartmentUnitDraft {
         'unemployed_count': unemployedCount,
         'students_count': studentsCount,
         'occupancy_type': occupancyType,
+        'family_members_count': familyMembersCount,
+        'residents_count': residentsCount,
+        'composition': composition,
         'is_data_verified': isDataVerified,
         if (apartmentId != null) 'apartment_id': apartmentId,
         if (familyId != null) 'family_id': familyId,
@@ -193,6 +213,7 @@ class ApartmentUnitDraft {
       electricityMeter: json['electricity_meter'] as String? ?? '',
       landline: json['landline'] as String? ?? '',
       isSealed: json['is_sealed'] as bool? ?? false,
+      status: json['status'] as String? ?? 'فارغة',
       familyBook: json['family_book'] as String? ?? '',
       healthStatus: json['health_status'] as String? ?? 'good',
       livingStatus: json['living_status'] as String? ?? 'medium',
@@ -200,6 +221,9 @@ class ApartmentUnitDraft {
       unemployedCount: json['unemployed_count'] as String? ?? '',
       studentsCount: json['students_count'] as String? ?? '',
       occupancyType: json['occupancy_type'] as String? ?? 'owner',
+      familyMembersCount: json['family_members_count']?.toString() ?? '',
+      residentsCount: json['residents_count']?.toString() ?? '',
+      composition: json['composition'] as String? ?? '',
       isDataVerified: json['is_data_verified'] as bool? ?? false,
       apartmentId: json['apartment_id'] as int?,
       familyId: json['family_id'] as int?,

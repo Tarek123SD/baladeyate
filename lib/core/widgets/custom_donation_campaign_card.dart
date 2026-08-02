@@ -29,125 +29,97 @@ class CustomDonationCampaignCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final clamped = progress.clamp(0.0, 1.0);
-    final percent = (clamped * 100).round();
+    final percent = (clamped * 100).toInt();
 
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(24.r(context)),
+        borderRadius: BorderRadius.circular(18.r(context)),
         border: Border.all(
-          color: AppColors.primaryForest.withValues(alpha: 0.06),
+          color: Colors.grey.shade200,
+          width: 1.0,
         ),
         boxShadow: [
           BoxShadow(
-            color: iconColor.withValues(alpha: 0.10),
-            blurRadius: 20,
-            offset: const Offset(0, 12),
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
           ),
         ],
       ),
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(24.r(context)),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            _buildHeader(context),
-            Padding(
-              padding: EdgeInsets.fromLTRB(
-                16.w(context),
-                14.h(context),
-                16.w(context),
-                16.h(context),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                mainAxisSize: MainAxisSize.min,
+        borderRadius: BorderRadius.circular(18.r(context)),
+        child: Padding(
+          padding: EdgeInsets.all(18.s(context)),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  if (subtitle.trim().isNotEmpty) ...[
-                    Text(
-                      subtitle,
-                      textAlign: TextAlign.right,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        color: AppColors.secondaryCharcoal,
-                        fontSize: 12.5.f(context),
-                        height: 1.5,
-                      ),
+                  Container(
+                    width: 48.w(context),
+                    height: 48.w(context),
+                    decoration: BoxDecoration(
+                      color: iconColor.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(14.r(context)),
                     ),
-                    SizedBox(height: 14.h(context)),
-                  ],
-                  _buildProgress(context, clamped, percent),
-                  if (onDonate != null) ...[
-                    SizedBox(height: 16.h(context)),
-                    _buildDonateButton(context),
-                  ],
+                    child: Icon(icon, color: iconColor, size: 24.ic(context)),
+                  ),
+                  SizedBox(width: 12.w(context)),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                title,
+                                textAlign: TextAlign.right,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  color: AppColors.primaryForest,
+                                  fontSize: 16.f(context),
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                            SizedBox(width: 8.w(context)),
+                            _buildCategoryPill(context),
+                          ],
+                        ),
+                        if (subtitle.trim().isNotEmpty) ...[
+                          SizedBox(height: 6.h(context)),
+                          Text(
+                            subtitle,
+                            textAlign: TextAlign.right,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              color: const Color(0xFF616161),
+                              fontSize: 12.5.f(context),
+                              height: 1.5,
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
                 ],
               ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildHeader(BuildContext context) {
-    return Container(
-      padding: EdgeInsets.all(16.s(context)),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topRight,
-          end: Alignment.bottomLeft,
-          colors: [
-            iconColor.withValues(alpha: 0.16),
-            iconColor.withValues(alpha: 0.04),
-          ],
-        ),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            width: 52.w(context),
-            height: 52.w(context),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(16.r(context)),
-              boxShadow: [
-                BoxShadow(
-                  color: iconColor.withValues(alpha: 0.22),
-                  blurRadius: 12,
-                  offset: const Offset(0, 6),
-                ),
+              SizedBox(height: 16.h(context)),
+              _buildProgress(context, clamped, percent),
+              if (onDonate != null) ...[
+                SizedBox(height: 16.h(context)),
+                _buildDonateButton(context),
               ],
-            ),
-            child: Icon(icon, color: iconColor, size: 28.ic(context)),
+            ],
           ),
-          SizedBox(width: 12.w(context)),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  title,
-                  textAlign: TextAlign.right,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    color: AppColors.primaryForest,
-                    fontSize: 16.f(context),
-                    fontWeight: FontWeight.bold,
-                    height: 1.25,
-                  ),
-                ),
-                SizedBox(height: 8.h(context)),
-                _buildCategoryPill(context),
-              ],
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }
@@ -159,23 +131,16 @@ class CustomDonationCampaignCard extends StatelessWidget {
         vertical: 4.h(context),
       ),
       decoration: BoxDecoration(
-        color: iconColor.withValues(alpha: 0.16),
-        borderRadius: BorderRadius.circular(20.r(context)),
+        color: iconColor.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(12.r(context)),
       ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, color: iconColor, size: 13.ic(context)),
-          SizedBox(width: 4.w(context)),
-          Text(
-            label,
-            style: TextStyle(
-              color: iconColor,
-              fontWeight: FontWeight.bold,
-              fontSize: 11.f(context),
-            ),
-          ),
-        ],
+      child: Text(
+        label,
+        style: TextStyle(
+          color: iconColor,
+          fontWeight: FontWeight.bold,
+          fontSize: 11.f(context),
+        ),
       ),
     );
   }
@@ -187,46 +152,32 @@ class CustomDonationCampaignCard extends StatelessWidget {
       children: [
         Row(
           children: [
-            Container(
-              padding: EdgeInsets.symmetric(
-                horizontal: 8.w(context),
-                vertical: 3.h(context),
-              ),
-              decoration: BoxDecoration(
-                color: iconColor.withValues(alpha: 0.12),
-                borderRadius: BorderRadius.circular(10.r(context)),
-              ),
-              child: Text(
-                '$percent%',
-                style: TextStyle(
-                  color: iconColor,
-                  fontWeight: FontWeight.w800,
-                  fontSize: 12.f(context),
-                ),
+            Text(
+              '$percent%',
+              style: TextStyle(
+                color: AppColors.primaryForest,
+                fontWeight: FontWeight.bold,
+                fontSize: 12.5.f(context),
               ),
             ),
             const Spacer(),
-            Flexible(
-              child: Text(
-                goalLabel ?? statusLabel,
-                textAlign: TextAlign.left,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  color: AppColors.primaryForest.withValues(alpha: 0.7),
-                  fontSize: 12.f(context),
-                  fontWeight: FontWeight.w600,
-                ),
+            Text(
+              goalLabel ?? statusLabel,
+              style: TextStyle(
+                color: const Color(0xFF757575),
+                fontSize: 12.f(context),
+                fontWeight: FontWeight.w500,
               ),
             ),
           ],
         ),
-        SizedBox(height: 10.h(context)),
+        SizedBox(height: 8.h(context)),
         ClipRRect(
-          borderRadius: BorderRadius.circular(12.r(context)),
+          borderRadius: BorderRadius.circular(10.r(context)),
           child: LinearProgressIndicator(
-            minHeight: 9.h(context),
+            minHeight: 8.h(context),
             value: value,
-            backgroundColor: iconColor.withValues(alpha: 0.12),
+            backgroundColor: Colors.grey.shade200,
             valueColor: AlwaysStoppedAnimation<Color>(iconColor),
           ),
         ),
@@ -237,7 +188,7 @@ class CustomDonationCampaignCard extends StatelessWidget {
   Widget _buildDonateButton(BuildContext context) {
     return SizedBox(
       width: double.infinity,
-      height: 46.h(context),
+      height: 44.h(context),
       child: ElevatedButton.icon(
         onPressed: onDonate,
         style: ElevatedButton.styleFrom(
@@ -245,7 +196,7 @@ class CustomDonationCampaignCard extends StatelessWidget {
           foregroundColor: Colors.white,
           elevation: 0,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(14.r(context)),
+            borderRadius: BorderRadius.circular(12.r(context)),
           ),
         ),
         icon: Icon(Icons.volunteer_activism_rounded, size: 18.ic(context)),
@@ -253,7 +204,7 @@ class CustomDonationCampaignCard extends StatelessWidget {
           'تبرع لهذه الحملة',
           style: TextStyle(
             fontSize: 13.5.f(context),
-            fontWeight: FontWeight.w700,
+            fontWeight: FontWeight.bold,
           ),
         ),
       ),

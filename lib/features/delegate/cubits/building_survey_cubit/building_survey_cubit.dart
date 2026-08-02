@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:baladeyate/features/delegate/data/local_building_survey_store.dart';
+import 'package:baladeyate/features/delegate/repo/local_building_survey_store.dart';
 import 'package:baladeyate/features/delegate/models/building_survey.dart';
 import 'package:baladeyate/features/delegate/models/survey_location.dart';
 import 'package:baladeyate/features/delegate/models/survey_phase.dart';
@@ -239,6 +239,32 @@ class BuildingSurveyCubit extends Cubit<BuildingSurveyState> {
     );
   }
 
+  Future<void> updateFloorApartments(List<ApartmentUnitDraft> apartments) async {
+    final current = _survey;
+    if (current == null || current.currentFloorLocalId == null) return;
+
+    final floorLocalId = current.currentFloorLocalId!;
+    final updatedFloors = current.floors.map((f) {
+      if (f.localId == floorLocalId) {
+        return f.copyWith(apartments: apartments);
+      }
+      return f;
+    }).toList();
+
+    await _emitAndPersist(current.copyWith(floors: updatedFloors));
+  }
+
+  Future<void> setCurrentApartment(ApartmentUnitDraft apartment) async {
+    final current = _survey;
+    if (current == null) return;
+    await _emitAndPersist(
+      current.copyWith(
+        currentApartment: apartment,
+        clearCurrentApartment: false,
+      ),
+    );
+  }
+
   Future<void> updateCurrentFamily({
     String? familyBook,
     String? healthStatus,
@@ -248,6 +274,9 @@ class BuildingSurveyCubit extends Cubit<BuildingSurveyState> {
     String? studentsCount,
     String? occupancyType,
     bool? isDataVerified,
+    String? familyMembersCount,
+    String? residentsCount,
+    String? composition,
   }) async {
     final current = _survey;
     if (current == null || current.currentApartment == null) return;
@@ -263,9 +292,100 @@ class BuildingSurveyCubit extends Cubit<BuildingSurveyState> {
           studentsCount: studentsCount,
           occupancyType: occupancyType,
           isDataVerified: isDataVerified,
+          familyMembersCount: familyMembersCount,
+          residentsCount: residentsCount,
+          composition: composition,
         ),
       ),
     );
+  }
+
+  Future<bool> saveAllFloorApartments(List<ApartmentUnitDraft> units) async {
+    final current = _survey;
+    if (current == null ||
+        current.buildingId == null ||
+        current.currentFloorLocalId == null) {
+      return false;
+    }
+
+    final floorLocalId = current.currentFloorLocalId!;
+    final floor = current.floorByLocalId(floorLocalId);
+    if (floor == null) return false;
+
+    await flush();
+    emit(BuildingSurveySaving(survey: current));
+
+    try {
+      final List<ApartmentUnitDraft> savedUnits = [];
+      for (final unit in units) {
+        if (unit.status == 'مسكونة') {
+          savedUnits.add(unit);
+        } else {
+          if (unit.isSaved && unit.apartmentId != null) {
+            await _delegateRepository.updateApartment(
+              id: unit.apartmentId!,
+              floorType: unit.floorType,
+              waterMeter: unit.waterMeter,
+              electricityMeter: unit.electricityMeter,
+              landline: unit.landline,
+              isSealed: unit.isSealed,
+            );
+            if (unit.familyId != null) {
+              await _delegateRepository.deleteFamily(unit.familyId!);
+            }
+            savedUnits.add(unit.copyWith(
+              isSaved: true,
+              familyId: null,
+              familyBook: '',
+              familyMembersCount: '',
+              residentsCount: '',
+              composition: '',
+            ));
+          } else {
+            final result = await _delegateRepository.createApartment(
+              buildingId: current.buildingId!,
+              floorType: unit.floorType,
+              waterMeter: unit.waterMeter,
+              electricityMeter: unit.electricityMeter,
+              landline: unit.landline,
+              isSealed: unit.isSealed,
+            );
+            savedUnits.add(unit.copyWith(
+              apartmentId: result.id,
+              isSaved: true,
+              familyId: null,
+              familyBook: '',
+              familyMembersCount: '',
+              residentsCount: '',
+              composition: '',
+            ));
+          }
+        }
+      }
+
+      final updatedFloors = current.floors.map((f) {
+        if (f.localId == floorLocalId) {
+          return f.copyWith(apartments: savedUnits);
+        }
+        return f;
+      }).toList();
+
+      final updated = current.copyWith(
+        floors: updatedFloors,
+        clearCurrentApartment: true,
+      );
+      await _emitAndPersist(updated);
+      await flush();
+      return true;
+    } catch (error) {
+      emit(
+        BuildingSurveyFailure(
+          survey: current,
+          message: error.toString().replaceFirst('Exception: ', ''),
+        ),
+      );
+      return false;
+    }
   }
 
   Future<bool> saveApartmentUnit() async {

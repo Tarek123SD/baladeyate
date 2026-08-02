@@ -1,5 +1,4 @@
-import 'package:baladeyate/core/auth/app_role.dart';
-import 'package:baladeyate/config/theme/app_colors.dart';
+import 'package:baladeyate/config/theme/app_icons.dart';
 import 'package:baladeyate/core/constants/app_assets.dart';
 import 'package:baladeyate/core/responsive/dimensions.dart';
 import 'package:baladeyate/core/responsive/responsive_helper.dart';
@@ -7,9 +6,14 @@ import 'package:baladeyate/core/widgets/custom_app_bar.dart';
 import 'package:baladeyate/core/widgets/custom_settings_option_card.dart';
 import 'package:baladeyate/features/auth/cubits/auth_cubit/auth_cubit.dart';
 import 'package:baladeyate/features/auth/cubits/auth_cubit/auth_state.dart';
-import 'package:baladeyate/features/auth/models/user.dart';
 import 'package:baladeyate/features/profile/cubits/profile_cubit/profile_cubit.dart';
 import 'package:baladeyate/features/profile/cubits/profile_cubit/profile_state.dart';
+import 'package:baladeyate/features/settings/presentation/components/settings_account_actions.dart';
+import 'package:baladeyate/features/settings/presentation/components/settings_footer.dart';
+import 'package:baladeyate/features/settings/presentation/components/settings_header.dart';
+import 'package:baladeyate/features/settings/presentation/components/settings_logout_button.dart';
+import 'package:baladeyate/features/settings/presentation/components/settings_profile_card.dart';
+import 'package:baladeyate/features/settings/presentation/components/settings_section_title.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -17,6 +21,15 @@ import 'package:responsive_x_toolkit/responsive_x.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
+
+  Future<void> _openResetPassword(BuildContext context) async {
+    final authState = context.read<AuthCubit>().state;
+    if (authState is! AuthSuccess) return;
+
+    await context.push(
+      '/reset-password?email=${Uri.encodeComponent(authState.user.email)}&fromSettings=1',
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -77,41 +90,43 @@ class SettingsScreen extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        _buildHeader(context),
+                        const SettingsHeader(),
                         SizedBox(height: 20.h(context)),
-                        _buildProfileCard(context),
+                        const SettingsProfileCard(),
                         SizedBox(height: 12.h(context)),
-                        _buildAccountActions(context),
+                        const SettingsAccountActions(),
                         SizedBox(height: 24.h(context)),
-                        _buildSectionTitle(context, 'الإعدادات العامة'),
+                        const SettingsSectionTitle(title: 'الإعدادات العامة'),
                         SizedBox(height: 12.h(context)),
                         const CustomSettingsOptionCard(
                           title: 'تغيير اللغة',
                           subtitle: 'العربية',
-                          leadingIcon: Icons.language_rounded,
+                          leadingIcon: AppIcons.language,
                         ),
                         SizedBox(height: 10.h(context)),
                         CustomSettingsOptionCard(
                           title: 'تغيير كلمة المرور',
-                          leadingIcon: Icons.lock_outline_rounded,
+                          leadingIcon: AppIcons.lock,
                           onTap: () => _openResetPassword(context),
                         ),
                         SizedBox(height: 24.h(context)),
-                        _buildSectionTitle(context, 'القانونية والمعلومات'),
+                        const SettingsSectionTitle(
+                          title: 'القانونية والمعلومات',
+                        ),
                         SizedBox(height: 12.h(context)),
                         const CustomSettingsOptionCard(
                           title: 'سياسة الخصوصية',
-                          leadingIcon: Icons.privacy_tip_outlined,
+                          leadingIcon: AppIcons.privacy,
                         ),
                         SizedBox(height: 10.h(context)),
                         const CustomSettingsOptionCard(
                           title: 'الشروط والأحكام العامة',
-                          leadingIcon: Icons.gavel_rounded,
+                          leadingIcon: AppIcons.terms,
                         ),
                         SizedBox(height: 24.h(context)),
-                        _buildLogoutButton(context),
+                        const SettingsLogoutButton(),
                         SizedBox(height: 16.h(context)),
-                        _buildFooter(context),
+                        const SettingsFooter(),
                       ],
                     ),
                   ),
@@ -121,286 +136,6 @@ class SettingsScreen extends StatelessWidget {
           ),
         ),
       ),
-    );
-  }
-
-  Widget _buildHeader(BuildContext context) {
-    return Text(
-      'الإعدادات',
-      textAlign: TextAlign.center,
-      textDirection: TextDirection.rtl,
-      style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-            color: AppColors.primaryForest,
-            fontWeight: FontWeight.w700,
-            fontSize: 26.f(context),
-          ),
-    );
-  }
-
-  Widget _buildProfileCard(BuildContext context) {
-    return BlocBuilder<AuthCubit, AuthState>(
-      builder: (context, state) {
-        final user = state is AuthSuccess ? state.user : null;
-        final isDelegate = user?.isDelegateLike ?? false;
-        final name = user?.name ?? (isDelegate ? 'مندوب' : 'مواطن');
-        final nationalId =
-            user?.nationalId ?? user?.nationalNumber ?? 'غير متوفر';
-        final statusLabel = isDelegate
-            ? 'مندوب ميداني'
-            : (user?.verificationStatusLabel ?? 'غير موثّق');
-        final isApproved = isDelegate ? true : (user?.isVerified ?? false);
-
-        return Container(
-          padding: EdgeInsets.all(16.s(context)),
-          decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.95),
-            borderRadius: BorderRadius.circular(18.r(context)),
-            border: Border.all(
-              color: AppColors.secondaryCharcoal.withValues(alpha: 0.15),
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.04),
-                blurRadius: 14,
-                offset: const Offset(0, 6),
-              ),
-            ],
-          ),
-          child: Row(
-            textDirection: TextDirection.rtl,
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    Text(
-                      name,
-                      textDirection: TextDirection.rtl,
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            color: AppColors.primaryForest,
-                            fontWeight: FontWeight.w700,
-                            fontSize: 18.f(context),
-                          ),
-                    ),
-                    SizedBox(height: 4.h(context)),
-                    Text(
-                      'رقم الهوية: $nationalId',
-                      textDirection: TextDirection.rtl,
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: AppColors.secondaryCharcoal
-                                .withValues(alpha: 0.8),
-                            fontSize: 15.f(context),
-                          ),
-                    ),
-                    if (user?.phoneNumber != null) ...[
-                      SizedBox(height: 4.h(context)),
-                      Text(
-                        'الهاتف: ${user!.phoneNumber}',
-                        textDirection: TextDirection.rtl,
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                              color: AppColors.secondaryCharcoal
-                                  .withValues(alpha: 0.8),
-                              fontSize: 15.f(context),
-                            ),
-                      ),
-                    ],
-                    SizedBox(height: 10.h(context)),
-                    Container(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: 10.w(context),
-                        vertical: 6.h(context),
-                      ),
-                      decoration: BoxDecoration(
-                        color: isApproved
-                            ? Colors.green
-                            : AppColors.thirdGoldenWheat
-                                .withValues(alpha: 0.45),
-                        borderRadius: BorderRadius.circular(12.r(context)),
-                      ),
-                      child: Text(
-                        statusLabel,
-                        textDirection: TextDirection.rtl,
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: AppColors.primaryForest,
-                              fontWeight: FontWeight.w600,
-                              fontSize: 12.f(context),
-                            ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              SizedBox(width: 12.w(context)),
-              CircleAvatar(
-                radius: 30.s(context),
-                backgroundColor:
-                    AppColors.primaryForest.withValues(alpha: 0.12),
-                child: Icon(
-                  Icons.person,
-                  size: 30.ic(context),
-                  color: AppColors.primaryForest,
-                ),
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildAccountActions(BuildContext context) {
-    return BlocBuilder<AuthCubit, AuthState>(
-      builder: (context, authState) {
-        final user = authState is AuthSuccess ? authState.user : null;
-        if (user == null) return const SizedBox.shrink();
-
-        return Column(
-          children: [
-            CustomSettingsOptionCard(
-              title: 'تحديث رقم الهاتف',
-              subtitle: user.phoneNumber ?? 'إضافة رقم',
-              leadingIcon: Icons.phone_outlined,
-              onTap: () => _showPhoneDialog(context, user),
-            ),
-            if (!user.isDelegateLike && !user.isVerified) ...[
-              SizedBox(height: 10.h(context)),
-              CustomSettingsOptionCard(
-                title: user.verificationStatus == 'pending'
-                    ? 'إعادة إرسال طلب التوثيق'
-                    : 'توثيق الهوية',
-                subtitle: _verificationSubtitle(user),
-                leadingIcon: Icons.verified_user_outlined,
-                onTap: () => context.push('/verify-identity'),
-              ),
-            ],
-          ],
-        );
-      },
-    );
-  }
-
-  String _verificationSubtitle(User user) {
-    switch (user.verificationStatus) {
-      case 'pending':
-        return 'طلبك قيد المراجعة — يمكنك إعادة الإرسال إذا تأخر القبول';
-      case 'rejected':
-        final reason = user.rejectionReason;
-        return reason != null && reason.isNotEmpty
-            ? 'تم رفض الطلب: $reason — أعد الإرسال'
-            : 'تم رفض الطلب — أعد إرسال الهوية';
-      default:
-        return 'إرسال الهوية للمراجعة الحكومية';
-    }
-  }
-
-  Future<void> _openResetPassword(BuildContext context) async {
-    final authState = context.read<AuthCubit>().state;
-    if (authState is! AuthSuccess) return;
-
-    await context.push(
-      '/reset-password?email=${Uri.encodeComponent(authState.user.email)}&fromSettings=1',
-    );
-  }
-
-  Future<void> _showPhoneDialog(BuildContext context, User user) async {
-    final controller = TextEditingController(text: user.phoneNumber ?? '');
-    final result = await showDialog<String>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text('تحديث رقم الهاتف'),
-        content: TextField(
-          controller: controller,
-          keyboardType: TextInputType.phone,
-          decoration: const InputDecoration(labelText: 'رقم الهاتف'),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext),
-            child: const Text('إلغاء'),
-          ),
-          TextButton(
-            onPressed: () =>
-                Navigator.pop(dialogContext, controller.text.trim()),
-            child: const Text('حفظ'),
-          ),
-        ],
-      ),
-    );
-    controller.dispose();
-
-    if (result == null || result.isEmpty || !context.mounted) return;
-    await context.read<ProfileCubit>().updatePhone(result);
-  }
-
-  Widget _buildSectionTitle(BuildContext context, String title) {
-    return Text(
-      title,
-      textDirection: TextDirection.rtl,
-      textAlign: TextAlign.right,
-      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-            color: AppColors.primaryForest,
-            fontWeight: FontWeight.w700,
-            fontSize: 17.f(context),
-          ),
-    );
-  }
-
-  Widget _buildLogoutButton(BuildContext context) {
-    return BlocBuilder<AuthCubit, AuthState>(
-      builder: (context, state) {
-        final isLoading = state is AuthLoading;
-
-        return SizedBox(
-          height: 52.h(context),
-          child: ElevatedButton.icon(
-            onPressed:
-                isLoading ? null : () => context.read<AuthCubit>().logout(),
-            style: ElevatedButton.styleFrom(
-              elevation: 0,
-              backgroundColor: AppColors.green,
-              disabledBackgroundColor: AppColors.green.withValues(alpha: 0.6),
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(14.r(context)),
-              ),
-            ),
-            icon: isLoading
-                ? SizedBox(
-                    width: 20.s(context),
-                    height: 20.s(context),
-                    child: const CircularProgressIndicator(
-                      strokeWidth: 2,
-                      valueColor: AlwaysStoppedAnimation(Colors.white),
-                    ),
-                  )
-                : Icon(Icons.logout_rounded, size: 20.ic(context)),
-            label: Text(
-              'تسجيل الخروج',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w700,
-                    fontSize: 16.f(context),
-                  ),
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildFooter(BuildContext context) {
-    return Column(
-      children: [
-        Text(
-          'إصدار النظام: V1.0.0',
-          textDirection: TextDirection.rtl,
-          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: AppColors.secondaryCharcoal.withValues(alpha: 0.90),
-                fontSize: 14.f(context),
-              ),
-        ),
-        SizedBox(height: 4.h(context)),
-      ],
     );
   }
 }

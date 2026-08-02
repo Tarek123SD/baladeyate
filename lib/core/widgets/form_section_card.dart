@@ -31,14 +31,7 @@ class FormSectionCard extends StatelessWidget {
         horizontal: 16.w(context),
         vertical: 12.h(context),
       ),
-      padding: EdgeInsets.all(24.w(context)),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.96),
-        borderRadius: BorderRadius.circular(24.r(context)),
-        border: Border.all(
-          color: AppColors.thirdGoldenWheat,
-          width: 1,
-        ),
         boxShadow: [
           BoxShadow(
             color: AppColors.primaryForest.withValues(alpha: 0.06),
@@ -47,49 +40,62 @@ class FormSectionCard extends StatelessWidget {
           ),
         ],
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Row(
-            textDirection: TextDirection.rtl,
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      child: Material(
+        color: Colors.white.withValues(alpha: 0.96),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(24.r(context)),
+          side: BorderSide(
+            color: AppColors.thirdGoldenWheat,
+            width: 1,
+          ),
+        ),
+        child: Padding(
+          padding: EdgeInsets.all(24.w(context)),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Expanded(
-                child: Text(
-                  title,
-                  textDirection: TextDirection.rtl,
-                  style: TextStyle(
-                    fontSize: 18.s(context),
-                    fontWeight: FontWeight.w800,
-                    color: AppColors.primaryForest,
-                  ),
-                ),
-              ),
-              if (badge != null)
-                Container(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: 12.w(context),
-                    vertical: 6.h(context),
-                  ),
-                  decoration: BoxDecoration(
-                    color: badgeColor ?? AppColors.secondaryGoldenWheat,
-                    borderRadius: BorderRadius.circular(12.r(context)),
-                  ),
-                  child: Text(
-                    badge!,
-                    textDirection: TextDirection.rtl,
-                    style: TextStyle(
-                      fontSize: 11.s(context),
-                      fontWeight: FontWeight.w600,
-                      color: Colors.white,
+              Row(
+                textDirection: TextDirection.rtl,
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Expanded(
+                    child: Text(
+                      title,
+                      textDirection: TextDirection.rtl,
+                      style: TextStyle(
+                        fontSize: 18.s(context),
+                        fontWeight: FontWeight.w800,
+                        color: AppColors.primaryForest,
+                      ),
                     ),
                   ),
-                ),
+                  if (badge != null)
+                    Container(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 12.w(context),
+                        vertical: 6.h(context),
+                      ),
+                      decoration: BoxDecoration(
+                        color: badgeColor ?? AppColors.secondaryGoldenWheat,
+                        borderRadius: BorderRadius.circular(12.r(context)),
+                      ),
+                      child: Text(
+                        badge!,
+                        textDirection: TextDirection.rtl,
+                        style: TextStyle(
+                          fontSize: 11.s(context),
+                          fontWeight: FontWeight.w600,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+              SizedBox(height: 20.h(context)),
+              child,
             ],
           ),
-          SizedBox(height: 20.h(context)),
-          child,
-        ],
+        ),
       ),
     );
   }

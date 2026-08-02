@@ -6,7 +6,7 @@ import 'package:baladeyate/core/navigation/main_navigation_screen.dart';
 import 'package:baladeyate/core/services/service_locator.dart';
 
 import 'package:baladeyate/features/admin/presentation/graves_search_screen.dart';
-import 'package:baladeyate/features/apartment/presentation/apartment_screen.dart';
+import 'package:baladeyate/features/delegate/presentation/apartment_screen.dart';
 
 import 'package:baladeyate/features/admin/cubits/graves_cubit/graves_cubit.dart';
 import 'package:baladeyate/features/auth/cubits/auth_cubit/auth_cubit.dart';
@@ -24,11 +24,11 @@ import 'package:baladeyate/features/auth/presentation/signup_screen.dart';
 
 import 'package:baladeyate/features/auth/presentation/splash_screen.dart';
 
-import 'package:baladeyate/features/building/presentation/building_complex_screen.dart';
+import 'package:baladeyate/features/delegate/presentation/building_complex_screen.dart';
 
-import 'package:baladeyate/features/building/presentation/building_hub_screen.dart';
+import 'package:baladeyate/features/delegate/presentation/building_hub_screen.dart';
 
-import 'package:baladeyate/features/building/presentation/floor_hub_screen.dart';
+import 'package:baladeyate/features/delegate/presentation/floor_hub_screen.dart';
 
 import 'package:baladeyate/features/complaints/cubits/complaints_cubit/complaints_cubit.dart';
 
@@ -37,29 +37,44 @@ import 'package:baladeyate/features/complaints/presentation/complaints_guard_scr
 import 'package:baladeyate/features/complaints/presentation/identity_verification_screen.dart';
 
 import 'package:baladeyate/features/complaints/presentation/track_complaints_screen.dart';
+import 'package:baladeyate/core/widgets/custom_complaint_map_box.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 
+import 'package:baladeyate/features/cemetery_map/cubits/cemetery_map_cubit/cemetery_map_cubit.dart';
+import 'package:baladeyate/features/cemetery_map/presentation/cemetery_map_screen.dart';
 import 'package:baladeyate/features/daily_tasks/cubits/daily_tasks_cubit/daily_tasks_cubit.dart';
 
+import 'package:baladeyate/features/digital_documents/presentation/document_scanner_screen.dart';
 import 'package:baladeyate/features/delegate/cubits/building_survey_cubit/building_survey_cubit.dart';
+
 
 import 'package:baladeyate/features/delegate/models/survey_location.dart';
 
 import 'package:baladeyate/features/delegate/models/survey_navigation_context.dart';
 
+import 'package:baladeyate/features/donations/cubits/donate_cubit/donate_cubit.dart';
 import 'package:baladeyate/features/donations/cubits/donations_cubit/donations_cubit.dart';
+import 'package:baladeyate/features/donations/models/donation_case.dart';
+import 'package:baladeyate/features/donations/presentation/donation_payment_screen.dart';
 import 'package:baladeyate/features/donations/presentation/donations_screen.dart';
 
-import 'package:baladeyate/features/floor/presentation/floor_screen.dart';
+import 'package:baladeyate/features/delegate/presentation/floor_screen.dart';
 
 import 'package:baladeyate/features/home/presentation/home_screen.dart';
 
 import 'package:baladeyate/features/notifications/presentation/notifications_screen.dart';
 
-import 'package:baladeyate/features/people/presentation/people_screen.dart';
+import 'package:baladeyate/features/delegate/presentation/people_screen.dart';
 
 import 'package:baladeyate/features/profile/cubits/profile_cubit/profile_cubit.dart';
 
 import 'package:baladeyate/features/profile/presentation/profile_screen.dart';
+import 'package:baladeyate/features/transactions/cubits/submit_transaction_cubit/submit_transaction_cubit.dart';
+import 'package:baladeyate/features/transactions/cubits/transactions_cubit/transactions_cubit.dart';
+import 'package:baladeyate/features/transactions/presentation/submit_transaction_screen.dart';
+import 'package:baladeyate/features/transactions/presentation/transactions_screen.dart';
+import 'package:baladeyate/features/digital_documents/cubits/digital_documents_cubit/digital_documents_cubit.dart';
+import 'package:baladeyate/features/digital_documents/presentation/digital_documents_screen.dart';
 
 import 'package:baladeyate/features/settings/presentation/settings_screen.dart';
 
@@ -241,7 +256,22 @@ GoRouter _createAppRouter() {
       ),
 
       GoRoute(
+        path: '/transactions/submit',
+        builder: (context, state) => BlocProvider(
+          create: (_) => sl<SubmitTransactionCubit>(),
+          child: const SubmitTransactionScreen(),
+        ),
+      ),
 
+      GoRoute(
+        path: '/digital-documents',
+        builder: (context, state) => BlocProvider(
+          create: (_) => sl<DigitalDocumentsCubit>()..fetchDigitalDocuments(),
+          child: const DigitalDocumentsScreen(),
+        ),
+      ),
+
+      GoRoute(
         path: '/notifications',
 
         builder: (context, state) => const NotificationsScreen(),
@@ -265,6 +295,16 @@ GoRouter _createAppRouter() {
           child: const ComplaintsGuardScreen(),
 
         ),
+
+        routes: [
+          GoRoute(
+            path: 'map-picker',
+            builder: (context, state) {
+              final initialLocation = state.extra as LatLng?;
+              return MapPickerScreen(initialLocation: initialLocation);
+            },
+          ),
+        ],
 
       ),
 
@@ -438,7 +478,10 @@ GoRouter _createAppRouter() {
 
             },
 
-            child: ApartmentScreen(navigationContext: nav),
+            child: ApartmentScreen(
+              navigationContext: nav,
+              apartmentsCount: nav?.apartmentsCount ?? 0,
+            ),
 
           );
 
@@ -500,6 +543,23 @@ GoRouter _createAppRouter() {
               GoRoute(
                 path: '/delegate/home',
                 builder: (context, state) => const DelegateHomeScreen(),
+                routes: [
+                  GoRoute(
+                    path: 'verify-document',
+                    builder: (context, state) => const DocumentScannerScreen(),
+                  ),
+                ],
+              ),
+              GoRoute(
+                path: '/delegate/verify-document',
+                builder: (context, state) => const DocumentScannerScreen(),
+              ),
+              GoRoute(
+                path: '/delegate/cemetery-map',
+                builder: (context, state) => BlocProvider(
+                  create: (_) => sl<CemeteryMapCubit>()..loadGraves(),
+                  child: const CemeteryMapScreen(),
+                ),
               ),
             ],
           ),
@@ -595,6 +655,24 @@ GoRouter _createAppRouter() {
                   child: const DonationsScreen(),
                 ),
 
+                routes: [
+                  GoRoute(
+                    path: 'pay',
+                    builder: (context, state) {
+                      final extra = state.extra;
+                      final donationCase = extra is DonationCase ? extra : null;
+                      final campaignTitle = extra is String ? extra : null;
+                      return BlocProvider(
+                        create: (_) => sl<DonateCubit>(),
+                        child: DonationPaymentScreen(
+                          donationCase: donationCase,
+                          campaignTitle: campaignTitle,
+                        ),
+                      );
+                    },
+                  ),
+                ],
+
               ),
 
             ],
@@ -602,27 +680,27 @@ GoRouter _createAppRouter() {
           ),
 
           StatefulShellBranch(
-
             routes: [
-
               GoRoute(
-
                 path: '/track',
-
                 builder: (context, state) => BlocProvider(
-
                   create: (_) => sl<ComplaintsCubit>()..loadComplaints(),
-
                   child: const TrackComplaintsScreen(),
-
                 ),
-
               ),
-
             ],
-
           ),
-
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/transactions',
+                builder: (context, state) => BlocProvider(
+                  create: (_) => sl<TransactionsCubit>()..fetchTransactions(),
+                  child: const TransactionsScreen(),
+                ),
+              ),
+            ],
+          ),
         ],
 
       ),

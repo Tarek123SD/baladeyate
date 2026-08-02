@@ -65,7 +65,7 @@ class _PasswordInputFieldState extends State<PasswordInputField> {
           children: [
             Container(
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: AppColors.inputFill,
                 borderRadius: BorderRadius.circular(radius),
                 boxShadow: [
                   BoxShadow(
@@ -86,9 +86,9 @@ class _PasswordInputFieldState extends State<PasswordInputField> {
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      // Toggle area stays white (no fill color behind the eye).
+                      // Toggle area styled with consistent background color.
                       Material(
-                        color: Colors.white,
+                        color: AppColors.inputFill,
                         child: InkWell(
                           onTap: widget.onToggle,
                           child: Padding(
@@ -126,6 +126,8 @@ class _PasswordInputFieldState extends State<PasswordInputField> {
                                 const EdgeInsets.only(bottom: 120),
                             decoration: InputDecoration(
                               isDense: true,
+                              filled: true,
+                              fillColor: AppColors.inputFill,
                               hintText: widget.hint,
                               hintStyle: TextStyle(
                                 color: Colors.grey[500],

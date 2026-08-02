@@ -51,11 +51,15 @@ final class NotificationsLoaded extends NotificationsState {
   List<Object?> get props => [notifications, isSubmitting, actionError];
 }
 
-final class NotificationsFailure extends NotificationsState {
-  const NotificationsFailure({required this.message});
+final class NotificationsError extends NotificationsState {
+  const NotificationsError(this.message);
 
   final String message;
 
   @override
   List<Object?> get props => [message];
+}
+
+final class NotificationsFailure extends NotificationsError {
+  const NotificationsFailure({required String message}) : super(message);
 }

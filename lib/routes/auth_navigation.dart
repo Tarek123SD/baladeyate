@@ -14,7 +14,28 @@ const citizenShellRoutes = {
   '/donations',
   '/track',
   '/complains',
+  '/transactions',
 };
+
+/// Top-level [StatefulShellRoute] tab paths.
+///
+/// These must be opened with [GoRouter.go] (not [GoRouter.push]). Pushing a
+/// shell tab while another shell page is already in the stack duplicates the
+/// shell's page key and throws `!keyReservation.contains(key)`.
+const indexedShellTabRoutes = {
+  '/main',
+  '/profile',
+  '/donations',
+  '/track',
+  '/transactions',
+  '/delegate/home',
+  '/delegate/map',
+  '/delegate/tasks',
+  '/delegate/buildings',
+};
+
+bool isIndexedShellTabRoute(String path) =>
+    indexedShellTabRoutes.contains(path);
 
 /// Delegate field-work routes.
 const delegateRoutes = {
@@ -22,6 +43,7 @@ const delegateRoutes = {
   '/delegate/map',
   '/delegate/tasks',
   '/delegate/buildings',
+  '/delegate/cemetery-map',
   '/tasks',
   '/info',
   '/floor',
@@ -49,10 +71,14 @@ const sharedAuthenticatedRoutes = {
 bool isCitizenRoute(String path) =>
     citizenShellRoutes.contains(path) ||
     path.startsWith('/complains') ||
-    path.startsWith('/track');
+    path.startsWith('/track') ||
+    path.startsWith('/transactions') ||
+    path.startsWith('/digital-documents');
 
 bool isDelegateRoute(String path) =>
-    delegateRoutes.contains(path) || path.startsWith('/building/');
+    delegateRoutes.contains(path) ||
+    path.startsWith('/delegate/') ||
+    path.startsWith('/building/');
 
 bool isPublicRoute(String path) => publicRoutes.contains(path);
 

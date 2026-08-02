@@ -10,6 +10,7 @@ class EndPoints {
   static const String login = 'v1/login';
   static const String logout = 'v1/logout';
   static const String forgotPassword = 'v1/auth/forgot-password';
+  static const String verifyOtp = 'v1/auth/verify-otp';
   static const String resetPassword = 'v1/auth/reset-password';
 
   // Citizen
@@ -18,6 +19,8 @@ class EndPoints {
   static const String myHousehold = 'v1/citizen/my-household';
   static const String complaints = 'v1/complaints';
   static String complaintById(int id) => 'v1/complaints/$id';
+  static const String transactions = 'v1/citizen/transactions';
+  static const String digitalDocuments = 'v1/citizen/digital-documents';
 
   // Delegate
   static const String buildings = 'v1/buildings';
@@ -31,6 +34,7 @@ class EndPoints {
   static String delegateMyTaskById(int id) => 'v1/delegate/my-tasks/$id';
   static String delegateMyTaskStatus(int id) =>
       'v1/delegate/my-tasks/$id/status';
+  static const String verifyDocument = 'v1/delegate/verify-document';
 
   // Admin
   static const String shops = 'v1/shops';

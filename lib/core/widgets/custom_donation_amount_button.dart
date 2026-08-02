@@ -24,64 +24,34 @@ class CustomDonationAmountButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 160),
-        curve: Curves.easeOut,
-        width: width,
-        padding: EdgeInsets.symmetric(vertical: 16.h(context)),
-        decoration: BoxDecoration(
-          gradient: isSelected
-              ? const LinearGradient(
-                  begin: Alignment.topRight,
-                  end: Alignment.bottomLeft,
-                  colors: [AppColors.green, AppColors.secondaryForest],
-                )
-              : null,
-          color: isSelected ? null : Colors.white,
-          borderRadius: BorderRadius.circular(18.r(context)),
-          border: Border.all(
-            color: isSelected
-                ? AppColors.green
-                : AppColors.secondaryGoldenWheat,
-            width: 1.4.w(context),
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(14.r(context)),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 160),
+          curve: Curves.easeInOut,
+          width: width,
+          padding: EdgeInsets.symmetric(vertical: 14.h(context)),
+          decoration: BoxDecoration(
+            color: isSelected ? AppColors.primaryForest : Colors.grey.shade50,
+            borderRadius: BorderRadius.circular(14.r(context)),
+            border: Border.all(color: Colors.transparent, width: 0),
           ),
-          boxShadow: [
-            BoxShadow(
-              color: isSelected
-                  ? AppColors.green.withValues(alpha: 0.28)
-                  : Colors.black.withValues(alpha: 0.03),
-              blurRadius: isSelected ? 14 : 10,
-              offset: const Offset(0, 6),
-            ),
-          ],
-        ),
-        alignment: Alignment.center,
-        child: FittedBox(
-          fit: BoxFit.scaleDown,
-          child: Padding(
-            padding: EdgeInsets.symmetric(horizontal: 8.w(context)),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                if (isSelected) ...[
-                  Icon(
-                    Icons.check_circle_rounded,
-                    size: 16.ic(context),
-                    color: Colors.white,
-                  ),
-                  SizedBox(width: 6.w(context)),
-                ],
-                Text(
-                  '$_formatted ل.س',
-                  style: TextStyle(
-                    color: isSelected ? Colors.white : AppColors.primaryForest,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 14.f(context),
-                  ),
+          alignment: Alignment.center,
+          child: FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Padding(
+              padding: EdgeInsets.symmetric(horizontal: 8.w(context)),
+              child: Text(
+                '$_formatted ل.س',
+                style: TextStyle(
+                  color: isSelected ? Colors.white : const Color(0xFF424242),
+                  fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
+                  fontSize: 14.f(context),
                 ),
-              ],
+              ),
             ),
           ),
         ),

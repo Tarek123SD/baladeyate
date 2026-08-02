@@ -67,7 +67,7 @@ class ComplaintsCubit extends Cubit<ComplaintsState> {
     try {
       final complaint = await _complaintsRepository.createComplaint(
         description: description,
-        priority: isUrgent ? 'urgent' : 'high',
+        priority: isUrgent ? 'urgent' : 'medium',
       );
       emit(ComplaintCreated(complaint: complaint));
     } catch (error) {
@@ -89,7 +89,7 @@ class ComplaintsCubit extends Cubit<ComplaintsState> {
       final updated = await _complaintsRepository.updateComplaint(
         id: id,
         description: description,
-        priority: isUrgent ? 'urgent' : 'high',
+        priority: isUrgent ? 'urgent' : 'medium',
       );
 
       if (current is ComplaintsLoaded) {
