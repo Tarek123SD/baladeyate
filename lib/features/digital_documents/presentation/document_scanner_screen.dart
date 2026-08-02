@@ -9,8 +9,8 @@ import 'package:baladeyate/config/theme/app_icons.dart';
 import 'package:baladeyate/core/services/service_locator.dart';
 import 'package:baladeyate/features/digital_documents/cubits/scanner_cubit/scanner_cubit.dart';
 import 'package:baladeyate/features/digital_documents/cubits/scanner_cubit/scanner_state.dart';
-import 'widgets/scanner_overlay_painter.dart';
-import 'widgets/verification_result_bottom_sheet.dart';
+import 'components/scanner_overlay_painter.dart';
+import 'components/verification_result_bottom_sheet.dart';
 
 class DocumentScannerScreen extends StatelessWidget {
   const DocumentScannerScreen({super.key});

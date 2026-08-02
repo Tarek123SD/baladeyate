@@ -8,7 +8,9 @@ import 'package:baladeyate/features/auth/cubits/auth_cubit/auth_cubit.dart';
 import 'package:baladeyate/features/auth/cubits/auth_cubit/auth_state.dart';
 import 'package:baladeyate/features/auth/cubits/auth_form_cubit/auth_form_cubit.dart';
 import 'package:baladeyate/features/auth/cubits/auth_form_cubit/auth_form_state.dart';
-import 'package:baladeyate/features/auth/presentation/widgets/auth_screen_widgets.dart';
+import 'package:baladeyate/features/auth/presentation/components/auth_screen_widgets.dart';
+import 'package:baladeyate/features/auth/presentation/components/signup_identity_upload_field.dart';
+import 'package:baladeyate/features/auth/presentation/components/signup_terms_section.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -161,7 +163,10 @@ class _SignupScreenState extends State<SignupScreen> {
                           buildWhen: (previous, current) =>
                               previous.identityImage != current.identityImage,
                           builder: (context, formState) =>
-                              _buildUploadField(formState.identityImage),
+                              SignupIdentityUploadField(
+                            identityImage: formState.identityImage,
+                            onTap: _pickImage,
+                          ),
                         ),
                         SizedBox(height: 20.h(context)),
                         const CustomFormFieldLabel(label: 'كلمة السر'),
@@ -201,9 +206,11 @@ class _SignupScreenState extends State<SignupScreen> {
                         BlocBuilder<AuthFormCubit, AuthFormState>(
                           buildWhen: (previous, current) =>
                               previous.agreeToTerms != current.agreeToTerms,
-                          builder: (context, formState) => _buildTermsSection(
-                            context,
-                            formState.agreeToTerms,
+                          builder: (context, formState) => SignupTermsSection(
+                            agreeToTerms: formState.agreeToTerms,
+                            onToggle: () => context
+                                .read<AuthFormCubit>()
+                                .setAgreeToTerms(!formState.agreeToTerms),
                           ),
                         ),
                         SizedBox(height: 28.h(context)),
@@ -244,166 +251,6 @@ class _SignupScreenState extends State<SignupScreen> {
             ],
           ),
         ),
-      ),
-    );
-  }
-
-  Widget _buildTermsSection(BuildContext context, bool agreeToTerms) {
-    return GestureDetector(
-      onTap: () =>
-          context.read<AuthFormCubit>().setAgreeToTerms(!agreeToTerms),
-      behavior: HitTestBehavior.opaque,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Text(
-            'أوافق على شروط الاستخدام وسياسة الخصوصية الخاصة بالخدمات',
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: Colors.grey.shade700,
-                  height: 1.4,
-                ),
-            textDirection: TextDirection.rtl,
-            textAlign: TextAlign.right,
-          ),
-          SizedBox(height: 8.h(context)),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            textDirection: TextDirection.rtl,
-            children: [
-              _buildTermsCheckbox(context, agreeToTerms),
-              Expanded(
-                child: Text(
-                  'الرقمية السيادية.',
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Colors.grey.shade700,
-                        height: 1.4,
-                      ),
-                  textDirection: TextDirection.rtl,
-                  textAlign: TextAlign.right,
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildTermsCheckbox(BuildContext context, bool agreeToTerms) {
-    final boxSize = 22.s(context);
-
-    return Container(
-      width: boxSize,
-      height: boxSize,
-      margin: EdgeInsets.only(left: 10.s(context)),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(4.r(context)),
-        border: Border.all(
-          color: AppColors.primaryForest,
-          width: 1.5,
-        ),
-      ),
-      child: agreeToTerms
-          ? Center(
-              child: Icon(
-                Icons.check,
-                size: 16.s(context),
-                color: AppColors.green,
-              ),
-            )
-          : null,
-    );
-  }
-
-  Widget _buildUploadField(File? identityImage) {
-    final r = 12.r(context);
-
-    return GestureDetector(
-      onTap: _pickImage,
-      child: Container(
-        width: double.infinity,
-        padding: EdgeInsets.symmetric(vertical: 40.h(context)),
-        decoration: BoxDecoration(
-          border: Border.all(
-            color: identityImage == null ? Colors.grey[300]! : AppColors.green,
-            width: 2,
-          ),
-          borderRadius: BorderRadius.circular(r),
-          color: identityImage == null
-              ? Colors.grey[50]
-              : Colors.green.withValues(alpha: 0.05),
-        ),
-        child: identityImage != null
-            ? Column(
-                children: [
-                  Container(
-                    width: 60.s(context),
-                    height: 60.s(context),
-                    decoration: const BoxDecoration(
-                      color: Color(0xFF90EE90),
-                      shape: BoxShape.circle,
-                    ),
-                    child: Icon(
-                      Icons.check,
-                      color: AppColors.primaryForest,
-                      size: 32.s(context),
-                    ),
-                  ),
-                  SizedBox(height: 16.h(context)),
-                  Text(
-                    'تم تحميل الصورة بنجاح',
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          fontWeight: FontWeight.w500,
-                          color: AppColors.primaryForest,
-                        ),
-                    textDirection: TextDirection.rtl,
-                  ),
-                  SizedBox(height: 8.h(context)),
-                  Text(
-                    identityImage.path.split('/').last,
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: Colors.grey[600],
-                        ),
-                    textDirection: TextDirection.rtl,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ],
-              )
-            : Column(
-                children: [
-                  Container(
-                    width: 60.s(context),
-                    height: 60.s(context),
-                    decoration: const BoxDecoration(
-                      color: Color(0xFFFFD699),
-                      shape: BoxShape.circle,
-                    ),
-                    child: Icon(
-                      Icons.cloud_upload_outlined,
-                      color: AppColors.primaryForest,
-                      size: 32.s(context),
-                    ),
-                  ),
-                  SizedBox(height: 16.h(context)),
-                  Text(
-                    'اضغط هنا لرفع صورة الهوية',
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          fontWeight: FontWeight.w500,
-                          color: AppColors.primaryForest,
-                        ),
-                    textDirection: TextDirection.rtl,
-                  ),
-                  SizedBox(height: 8.h(context)),
-                  Text(
-                    'PNG / JPG / JPEG',
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: AppColors.primaryForest,
-                        ),
-                  ),
-                ],
-              ),
       ),
     );
   }

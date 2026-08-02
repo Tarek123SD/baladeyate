@@ -17,6 +17,26 @@ const citizenShellRoutes = {
   '/transactions',
 };
 
+/// Top-level [StatefulShellRoute] tab paths.
+///
+/// These must be opened with [GoRouter.go] (not [GoRouter.push]). Pushing a
+/// shell tab while another shell page is already in the stack duplicates the
+/// shell's page key and throws `!keyReservation.contains(key)`.
+const indexedShellTabRoutes = {
+  '/main',
+  '/profile',
+  '/donations',
+  '/track',
+  '/transactions',
+  '/delegate/home',
+  '/delegate/map',
+  '/delegate/tasks',
+  '/delegate/buildings',
+};
+
+bool isIndexedShellTabRoute(String path) =>
+    indexedShellTabRoutes.contains(path);
+
 /// Delegate field-work routes.
 const delegateRoutes = {
   '/delegate/home',

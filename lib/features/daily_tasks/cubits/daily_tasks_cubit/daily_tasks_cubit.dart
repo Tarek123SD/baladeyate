@@ -1,17 +1,17 @@
 import 'package:baladeyate/features/daily_tasks/cubits/daily_tasks_cubit/daily_tasks_state.dart';
+import 'package:baladeyate/features/daily_tasks/repo/daily_tasks_repository.dart';
 import 'package:baladeyate/features/delegate/models/survey_pin.dart';
 import 'package:baladeyate/features/delegate/models/survey_pin_status.dart';
-import 'package:baladeyate/features/delegate/repo/delegate_repository.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 class DailyTasksCubit extends Cubit<DailyTasksState> {
-  DailyTasksCubit({required DelegateRepository delegateRepository})
-      : _delegateRepository = delegateRepository,
+  DailyTasksCubit({required DailyTasksRepository dailyTasksRepository})
+      : _dailyTasksRepository = dailyTasksRepository,
         super(const DailyTasksState());
 
-  final DelegateRepository _delegateRepository;
+  final DailyTasksRepository _dailyTasksRepository;
   bool _initialized = false;
 
   Future<void> initialize() async {
@@ -34,7 +34,7 @@ class DailyTasksCubit extends Cubit<DailyTasksState> {
   Future<void> loadPins() async {
     emit(state.copyWith(isLoadingPins: true, clearErrorMessage: true));
     try {
-      final pins = await _delegateRepository.getMapPins();
+      final pins = await _dailyTasksRepository.getMapPins();
       emit(state.copyWith(pins: pins, isLoadingPins: false));
     } catch (error) {
       emit(state.copyWith(
@@ -47,7 +47,7 @@ class DailyTasksCubit extends Cubit<DailyTasksState> {
   Future<void> loadTasks() async {
     emit(state.copyWith(isLoadingTasks: true, clearErrorMessage: true));
     try {
-      final tasks = await _delegateRepository.getMyTasks();
+      final tasks = await _dailyTasksRepository.getMyTasks();
       emit(state.copyWith(delegateTasks: tasks, isLoadingTasks: false));
     } catch (error) {
       emit(state.copyWith(
@@ -63,7 +63,7 @@ class DailyTasksCubit extends Cubit<DailyTasksState> {
   }) async {
     emit(state.copyWith(isUpdatingTask: true, clearErrorMessage: true));
     try {
-      final updated = await _delegateRepository.updateMyTaskStatus(
+      final updated = await _dailyTasksRepository.updateMyTaskStatus(
         id: id,
         status: status,
       );
@@ -221,7 +221,7 @@ class DailyTasksCubit extends Cubit<DailyTasksState> {
       status: SurveyPinStatus.inProgress,
       title: 'مسح جديد',
     );
-    await _delegateRepository.saveDraftPin(draftPin);
+    await _dailyTasksRepository.saveDraftPin(draftPin);
     return draftPin;
   }
 

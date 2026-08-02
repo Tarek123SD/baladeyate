@@ -14,6 +14,7 @@ import 'package:baladeyate/features/auth/cubits/password_reset_cubit/password_re
 import 'package:baladeyate/features/cemetery_map/cubits/cemetery_map_cubit/cemetery_map_cubit.dart';
 import 'package:baladeyate/features/cemetery_map/repo/cemetery_map_repository.dart';
 import 'package:baladeyate/features/daily_tasks/cubits/daily_tasks_cubit/daily_tasks_cubit.dart';
+import 'package:baladeyate/features/daily_tasks/repo/daily_tasks_repository.dart';
 import 'package:baladeyate/features/auth/repo/auth_repository.dart';
 import 'package:baladeyate/features/complaints/cubits/complaints_cubit/complaints_cubit.dart';
 import 'package:baladeyate/features/complaints/repo/complaints_repository.dart';
@@ -21,8 +22,8 @@ import 'package:baladeyate/features/donations/cubits/donate_cubit/donate_cubit.d
 import 'package:baladeyate/features/donations/cubits/donations_cubit/donations_cubit.dart';
 import 'package:baladeyate/features/donations/repo/donations_repository.dart';
 import 'package:baladeyate/features/delegate/cubits/building_survey_cubit/building_survey_cubit.dart';
-import 'package:baladeyate/features/delegate/data/local_building_survey_store.dart';
-import 'package:baladeyate/features/delegate/data/local_survey_pin_store.dart';
+import 'package:baladeyate/features/delegate/repo/local_building_survey_store.dart';
+import 'package:baladeyate/features/delegate/repo/local_survey_pin_store.dart';
 import 'package:baladeyate/features/delegate/repo/delegate_repository.dart';
 import 'package:baladeyate/features/notifications/cubits/notifications_cubit/notifications_cubit.dart';
 import 'package:baladeyate/features/notifications/repo/notifications_repository.dart';
@@ -123,6 +124,12 @@ Future<void> setupServiceLocator() async {
     ),
   );
 
+  sl.registerLazySingleton<DailyTasksRepository>(
+    () => DailyTasksRepository(
+      delegateRepository: sl<DelegateRepository>(),
+    ),
+  );
+
   sl.registerLazySingleton<AdminRepository>(
     () => AdminRepository(apiService: sl()),
   );
@@ -190,7 +197,9 @@ Future<void> setupServiceLocator() async {
   );
 
   sl.registerLazySingleton<DailyTasksCubit>(
-    () => DailyTasksCubit(delegateRepository: sl<DelegateRepository>()),
+    () => DailyTasksCubit(
+      dailyTasksRepository: sl<DailyTasksRepository>(),
+    ),
   );
 
   sl.registerFactory<AuthFormCubit>(() => AuthFormCubit());

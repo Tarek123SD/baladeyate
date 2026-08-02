@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:baladeyate/features/delegate/data/local_building_survey_store.dart';
+import 'package:baladeyate/features/delegate/repo/local_building_survey_store.dart';
 import 'package:baladeyate/features/delegate/models/building_survey.dart';
 import 'package:baladeyate/features/delegate/models/survey_location.dart';
 import 'package:baladeyate/features/delegate/models/survey_phase.dart';

@@ -6,7 +6,7 @@ import 'package:baladeyate/core/navigation/main_navigation_screen.dart';
 import 'package:baladeyate/core/services/service_locator.dart';
 
 import 'package:baladeyate/features/admin/presentation/graves_search_screen.dart';
-import 'package:baladeyate/features/apartment/presentation/apartment_screen.dart';
+import 'package:baladeyate/features/delegate/presentation/apartment_screen.dart';
 
 import 'package:baladeyate/features/admin/cubits/graves_cubit/graves_cubit.dart';
 import 'package:baladeyate/features/auth/cubits/auth_cubit/auth_cubit.dart';
@@ -24,11 +24,11 @@ import 'package:baladeyate/features/auth/presentation/signup_screen.dart';
 
 import 'package:baladeyate/features/auth/presentation/splash_screen.dart';
 
-import 'package:baladeyate/features/building/presentation/building_complex_screen.dart';
+import 'package:baladeyate/features/delegate/presentation/building_complex_screen.dart';
 
-import 'package:baladeyate/features/building/presentation/building_hub_screen.dart';
+import 'package:baladeyate/features/delegate/presentation/building_hub_screen.dart';
 
-import 'package:baladeyate/features/building/presentation/floor_hub_screen.dart';
+import 'package:baladeyate/features/delegate/presentation/floor_hub_screen.dart';
 
 import 'package:baladeyate/features/complaints/cubits/complaints_cubit/complaints_cubit.dart';
 
@@ -58,13 +58,13 @@ import 'package:baladeyate/features/donations/models/donation_case.dart';
 import 'package:baladeyate/features/donations/presentation/donation_payment_screen.dart';
 import 'package:baladeyate/features/donations/presentation/donations_screen.dart';
 
-import 'package:baladeyate/features/floor/presentation/floor_screen.dart';
+import 'package:baladeyate/features/delegate/presentation/floor_screen.dart';
 
 import 'package:baladeyate/features/home/presentation/home_screen.dart';
 
 import 'package:baladeyate/features/notifications/presentation/notifications_screen.dart';
 
-import 'package:baladeyate/features/people/presentation/people_screen.dart';
+import 'package:baladeyate/features/delegate/presentation/people_screen.dart';
 
 import 'package:baladeyate/features/profile/cubits/profile_cubit/profile_cubit.dart';
 

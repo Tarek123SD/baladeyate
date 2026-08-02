@@ -1,26 +1,24 @@
 import 'package:baladeyate/config/theme/app_icons.dart';
-import 'package:baladeyate/features/auth/presentation/widgets/signup_success_dialog.dart';
-import 'package:baladeyate/features/auth/cubits/auth_cubit/auth_cubit.dart';
-import 'package:baladeyate/features/auth/cubits/auth_cubit/auth_state.dart';
-import 'package:baladeyate/features/complaints/cubits/complaints_cubit/complaints_cubit.dart';
-import 'package:baladeyate/features/home/presentation/components/greeting_card.dart';
+import 'package:baladeyate/core/responsive/dimensions.dart';
+import 'package:baladeyate/core/widgets/app_background.dart';
+import 'package:baladeyate/core/widgets/custom_app_bar.dart';
+import 'package:baladeyate/features/auth/presentation/components/signup_success_dialog.dart';
+import 'package:baladeyate/features/home/presentation/components/home_filter_chips.dart';
+import 'package:baladeyate/features/home/presentation/components/home_heritage_section.dart';
+import 'package:baladeyate/features/home/presentation/components/home_notification_update_card.dart';
+import 'package:baladeyate/features/home/presentation/components/home_service_card.dart';
+import 'package:baladeyate/features/home/presentation/components/home_top_section.dart';
+import 'package:baladeyate/features/home/presentation/components/home_updates_empty_state.dart';
+import 'package:baladeyate/features/home/presentation/components/home_updates_error_state.dart';
+import 'package:baladeyate/features/home/presentation/components/home_updates_loading_state.dart';
 import 'package:baladeyate/features/home/presentation/components/section_header.dart';
-import 'package:baladeyate/features/home/presentation/components/stats_overview.dart';
-import 'package:baladeyate/features/home/presentation/components/verification_banner.dart';
 import 'package:baladeyate/features/notifications/cubits/notifications_cubit/notifications_cubit.dart';
 import 'package:baladeyate/features/notifications/cubits/notifications_cubit/notifications_state.dart';
 import 'package:baladeyate/features/notifications/models/app_notification.dart';
-import 'package:baladeyate/features/notifications/utils/notification_display.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:responsive_x_toolkit/responsive_x.dart';
-
-import 'package:baladeyate/core/constants/app_assets.dart';
-import 'package:baladeyate/core/services/service_locator.dart';
-import 'package:baladeyate/core/widgets/app_background.dart';
-import 'package:baladeyate/core/responsive/dimensions.dart';
-import 'package:baladeyate/core/widgets/custom_app_bar.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -86,7 +84,6 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               child: CustomScrollView(
                 slivers: [
-                  // Top Section: Greeting, Verification, Stats, and Quick Services Header
                   SliverPadding(
                     padding: EdgeInsets.fromLTRB(
                       paddingVal,
@@ -94,76 +91,10 @@ class _HomeScreenState extends State<HomeScreen> {
                       paddingVal,
                       0,
                     ),
-                    sliver: SliverToBoxAdapter(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          // Hero banner + verification CTA
-                          BlocBuilder<AuthCubit, AuthState>(
-                            buildWhen: (previous, current) {
-                              if (previous is AuthSuccess &&
-                                  current is AuthSuccess) {
-                                return previous.user.name !=
-                                        current.user.name ||
-                                    previous.user.verificationStatus !=
-                                        current.user.verificationStatus;
-                              }
-                              return previous.runtimeType !=
-                                  current.runtimeType;
-                            },
-                            builder: (context, state) {
-                              final userName = state is AuthSuccess
-                                  ? state.user.name
-                                  : 'مواطن';
-                              final statusLabel = state is AuthSuccess
-                                  ? (state.user.verificationStatusLabel ??
-                                      'حالة التوثيق غير معروفة')
-                                  : 'سجّل الدخول لعرض حالتك';
-                              final isVerified =
-                                  state is AuthSuccess && state.user.isVerified;
-                              final showVerification = state is AuthSuccess &&
-                                  state.user.canSubmitVerification;
-
-                              return Column(
-                                crossAxisAlignment: CrossAxisAlignment.stretch,
-                                children: [
-                                  GreetingCard(
-                                    greeting: timeAwareGreeting(),
-                                    name: 'أهلا بك، $userName',
-                                    statusLabel: statusLabel,
-                                    statusColor: isVerified
-                                        ? Colors.amber
-                                        : Colors.orange,
-                                  ),
-                                  if (showVerification) ...[
-                                    SizedBox(height: 16.h(context)),
-                                    VerificationBanner(
-                                      wasRejected:
-                                          state.user.verificationStatus ==
-                                              'rejected',
-                                    ),
-                                  ],
-                                ],
-                              );
-                            },
-                          ),
-                          SizedBox(height: 32.h(context)),
-                          // Complaint stats overview
-                          BlocProvider(
-                            create: (_) =>
-                                sl<ComplaintsCubit>()..loadComplaints(),
-                            child: const StatsOverview(),
-                          ),
-                          SizedBox(height: 32.h(context)),
-                          // Quick Services Header
-                          const SectionHeader(title: 'الخدمات السريعة'),
-                          SizedBox(height: 16.h(context)),
-                        ],
-                      ),
+                    sliver: const SliverToBoxAdapter(
+                      child: HomeTopSection(),
                     ),
                   ),
-
-                  // Quick Services SliverGrid
                   SliverPadding(
                     padding: EdgeInsets.symmetric(
                       horizontal: paddingVal,
@@ -177,17 +108,17 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                       delegate: SliverChildListDelegate(
                         [
-                          _buildServiceCard(
+                          HomeServiceCard(
                             title: 'المعاملات والرخص',
                             icon: AppIcons.transactions,
-                            onTap: () => context.push('/transactions'),
+                            onTap: () => context.go('/transactions'),
                           ),
-                          _buildServiceCard(
+                          HomeServiceCard(
                             title: 'الوثائق الرقمية',
                             icon: AppIcons.digitalDocs,
-                            onTap: () => context.push('/profile'),
+                            onTap: () => context.go('/profile'),
                           ),
-                          _buildServiceCard(
+                          HomeServiceCard(
                             title: 'تقديم شكوى',
                             icon: AppIcons.complaint,
                             onTap: () => context.push('/complains'),
@@ -196,8 +127,6 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                     ),
                   ),
-
-                  // Latest Updates Section Header & Filter Row
                   SliverPadding(
                     padding: EdgeInsets.fromLTRB(
                       paddingVal,
@@ -215,21 +144,25 @@ class _HomeScreenState extends State<HomeScreen> {
                             onActionTap: () => context.push('/notifications'),
                           ),
                           SizedBox(height: 12.h(context)),
-                          _buildFilterChips(),
+                          HomeFilterChips(
+                            options: _filterOptions,
+                            selectedFilter: _selectedFilter,
+                            onFilterSelected: (value) {
+                              setState(() => _selectedFilter = value);
+                            },
+                          ),
                           SizedBox(height: 16.h(context)),
                         ],
                       ),
                     ),
                   ),
-
-                  // Dynamic Latest Updates using BlocBuilder
                   BlocBuilder<NotificationsCubit, NotificationsState>(
                     builder: (context, state) {
                       if (state is NotificationsLoading) {
                         return SliverPadding(
                           padding: EdgeInsets.symmetric(horizontal: paddingVal),
-                          sliver: SliverToBoxAdapter(
-                            child: _buildLoadingState(),
+                          sliver: const SliverToBoxAdapter(
+                            child: HomeUpdatesLoadingState(),
                           ),
                         );
                       }
@@ -238,7 +171,12 @@ class _HomeScreenState extends State<HomeScreen> {
                         return SliverPadding(
                           padding: EdgeInsets.symmetric(horizontal: paddingVal),
                           sliver: SliverToBoxAdapter(
-                            child: _buildErrorState(state.message),
+                            child: HomeUpdatesErrorState(
+                              message: state.message,
+                              onRetry: () => context
+                                  .read<NotificationsCubit>()
+                                  .fetchNotifications(),
+                            ),
                           ),
                         );
                       }
@@ -254,8 +192,8 @@ class _HomeScreenState extends State<HomeScreen> {
                         return SliverPadding(
                           padding:
                               EdgeInsets.symmetric(horizontal: paddingVal),
-                          sliver: SliverToBoxAdapter(
-                            child: _buildEmptyState(),
+                          sliver: const SliverToBoxAdapter(
+                            child: HomeUpdatesEmptyState(),
                           ),
                         );
                       }
@@ -265,14 +203,16 @@ class _HomeScreenState extends State<HomeScreen> {
                         sliver: SliverList.builder(
                           itemCount: filteredUpdates.length,
                           itemBuilder: (context, index) {
-                            return _buildUpdateCard(filteredUpdates[index]);
+                            return HomeNotificationUpdateCard(
+                              notification: filteredUpdates[index],
+                              onActionTap: () =>
+                                  context.push('/notifications'),
+                            );
                           },
                         ),
                       );
                     },
                   ),
-
-                  // Heritage Section
                   SliverPadding(
                     padding: EdgeInsets.fromLTRB(
                       paddingVal,
@@ -280,479 +220,13 @@ class _HomeScreenState extends State<HomeScreen> {
                       paddingVal,
                       paddingVal,
                     ),
-                    sliver: SliverToBoxAdapter(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          ClipRRect(
-                            borderRadius: BorderRadius.circular(20.r(context)),
-                            child: Stack(
-                              children: [
-                                Container(
-                                  height: 200.h(context),
-                                  decoration: const BoxDecoration(
-                                    image: DecorationImage(
-                                      image: AssetImage(
-                                        AppAssets.splashWallpaper,
-                                      ),
-                                      fit: BoxFit.cover,
-                                    ),
-                                  ),
-                                ),
-                                Positioned(
-                                  bottom: 0,
-                                  left: 0,
-                                  right: 0,
-                                  child: Container(
-                                    decoration: BoxDecoration(
-                                      gradient: LinearGradient(
-                                        begin: Alignment.bottomCenter,
-                                        end: Alignment.topCenter,
-                                        colors: [
-                                          Colors.black.withValues(alpha: 0.7),
-                                          Colors.transparent,
-                                        ],
-                                      ),
-                                    ),
-                                    padding: EdgeInsets.all(16.s(context)),
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.end,
-                                      children: [
-                                        Text(
-                                          'تراثنا، هويتنا',
-                                          style: Theme.of(context)
-                                              .textTheme
-                                              .titleLarge
-                                              ?.copyWith(
-                                                color: Colors.white,
-                                                fontWeight: FontWeight.bold,
-                                                fontSize: 18.f(context),
-                                              ),
-                                          textDirection: TextDirection.rtl,
-                                        ),
-                                        SizedBox(height: 4.h(context)),
-                                        Text(
-                                          'اكتشف المزيد عن الخدمات السياحية والثقافية للمدن الأثرية بمنصة المواطن',
-                                          style: Theme.of(context)
-                                              .textTheme
-                                              .bodySmall
-                                              ?.copyWith(
-                                                color: Colors.white70,
-                                                fontSize: 12.f(context),
-                                              ),
-                                          textDirection: TextDirection.rtl,
-                                          maxLines: 2,
-                                          overflow: TextOverflow.ellipsis,
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          SizedBox(height: 24.h(context)),
-                        ],
-                      ),
+                    sliver: const SliverToBoxAdapter(
+                      child: HomeHeritageSection(),
                     ),
                   ),
                 ],
               ),
             ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  /// Horizontal filter row containing ChoiceChips
-  Widget _buildFilterChips() {
-    final primaryColor = Theme.of(context).colorScheme.primary;
-
-    return Directionality(
-      textDirection: TextDirection.rtl,
-      child: SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        physics: const BouncingScrollPhysics(),
-        child: Row(
-          textDirection: TextDirection.rtl,
-          children: _filterOptions.entries.map((entry) {
-            final isSelected = _selectedFilter == entry.key;
-            return Padding(
-              padding: EdgeInsetsDirectional.only(end: 8.s(context)),
-              child: ChoiceChip(
-                label: Text(
-                  entry.value,
-                  style: TextStyle(
-                    fontSize: 13.f(context),
-                    fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
-                    color: isSelected ? Colors.white : Colors.grey[700],
-                  ),
-                ),
-                selected: isSelected,
-                onSelected: (selected) {
-                  if (selected) {
-                    setState(() {
-                      _selectedFilter = entry.key;
-                    });
-                  }
-                },
-                selectedColor: primaryColor,
-                backgroundColor: Colors.grey[200],
-                elevation: isSelected ? 1 : 0,
-                padding: EdgeInsets.symmetric(
-                  horizontal: 10.s(context),
-                  vertical: 6.s(context),
-                ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(20.r(context)),
-                  side: BorderSide(
-                    color: isSelected ? primaryColor : Colors.transparent,
-                  ),
-                ),
-                showCheckmark: false,
-              ),
-            );
-          }).toList(),
-        ),
-      ),
-    );
-  }
-
-  /// Material 3 Update Card component for real AppNotification
-  Widget _buildUpdateCard(AppNotification notification) {
-    final typeLower = notification.type.toLowerCase();
-    IconData icon;
-    Color iconColor;
-    Color bgColor;
-
-    if (typeLower.contains('transaction')) {
-      icon = AppIcons.statsDone;
-      iconColor = const Color(0xFF2E7D32);
-      bgColor = const Color(0xFFE8F5E9);
-    } else if (typeLower.contains('complaint')) {
-      icon = AppIcons.complaint;
-      iconColor = const Color(0xFF1565C0);
-      bgColor = const Color(0xFFE3F2FD);
-    } else {
-      icon = AppIcons.announcements;
-      iconColor = const Color(0xFFC62828);
-      bgColor = const Color(0xFFFFEBEE);
-    }
-
-    final String ctaText = typeLower.contains('transaction')
-        ? 'عرض المعاملة'
-        : typeLower.contains('complaint')
-            ? 'عرض الشكوى'
-            : 'عرض التفاصيل';
-
-    final formattedTime = formatNotificationTime(notification.createdAt);
-    final subtitle = notificationDescription(notification);
-
-    return Directionality(
-      textDirection: TextDirection.rtl,
-      child: Card(
-        margin: EdgeInsets.only(bottom: 16.h(context)),
-        color: Colors.white,
-        surfaceTintColor: Colors.white,
-        elevation: 1,
-        shadowColor: Colors.black.withValues(alpha: 0.1),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16.r(context)),
-          side: BorderSide(
-            color: Colors.grey.withValues(alpha: 0.15),
-            width: 0.8.w(context),
-          ),
-        ),
-        child: Padding(
-          padding: EdgeInsets.all(16.s(context)),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // 1. FIRST CHILD: Circular colored Icon container (on the right in RTL)
-                  Container(
-                    width: 48.s(context),
-                    height: 48.s(context),
-                    decoration: BoxDecoration(
-                      color: bgColor,
-                      shape: BoxShape.circle,
-                    ),
-                    child: Icon(
-                      icon,
-                      color: iconColor,
-                      size: 24.ic(context),
-                    ),
-                  ),
-                  SizedBox(width: 16.w(context)),
-                  // 2. SECOND CHILD: Expanded Column containing Title and Subtitle
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          notification.title,
-                          style: TextStyle(
-                            fontSize: 14.f(context),
-                            fontWeight: FontWeight.bold,
-                            color: const Color(0xFF212121),
-                          ),
-                          overflow: TextOverflow.ellipsis,
-                          maxLines: 1,
-                        ),
-                        SizedBox(height: 6.h(context)),
-                        Text(
-                          subtitle,
-                          style: TextStyle(
-                            fontSize: 12.f(context),
-                            color: Colors.grey[700],
-                            height: 1.4,
-                          ),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ],
-                    ),
-                  ),
-                  SizedBox(width: 8.w(context)),
-                  // 3. THIRD CHILD: Date Text (pushed to the far left)
-                  Text(
-                    formattedTime,
-                    style: TextStyle(
-                      fontSize: 11.f(context),
-                      color: Colors.grey[500],
-                      fontWeight: FontWeight.w400,
-                    ),
-                  ),
-                ],
-              ),
-              SizedBox(height: 12.h(context)),
-              Divider(
-                height: 1.h(context),
-                thickness: 0.6,
-                color: Colors.grey[200],
-              ),
-              SizedBox(height: 8.h(context)),
-              Align(
-                alignment: Alignment.centerLeft,
-                child: TextButton.icon(
-                  onPressed: () {
-                    context.push('/notifications');
-                  },
-                  style: TextButton.styleFrom(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: 12.s(context),
-                      vertical: 4.s(context),
-                    ),
-                    minimumSize: Size.zero,
-                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                  ),
-                  icon: Icon(
-                    Icons.chevron_left,
-                    size: 18.ic(context),
-                    color: Theme.of(context).colorScheme.primary,
-                  ),
-                  label: Text(
-                    ctaText,
-                    style: TextStyle(
-                      fontSize: 12.f(context),
-                      fontWeight: FontWeight.bold,
-                      color: Theme.of(context).colorScheme.primary,
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  /// Loading state widget
-  Widget _buildLoadingState() {
-    return Padding(
-      padding: EdgeInsets.symmetric(vertical: 32.h(context)),
-      child: Center(
-        child: Column(
-          children: [
-            SizedBox(
-              width: 36.s(context),
-              height: 36.s(context),
-              child: CircularProgressIndicator(
-                strokeWidth: 3,
-                color: Theme.of(context).colorScheme.primary,
-              ),
-            ),
-            SizedBox(height: 16.h(context)),
-            Text(
-              'جاري تحميل التحديثات...',
-              style: TextStyle(
-                fontSize: 13.f(context),
-                color: Colors.grey[600],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  /// Error state widget
-  Widget _buildErrorState(String message) {
-    return Padding(
-      padding: EdgeInsets.symmetric(vertical: 24.h(context)),
-      child: Container(
-        padding: EdgeInsets.all(20.s(context)),
-        decoration: BoxDecoration(
-          color: Colors.red.withValues(alpha: 0.05),
-          borderRadius: BorderRadius.circular(16.r(context)),
-          border: Border.all(
-            color: Colors.red.withValues(alpha: 0.2),
-          ),
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.error_outline,
-              color: Colors.red,
-              size: 44.ic(context),
-            ),
-            SizedBox(height: 12.h(context)),
-            Text(
-              message,
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 13.f(context),
-                fontWeight: FontWeight.w500,
-                color: Colors.red[700],
-              ),
-              textDirection: TextDirection.rtl,
-            ),
-            SizedBox(height: 12.h(context)),
-            ElevatedButton.icon(
-              onPressed: () {
-                context.read<NotificationsCubit>().fetchNotifications();
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.red[700],
-                foregroundColor: Colors.white,
-                elevation: 0,
-                padding: EdgeInsets.symmetric(
-                  horizontal: 16.s(context),
-                  vertical: 8.h(context),
-                ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12.r(context)),
-                ),
-              ),
-              icon: Icon(Icons.refresh_rounded, size: 16.ic(context)),
-              label: Text(
-                'إعادة المحاولة',
-                style: TextStyle(fontSize: 12.f(context)),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  /// Empty state widget when filter yields no updates
-  Widget _buildEmptyState() {
-    return Padding(
-      padding: EdgeInsets.symmetric(vertical: 36.h(context)),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Container(
-            padding: EdgeInsets.all(16.s(context)),
-            decoration: BoxDecoration(
-              color: Colors.grey[100],
-              shape: BoxShape.circle,
-            ),
-            child: Icon(
-              Icons.inbox_outlined,
-              size: 64.ic(context),
-              color: Colors.grey[400],
-            ),
-          ),
-          SizedBox(height: 16.h(context)),
-          Text(
-            'لا توجد تحديثات حالياً',
-            style: TextStyle(
-              fontSize: 15.f(context),
-              fontWeight: FontWeight.w600,
-              color: Colors.grey[600],
-            ),
-            textDirection: TextDirection.rtl,
-          ),
-          SizedBox(height: 4.h(context)),
-          Text(
-            'تأكد من اختيار تصنيف آخر أو تفقد الإشعارات لاحقاً',
-            style: TextStyle(
-              fontSize: 12.f(context),
-              color: Colors.grey[400],
-            ),
-            textDirection: TextDirection.rtl,
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildServiceCard({
-    required String title,
-    required IconData icon,
-    required VoidCallback onTap,
-  }) {
-    return Card(
-      color: const Color.fromARGB(255, 245, 243, 243),
-      surfaceTintColor: Colors.white,
-      elevation: 3,
-      shadowColor: Colors.black12,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16.r(context)),
-      ),
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(16.r(context)),
-        child: Padding(
-          padding: EdgeInsets.all(12.s(context)),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Container(
-                width: 48.s(context),
-                height: 48.s(context),
-                decoration: const BoxDecoration(
-                  color: Color(0xFFE8F5E9),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(
-                  icon,
-                  color: const Color(0xFF0B4D3C),
-                  size: 24.ic(context),
-                ),
-              ),
-              SizedBox(height: 8.h(context)),
-              Text(
-                title,
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  color: const Color(0xFF212121),
-                  fontSize: 14.f(context),
-                  fontWeight: FontWeight.bold,
-                ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ],
           ),
         ),
       ),

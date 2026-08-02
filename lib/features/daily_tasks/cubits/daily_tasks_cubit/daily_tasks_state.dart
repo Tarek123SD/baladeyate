@@ -1,4 +1,4 @@
-import 'package:baladeyate/features/daily_tasks/utils/delegate_task_display.dart';
+import 'package:baladeyate/features/daily_tasks/presentation/delegate_task_display.dart';
 import 'package:baladeyate/features/delegate/models/delegate_task.dart';
 import 'package:baladeyate/features/delegate/models/survey_pin.dart';
 import 'package:baladeyate/features/delegate/models/survey_pin_status.dart';

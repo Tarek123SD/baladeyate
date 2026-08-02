@@ -7,7 +7,7 @@ import 'package:baladeyate/features/delegate/models/building_survey.dart';
 import 'package:baladeyate/features/delegate/models/delegate_task.dart';
 import 'package:baladeyate/features/delegate/models/family.dart';
 import 'package:baladeyate/features/delegate/models/registered_household.dart';
-import 'package:baladeyate/features/delegate/data/local_survey_pin_store.dart';
+import 'package:baladeyate/features/delegate/repo/local_survey_pin_store.dart';
 import 'package:baladeyate/features/delegate/models/survey_draft.dart';
 import 'package:baladeyate/features/delegate/models/survey_pin.dart';
 import 'package:baladeyate/features/delegate/models/survey_pin_status.dart';

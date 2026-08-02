@@ -1,13 +1,19 @@
 import 'package:baladeyate/config/theme/app_colors.dart';
-import 'package:baladeyate/config/theme/app_icons.dart';
 import 'package:baladeyate/core/responsive/dimensions.dart';
 import 'package:baladeyate/core/responsive/responsive_helper.dart';
 import 'package:baladeyate/core/services/service_locator.dart';
 import 'package:baladeyate/core/widgets/custom_delegate_building_card.dart';
 import 'package:baladeyate/core/widgets/delegate_bottom_navigation_bar.dart';
 import 'package:baladeyate/features/daily_tasks/cubits/daily_tasks_cubit/daily_tasks_cubit.dart';
-import 'package:baladeyate/features/delegate/data/local_building_survey_store.dart';
-import 'package:baladeyate/features/delegate/data/local_survey_pin_store.dart';
+import 'package:baladeyate/features/daily_tasks/presentation/components/buildings_empty_state.dart';
+import 'package:baladeyate/features/daily_tasks/presentation/components/buildings_list_header.dart';
+import 'package:baladeyate/features/daily_tasks/presentation/components/buildings_no_results_state.dart';
+import 'package:baladeyate/features/daily_tasks/presentation/components/buildings_phase_filters.dart';
+import 'package:baladeyate/features/daily_tasks/presentation/components/buildings_search_field.dart';
+import 'package:baladeyate/features/daily_tasks/presentation/components/buildings_stats_header.dart';
+import 'package:baladeyate/features/daily_tasks/presentation/components/delete_building_confirmation_dialog.dart';
+import 'package:baladeyate/features/delegate/repo/local_building_survey_store.dart';
+import 'package:baladeyate/features/delegate/repo/local_survey_pin_store.dart';
 import 'package:baladeyate/features/delegate/models/building_survey.dart';
 import 'package:baladeyate/features/delegate/models/survey_location.dart';
 import 'package:baladeyate/features/delegate/models/survey_phase.dart';
@@ -114,248 +120,10 @@ class _DelegateBuildingsScreenState extends State<DelegateBuildingsScreen>
         : 'مبنى بدون اسم';
     final hasServerCopy = survey.buildingId != null;
 
-    final confirmed = await showDialog<bool>(
-      context: context,
-      barrierColor: AppColors.primaryForest.withValues(alpha: 0.45),
-      builder: (dialogContext) {
-        return Directionality(
-          textDirection: TextDirection.rtl,
-          child: Dialog(
-            backgroundColor: Colors.transparent,
-            insetPadding: EdgeInsets.symmetric(horizontal: 28.w(context)),
-            child: Container(
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(24.r(context)),
-                border: Border.all(
-                  color: AppColors.thirdGoldenWheat.withValues(alpha: 0.9),
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: AppColors.primaryForest.withValues(alpha: 0.22),
-                    blurRadius: 24,
-                    offset: const Offset(0, 12),
-                  ),
-                ],
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Container(
-                    width: double.infinity,
-                    padding: EdgeInsets.fromLTRB(
-                      20.w(context),
-                      20.h(context),
-                      20.w(context),
-                      18.h(context),
-                    ),
-                    decoration: BoxDecoration(
-                      gradient: const LinearGradient(
-                        begin: Alignment.topRight,
-                        end: Alignment.bottomLeft,
-                        colors: [
-                          AppColors.primaryForest,
-                          AppColors.secondaryForest,
-                          AppColors.thirdForest,
-                        ],
-                      ),
-                      borderRadius: BorderRadius.vertical(
-                        top: Radius.circular(24.r(context)),
-                      ),
-                    ),
-                    child: Row(
-                      children: [
-                        Container(
-                          padding: EdgeInsets.all(10.s(context)),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: 0.15),
-                            borderRadius: BorderRadius.circular(14.r(context)),
-                            border: Border.all(
-                              color: Colors.white.withValues(alpha: 0.25),
-                            ),
-                          ),
-                          child: Icon(
-                            AppIcons.buildings,
-                            color: AppColors.thirdGoldenWheat,
-                            size: 24.ic(context),
-                          ),
-                        ),
-                        SizedBox(width: 12.w(context)),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'تأكيد الحذف',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 17.f(context),
-                                  fontWeight: FontWeight.w800,
-                                ),
-                              ),
-                              SizedBox(height: 4.h(context)),
-                              Text(
-                                'إزالة المبنى من قائمة المسوحات',
-                                style: TextStyle(
-                                  color: Colors.white.withValues(alpha: 0.8),
-                                  fontSize: 12.f(context),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  Padding(
-                    padding: EdgeInsets.fromLTRB(
-                      20.w(context),
-                      18.h(context),
-                      20.w(context),
-                      20.h(context),
-                    ),
-                    child: Column(
-                      children: [
-                        Container(
-                          width: double.infinity,
-                          padding: EdgeInsets.all(14.s(context)),
-                          decoration: BoxDecoration(
-                            color: AppColors.thirdGoldenWheat
-                                .withValues(alpha: 0.45),
-                            borderRadius: BorderRadius.circular(16.r(context)),
-                            border: Border.all(
-                              color: AppColors.primaryForest
-                                  .withValues(alpha: 0.08),
-                            ),
-                          ),
-                          child: Column(
-                            children: [
-                              Text(
-                                name,
-                                textAlign: TextAlign.center,
-                                style: TextStyle(
-                                  color: AppColors.primaryForest,
-                                  fontSize: 15.f(context),
-                                  fontWeight: FontWeight.w800,
-                                ),
-                              ),
-                              SizedBox(height: 8.h(context)),
-                              Text(
-                                hasServerCopy
-                                    ? 'سيتم حذف المبنى من قائمتك ومحاولة إزالته من الخادم أيضاً.'
-                                    : 'سيتم حذف المبنى وبيانات المسح المرتبطة به من قائمتك.',
-                                textAlign: TextAlign.center,
-                                style: TextStyle(
-                                  color: AppColors.secondaryCharcoal
-                                      .withValues(alpha: 0.75),
-                                  fontSize: 13.f(context),
-                                  height: 1.55,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        SizedBox(height: 10.h(context)),
-                        Text(
-                          'لا يمكن التراجع عن هذا الإجراء.',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            color: AppColors.primaryGoldenWheat,
-                            fontSize: 12.f(context),
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        SizedBox(height: 20.h(context)),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: SizedBox(
-                                height: 46.h(context),
-                                child: OutlinedButton(
-                                  onPressed: () =>
-                                      Navigator.of(dialogContext).pop(false),
-                                  style: OutlinedButton.styleFrom(
-                                    foregroundColor: AppColors.primaryForest,
-                                    backgroundColor: AppColors.thirdGoldenWheat
-                                        .withValues(alpha: 0.35),
-                                    side: BorderSide(
-                                      color: AppColors.primaryForest
-                                          .withValues(alpha: 0.3),
-                                    ),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius:
-                                          BorderRadius.circular(14.r(context)),
-                                    ),
-                                  ),
-                                  child: Text(
-                                    'إلغاء',
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.w700,
-                                      fontSize: 14.f(context),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ),
-                            SizedBox(width: 10.w(context)),
-                            Expanded(
-                              child: SizedBox(
-                                height: 46.h(context),
-                                child: Material(
-                                  color: Colors.transparent,
-                                  child: InkWell(
-                                    onTap: () =>
-                                        Navigator.of(dialogContext).pop(true),
-                                    borderRadius:
-                                        BorderRadius.circular(14.r(context)),
-                                    child: Ink(
-                                      decoration: BoxDecoration(
-                                        gradient: const LinearGradient(
-                                          begin: Alignment.topRight,
-                                          end: Alignment.bottomLeft,
-                                          colors: [
-                                            AppColors.thirdDeepUmber,
-                                            AppColors.alertRed,
-                                            Color(0xFF8B3A2F),
-                                          ],
-                                        ),
-                                        borderRadius: BorderRadius.circular(
-                                            14.r(context)),
-                                        boxShadow: [
-                                          BoxShadow(
-                                            color: AppColors.alertRed
-                                                .withValues(alpha: 0.28),
-                                            blurRadius: 12,
-                                            offset: const Offset(0, 6),
-                                          ),
-                                        ],
-                                      ),
-                                      child: Center(
-                                        child: Text(
-                                          'حذف',
-                                          style: TextStyle(
-                                            color: AppColors.thirdGoldenWheat,
-                                            fontWeight: FontWeight.w800,
-                                            fontSize: 14.f(context),
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        );
-      },
+    final confirmed = await showDeleteBuildingConfirmationDialog(
+      context,
+      buildingName: name,
+      hasServerCopy: hasServerCopy,
     );
 
     return confirmed == true;
@@ -450,8 +218,7 @@ class _DelegateBuildingsScreenState extends State<DelegateBuildingsScreen>
                       ),
                       sliver: SliverList(
                         delegate: SliverChildListDelegate([
-                          _buildStatsHeader(
-                            context,
+                          BuildingsStatsHeader(
                             total: _surveys.length,
                             completed: completedCount,
                             inProgress: inProgressCount,
@@ -461,11 +228,18 @@ class _DelegateBuildingsScreenState extends State<DelegateBuildingsScreen>
                               .fadeIn(duration: 320.ms)
                               .slideY(begin: -0.06, end: 0),
                           SizedBox(height: 12.h(context)),
-                          _buildSearchField(context),
+                          BuildingsSearchField(
+                            controller: _searchController,
+                            query: _query,
+                          ),
                           SizedBox(height: 10.h(context)),
-                          _buildFilters(context),
+                          BuildingsPhaseFilters(
+                            selected: _phaseFilter,
+                            onSelected: (phase) =>
+                                setState(() => _phaseFilter = phase),
+                          ),
                           SizedBox(height: 12.h(context)),
-                          _buildListHeader(context, visible.length),
+                          BuildingsListHeader(count: visible.length),
                           SizedBox(height: 8.h(context)),
                         ]),
                       ),
@@ -483,8 +257,8 @@ class _DelegateBuildingsScreenState extends State<DelegateBuildingsScreen>
                           horizontalPadding,
                           bottomClearance,
                         ),
-                        sliver: SliverToBoxAdapter(
-                          child: _buildEmptyState(context),
+                        sliver: const SliverToBoxAdapter(
+                          child: BuildingsEmptyState(),
                         ),
                       )
                     else if (visible.isEmpty)
@@ -496,7 +270,14 @@ class _DelegateBuildingsScreenState extends State<DelegateBuildingsScreen>
                           bottomClearance,
                         ),
                         sliver: SliverToBoxAdapter(
-                          child: _buildNoResultsState(context),
+                          child: BuildingsNoResultsState(
+                            onClearFilters: () {
+                              setState(() {
+                                _phaseFilter = null;
+                                _searchController.clear();
+                              });
+                            },
+                          ),
                         ),
                       )
                     else
@@ -531,375 +312,6 @@ class _DelegateBuildingsScreenState extends State<DelegateBuildingsScreen>
                   ],
                 ),
               ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildStatsHeader(
-    BuildContext context, {
-    required int total,
-    required int completed,
-    required int inProgress,
-    required int pending,
-  }) {
-    return Container(
-      width: double.infinity,
-      padding: EdgeInsets.all(14.s(context)),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          begin: Alignment.topRight,
-          end: Alignment.bottomLeft,
-          colors: [
-            AppColors.primaryForest,
-            AppColors.secondaryForest,
-            AppColors.thirdForest,
-          ],
-        ),
-        borderRadius: BorderRadius.circular(18.r(context)),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.primaryForest.withValues(alpha: 0.22),
-            blurRadius: 16,
-            offset: const Offset(0, 8),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Row(
-            textDirection: TextDirection.rtl,
-            children: [
-              Icon(
-                AppIcons.buildings,
-                color: Colors.white,
-                size: 20.ic(context),
-              ),
-              SizedBox(width: 8.w(context)),
-              Expanded(
-                child: Text(
-                  'المباني المُدخلة',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 15.f(context),
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-              ),
-              Text(
-                '$total',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 16.f(context),
-                  fontWeight: FontWeight.w800,
-                ),
-              ),
-            ],
-          ),
-          SizedBox(height: 10.h(context)),
-          Row(
-            textDirection: TextDirection.rtl,
-            children: [
-              _StatPill(label: 'مكتمل', value: '$completed'),
-              SizedBox(width: 8.w(context)),
-              _StatPill(label: 'قيد الإدخال', value: '$inProgress'),
-              SizedBox(width: 8.w(context)),
-              _StatPill(label: 'بيانات', value: '$pending'),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSearchField(BuildContext context) {
-    return TextField(
-      controller: _searchController,
-      textDirection: TextDirection.rtl,
-      style: TextStyle(
-        color: AppColors.primaryForest,
-        fontSize: 13.f(context),
-      ),
-      decoration: InputDecoration(
-        hintText: 'ابحث بالاسم أو رقم العقار',
-        hintTextDirection: TextDirection.rtl,
-        prefixIcon: Icon(
-          AppIcons.search,
-          color: AppColors.primaryForest.withValues(alpha: 0.55),
-        ),
-        suffixIcon: _query.isEmpty
-            ? null
-            : IconButton(
-                onPressed: () {
-                  _searchController.clear();
-                },
-                icon: const Icon(Icons.close_rounded),
-              ),
-        filled: true,
-        fillColor: Colors.white,
-        contentPadding: EdgeInsets.symmetric(
-          horizontal: 12.w(context),
-          vertical: 10.h(context),
-        ),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14.r(context)),
-          borderSide: BorderSide(
-            color: AppColors.primaryForest.withValues(alpha: 0.1),
-          ),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14.r(context)),
-          borderSide: BorderSide(
-            color: AppColors.primaryForest.withValues(alpha: 0.1),
-          ),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14.r(context)),
-          borderSide: const BorderSide(color: AppColors.primaryForest),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildFilters(BuildContext context) {
-    final options = <(SurveyPhase?, String)>[
-      (null, 'الكل'),
-      (SurveyPhase.floorsInProgress, 'قيد الإدخال'),
-      (SurveyPhase.completed, 'مكتمل'),
-      (SurveyPhase.buildingPending, 'بيانات'),
-    ];
-
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      child: Row(
-        textDirection: TextDirection.rtl,
-        children: [
-          for (final option in options) ...[
-            _FilterChip(
-              label: option.$2,
-              selected: _phaseFilter == option.$1,
-              onTap: () => setState(() => _phaseFilter = option.$1),
-            ),
-            SizedBox(width: 8.w(context)),
-          ],
-        ],
-      ),
-    );
-  }
-
-  Widget _buildListHeader(BuildContext context, int count) {
-    return Row(
-      textDirection: TextDirection.rtl,
-      children: [
-        Container(
-          width: 4.w(context),
-          height: 16.h(context),
-          decoration: BoxDecoration(
-            color: AppColors.green,
-            borderRadius: BorderRadius.circular(4.r(context)),
-          ),
-        ),
-        SizedBox(width: 8.w(context)),
-        Text(
-          'قائمة المباني',
-          style: TextStyle(
-            fontSize: 14.f(context),
-            fontWeight: FontWeight.w800,
-            color: AppColors.primaryForest,
-          ),
-        ),
-        const Spacer(),
-        Container(
-          padding: EdgeInsets.symmetric(
-            horizontal: 10.w(context),
-            vertical: 4.h(context),
-          ),
-          decoration: BoxDecoration(
-            color: AppColors.primaryForest.withValues(alpha: 0.08),
-            borderRadius: BorderRadius.circular(16.r(context)),
-          ),
-          child: Text(
-            '$count مبنى',
-            style: TextStyle(
-              fontSize: 11.f(context),
-              fontWeight: FontWeight.w700,
-              color: AppColors.primaryForest,
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildEmptyState(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: EdgeInsets.symmetric(
-        vertical: 36.h(context),
-        horizontal: 20.w(context),
-      ),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.75),
-        borderRadius: BorderRadius.circular(20.r(context)),
-        border: Border.all(
-          color: AppColors.primaryForest.withValues(alpha: 0.08),
-        ),
-      ),
-      child: Column(
-        children: [
-          Icon(
-            AppIcons.buildings,
-            size: 36.ic(context),
-            color: AppColors.primaryForest,
-          ),
-          SizedBox(height: 12.h(context)),
-          Text(
-            'لا توجد مباني مُدخلة بعد',
-            style: TextStyle(
-              fontSize: 15.f(context),
-              fontWeight: FontWeight.bold,
-              color: AppColors.primaryForest,
-            ),
-          ),
-          SizedBox(height: 6.h(context)),
-          Text(
-            'ابدأ مسحاً جديداً من تبويب الخريطة لتظهر هنا.',
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 12.f(context),
-              color: AppColors.secondaryCharcoal.withValues(alpha: 0.75),
-              height: 1.5,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildNoResultsState(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: EdgeInsets.symmetric(
-        vertical: 28.h(context),
-        horizontal: 16.w(context),
-      ),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.75),
-        borderRadius: BorderRadius.circular(16.r(context)),
-      ),
-      child: Column(
-        children: [
-          Text(
-            'لا نتائج مطابقة',
-            style: TextStyle(
-              fontSize: 14.f(context),
-              fontWeight: FontWeight.w800,
-              color: AppColors.primaryForest,
-            ),
-          ),
-          SizedBox(height: 8.h(context)),
-          TextButton(
-            onPressed: () {
-              setState(() {
-                _phaseFilter = null;
-                _searchController.clear();
-              });
-            },
-            child: Text(
-              'مسح الفلاتر',
-              style: TextStyle(
-                color: AppColors.primaryForest,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _StatPill extends StatelessWidget {
-  const _StatPill({required this.label, required this.value});
-
-  final String label;
-  final String value;
-
-  @override
-  Widget build(BuildContext context) {
-    return Expanded(
-      child: Container(
-        padding: EdgeInsets.symmetric(vertical: 8.h(context)),
-        decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.14),
-          borderRadius: BorderRadius.circular(12.r(context)),
-        ),
-        child: Column(
-          children: [
-            Text(
-              value,
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 15.f(context),
-                fontWeight: FontWeight.w800,
-              ),
-            ),
-            Text(
-              label,
-              style: TextStyle(
-                color: Colors.white.withValues(alpha: 0.85),
-                fontSize: 10.f(context),
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _FilterChip extends StatelessWidget {
-  const _FilterChip({
-    required this.label,
-    required this.selected,
-    required this.onTap,
-  });
-
-  final String label;
-  final bool selected;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return Material(
-      color: selected ? AppColors.primaryForest : Colors.white,
-      borderRadius: BorderRadius.circular(16.r(context)),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(16.r(context)),
-        child: Container(
-          padding: EdgeInsets.symmetric(
-            horizontal: 12.w(context),
-            vertical: 7.h(context),
-          ),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(16.r(context)),
-            border: Border.all(
-              color: selected
-                  ? AppColors.primaryForest
-                  : AppColors.primaryForest.withValues(alpha: 0.14),
-            ),
-          ),
-          child: Text(
-            label,
-            style: TextStyle(
-              color: selected ? Colors.white : AppColors.primaryForest,
-              fontSize: 11.f(context),
-              fontWeight: FontWeight.w700,
             ),
           ),
         ),

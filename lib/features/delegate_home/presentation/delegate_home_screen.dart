@@ -1,24 +1,15 @@
-import 'package:baladeyate/config/theme/app_colors.dart';
-import 'package:baladeyate/config/theme/app_icons.dart';
 import 'package:baladeyate/core/responsive/dimensions.dart';
 import 'package:baladeyate/core/widgets/app_background.dart';
 import 'package:baladeyate/core/widgets/custom_app_bar.dart';
-import 'package:baladeyate/core/widgets/custom_daily_task_card.dart';
-import 'package:baladeyate/core/widgets/custom_track_statistic_card.dart';
 import 'package:baladeyate/core/widgets/delegate_bottom_navigation_bar.dart';
-import 'package:baladeyate/features/auth/cubits/auth_cubit/auth_cubit.dart';
-import 'package:baladeyate/features/auth/cubits/auth_cubit/auth_state.dart';
 import 'package:baladeyate/features/daily_tasks/cubits/daily_tasks_cubit/daily_tasks_cubit.dart';
 import 'package:baladeyate/features/daily_tasks/cubits/daily_tasks_cubit/daily_tasks_state.dart';
-import 'package:baladeyate/features/daily_tasks/utils/delegate_survey_actions.dart';
-import 'package:baladeyate/features/daily_tasks/utils/delegate_task_display.dart';
-import 'package:baladeyate/features/daily_tasks/widgets/delegate_assigned_task_sheet.dart';
-import 'package:baladeyate/features/daily_tasks/widgets/delegate_map_widgets.dart';
-import 'package:baladeyate/features/delegate/models/survey_pin_status.dart';
-import 'package:baladeyate/features/home/presentation/components/custom_card.dart';
-import 'package:baladeyate/features/home/presentation/components/greeting_card.dart';
+import 'package:baladeyate/features/delegate_home/presentation/components/delegate_home_greeting.dart';
+import 'package:baladeyate/features/delegate_home/presentation/components/delegate_home_priority_tasks.dart';
+import 'package:baladeyate/features/delegate_home/presentation/components/delegate_home_progress_row.dart';
+import 'package:baladeyate/features/delegate_home/presentation/components/delegate_home_quick_actions.dart';
+import 'package:baladeyate/features/delegate_home/presentation/components/delegate_home_recent_activity.dart';
 import 'package:baladeyate/features/home/presentation/components/section_header.dart';
-import 'package:baladeyate/features/home/presentation/components/update_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -29,289 +20,6 @@ class DelegateHomeScreen extends StatefulWidget {
 
   @override
   State<DelegateHomeScreen> createState() => _DelegateHomeScreenState();
-
-  Widget _buildGreeting(BuildContext context) {
-    return BlocBuilder<AuthCubit, AuthState>(
-      buildWhen: (previous, current) {
-        if (previous is AuthSuccess && current is AuthSuccess) {
-          return previous.user.name != current.user.name;
-        }
-        return previous.runtimeType != current.runtimeType;
-      },
-      builder: (context, state) {
-        final userName = state is AuthSuccess ? state.user.name : 'مندوب';
-        return GreetingCard(
-          greeting: _timeGreeting(),
-          name: 'أهلاً، $userName',
-          statusLabel: 'مندوب ميداني',
-          statusColor: AppColors.primaryGoldenWheat,
-        );
-      },
-    );
-  }
-
-  Widget _buildProgressRow(BuildContext context, DailyTasksState state) {
-    return Column(
-      children: [
-        Row(
-          textDirection: TextDirection.rtl,
-          children: [
-            CustomTrackStatisticCard(
-              title: 'إجمالي المهام',
-              value: '${state.totalTasks}',
-              backgroundColor: Colors.white,
-              textColor: AppColors.primaryForest,
-            ),
-            SizedBox(width: 10.w(context)),
-            CustomTrackStatisticCard(
-              title: 'قيد التنفيذ',
-              value: '${state.inProgressTasks}',
-              backgroundColor:
-                  AppColors.thirdGoldenWheat.withValues(alpha: 0.35),
-              textColor: AppColors.primaryForest,
-            ),
-          ],
-        ),
-        SizedBox(height: 10.h(context)),
-        Row(
-          textDirection: TextDirection.rtl,
-          children: [
-            CustomTrackStatisticCard(
-              title: 'مكتملة',
-              value: '${state.completedTasks}',
-              backgroundColor: AppColors.secondaryForest.withValues(alpha: 0.15),
-              textColor: AppColors.primaryForest,
-            ),
-            SizedBox(width: 10.w(context)),
-            CustomTrackStatisticCard(
-              title: 'الإنجاز',
-              value: '${state.achievementPercent}%',
-              backgroundColor:
-                  AppColors.thirdGoldenWheat.withValues(alpha: 0.75),
-              textColor: AppColors.primaryGoldenWheat,
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-
-  Widget _buildQuickActions(BuildContext context) {
-    final gap = 12.s(context);
-
-    Widget tile(String title, IconData icon, VoidCallback onTap) {
-      return CustomCard(
-        title: title,
-        icon: icon,
-        bgColor: Colors.white,
-        iconColor: AppColors.primaryForest,
-        onTap: onTap,
-      );
-    }
-
-    return Column(
-      children: [
-        Row(
-          children: [
-            Expanded(
-              child: tile(
-                'الخريطة',
-                AppIcons.map,
-                () => context.push('/delegate/map'),
-              ),
-            ),
-            SizedBox(width: gap),
-            Expanded(
-              child: tile(
-                'المهام',
-                AppIcons.tasks,
-                () => context.push('/delegate/tasks'),
-              ),
-            ),
-          ],
-        ),
-        SizedBox(height: gap),
-        Row(
-          children: [
-            Expanded(
-              child: tile(
-                'فحص الوثائق',
-                AppIcons.scanDocument,
-                () => context.push('/delegate/home/verify-document'),
-              ),
-            ),
-            SizedBox(width: gap),
-            Expanded(
-              child: tile(
-                'خريطة المقبرة',
-                AppIcons.cemetery,
-                () => context.push('/delegate/cemetery-map'),
-              ),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-
-
-
-  List<Widget> _buildPriorityTasks(
-    BuildContext context,
-    DailyTasksState state,
-  ) {
-    final assignedTasks = state.activeAssignedTasks.take(2).toList();
-    final priorityPins = state.pins
-        .where(
-          (pin) =>
-              pin.status == SurveyPinStatus.assigned ||
-              pin.status == SurveyPinStatus.inProgress,
-        )
-        .take(3 - assignedTasks.length)
-        .toList();
-
-    if (assignedTasks.isEmpty && priorityPins.isEmpty) {
-      return [
-        Container(
-          padding: EdgeInsets.all(20.s(context)),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(16.r(context)),
-            border: Border.all(
-              color: AppColors.secondaryCharcoal.withValues(alpha: 0.15),
-            ),
-          ),
-          child: Text(
-            'لا توجد مهام نشطة حالياً. ابدأ مسحاً جديداً من الخريطة.',
-            textAlign: TextAlign.center,
-            textDirection: TextDirection.rtl,
-            style: TextStyle(
-              color: AppColors.secondaryCharcoal.withValues(alpha: 0.75),
-              fontSize: 14.f(context),
-            ),
-          ),
-        ),
-      ];
-    }
-
-    final widgets = <Widget>[];
-
-    for (final task in assignedTasks) {
-      widgets.add(
-        Padding(
-          padding: EdgeInsets.only(bottom: 8.h(context)),
-          child: CustomDailyTaskCard(
-            title: task.title,
-            location: locationLabelForDelegateTask(task),
-            statusLabel: statusLabelForDelegateTask(task),
-            metaLabel: timeLabelForDelegateTask(task),
-            status: cardStatusForDelegateTask(task),
-            isPriority: task.isInProgress,
-            emphasized: true,
-            startLabel:
-                task.isInProgress ? 'متابعة المهمة' : 'بدء المهمة',
-            onTap: () => showDelegateAssignedTaskSheet(context, task),
-            onStart: task.isInProgress
-                ? () => showDelegateAssignedTaskSheet(context, task)
-                : () => context.read<DailyTasksCubit>().updateTaskStatus(
-                      id: task.id,
-                      status: 'in_progress',
-                    ),
-          ),
-        ),
-      );
-    }
-
-    for (final pin in priorityPins) {
-      widgets.add(
-        Padding(
-          padding: EdgeInsets.only(bottom: 8.h(context)),
-          child: CustomDailyTaskCard(
-            title: friendlyTitleForPin(pin),
-            location: friendlyLocationForPin(pin),
-            statusLabel: statusLabelForPin(pin),
-            metaLabel: distanceLabelForPin(pin, state.currentPosition),
-            status: cardStatusForPin(pin),
-            startLabel: actionLabelForPin(pin),
-            onTap: () => showPinInfoSheet(context, pin),
-            onStart: pin.status == SurveyPinStatus.completed
-                ? null
-                : () => resumeDelegateSurvey(context, pin),
-            onNavigate: () {
-              context.read<DailyTasksCubit>().selectPin(pin.id);
-              context.go('/delegate/map');
-            },
-          ),
-        ),
-      );
-    }
-
-    return widgets;
-  }
-
-  List<Widget> _buildRecentActivity(
-    BuildContext context,
-    DailyTasksState state,
-  ) {
-    final completedTasks = completedDelegateTasks(state.delegateTasks).take(1);
-    final completed = state.pins
-        .where((pin) => pin.status == SurveyPinStatus.completed)
-        .take(2 - completedTasks.length)
-        .toList();
-
-    if (completedTasks.isEmpty && completed.isEmpty) {
-      return [
-        UpdateCard(
-          title: 'لا يوجد نشاط مكتمل بعد',
-          time: 'اليوم',
-          description: 'ستظهر هنا المهام المكتملة بعد إنهاء المسوحات الميدانية.',
-          icon: AppIcons.transactions,
-          iconBgColor: AppColors.primaryForest,
-        ),
-      ];
-    }
-
-    final widgets = <Widget>[];
-
-    for (final task in completedTasks) {
-      widgets.add(
-        Padding(
-          padding: EdgeInsets.only(bottom: 12.h(context)),
-          child: UpdateCard(
-            title: 'اكتملت مهمة: ${task.title}',
-            time: 'مكتمل',
-            description: locationLabelForDelegateTask(task),
-            icon: AppIcons.statsDone,
-            iconBgColor: AppColors.primaryForest,
-          ),
-        ),
-      );
-    }
-
-    for (final pin in completed) {
-      widgets.add(
-        Padding(
-          padding: EdgeInsets.only(bottom: 12.h(context)),
-          child: UpdateCard(
-            title: 'اكتمل مسح: ${friendlyTitleForPin(pin)}',
-            time: 'مكتمل',
-            description: friendlyLocationForPin(pin),
-            icon: AppIcons.statsDone,
-            iconBgColor: AppColors.primaryForest,
-          ),
-        ),
-      );
-    }
-
-    return widgets;
-  }
-
-  String _timeGreeting() {
-    final hour = DateTime.now().hour;
-    if (hour < 12) return 'صباح الخير';
-    if (hour < 17) return 'مساء الخير';
-    return 'مساء الخير';
-  }
 }
 
 class _DelegateHomeScreenState extends State<DelegateHomeScreen> {
@@ -363,13 +71,13 @@ class _DelegateHomeScreenState extends State<DelegateHomeScreen> {
                         ),
                         sliver: SliverList(
                           delegate: SliverChildListDelegate([
-                            widget._buildGreeting(context),
+                            const DelegateHomeGreeting(),
                             SizedBox(height: 24.h(context)),
-                            widget._buildProgressRow(context, tasksState),
+                            DelegateHomeProgressRow(state: tasksState),
                             SizedBox(height: 28.h(context)),
                             const SectionHeader(title: 'الوصول السريع'),
                             SizedBox(height: 16.h(context)),
-                            widget._buildQuickActions(context),
+                            const DelegateHomeQuickActions(),
                             SizedBox(height: 28.h(context)),
                             SectionHeader(
                               title: 'مهام ذات أولوية',
@@ -377,11 +85,11 @@ class _DelegateHomeScreenState extends State<DelegateHomeScreen> {
                               onActionTap: () => context.go('/delegate/tasks'),
                             ),
                             SizedBox(height: 16.h(context)),
-                            ...widget._buildPriorityTasks(context, tasksState),
+                            DelegateHomePriorityTasks(state: tasksState),
                             SizedBox(height: 28.h(context)),
                             const SectionHeader(title: 'آخر النشاط'),
                             SizedBox(height: 16.h(context)),
-                            ...widget._buildRecentActivity(context, tasksState),
+                            DelegateHomeRecentActivity(state: tasksState),
                           ]),
                         ),
                       ),
@@ -395,5 +103,4 @@ class _DelegateHomeScreenState extends State<DelegateHomeScreen> {
       ),
     );
   }
-
 }

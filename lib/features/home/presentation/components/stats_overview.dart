@@ -24,7 +24,7 @@ class StatsOverview extends StatelessWidget {
         return Material(
           color: Colors.transparent,
           child: InkWell(
-            onTap: () => context.push('/track'),
+            onTap: () => context.go('/track'),
             borderRadius: BorderRadius.circular(20.r(context)),
             child: Container(
               padding: EdgeInsets.all(16.s(context)),
