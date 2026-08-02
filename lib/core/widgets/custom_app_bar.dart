@@ -131,7 +131,9 @@ class _NotificationsButton extends StatelessWidget {
             clipBehavior: Clip.none,
             children: [
               Icon(
-                hasUnread ? AppIcons.notificationActive : AppIcons.notification,
+                hasUnread
+                    ? AppIcons.notificationActive
+                    : AppIcons.notification,
                 color: hasUnread ? AppColors.primaryForest : Colors.black87,
                 size: iconSize,
               ),

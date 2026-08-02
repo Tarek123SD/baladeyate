@@ -486,8 +486,7 @@ class DelegateSelectedPinCard extends StatelessWidget {
                     child: Icon(
                       Icons.close_rounded,
                       size: 18.ic(context),
-                      color:
-                          AppColors.secondaryCharcoal.withValues(alpha: 0.55),
+                      color: AppColors.secondaryCharcoal.withValues(alpha: 0.55),
                     ),
                   ),
                 ),
