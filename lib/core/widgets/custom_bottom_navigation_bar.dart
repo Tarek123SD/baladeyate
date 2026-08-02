@@ -1,4 +1,5 @@
 import 'package:baladeyate/config/theme/app_colors.dart';
+import 'package:baladeyate/config/theme/app_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:responsive_x_toolkit/responsive_x.dart';
 
@@ -21,19 +22,19 @@ class CustomBottomNavigationBar extends StatelessWidget {
   ];
 
   static const _icons = [
-    Icons.home_outlined,
-    Icons.person_outline,
-    Icons.volunteer_activism_outlined,
-    Icons.support_agent_outlined,
-    Icons.assignment_outlined,
+    AppIcons.navHome,
+    AppIcons.navProfile,
+    AppIcons.navDonations,
+    AppIcons.navComplaints,
+    AppIcons.navTransactions,
   ];
 
   static const _activeIcons = [
-    Icons.home_rounded,
-    Icons.person_rounded,
-    Icons.volunteer_activism_rounded,
-    Icons.support_agent_rounded,
-    Icons.assignment,
+    AppIcons.navHomeActive,
+    AppIcons.navProfileActive,
+    AppIcons.navDonationsActive,
+    AppIcons.navComplaintsActive,
+    AppIcons.navTransactionsActive,
   ];
 
   @override

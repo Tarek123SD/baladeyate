@@ -5,6 +5,7 @@ import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:responsive_x_toolkit/responsive_x.dart';
 
 import 'package:baladeyate/config/theme/app_colors.dart';
+import 'package:baladeyate/config/theme/app_icons.dart';
 import 'package:baladeyate/core/services/service_locator.dart';
 import 'package:baladeyate/features/digital_documents/cubits/scanner_cubit/scanner_cubit.dart';
 import 'package:baladeyate/features/digital_documents/cubits/scanner_cubit/scanner_state.dart';
@@ -221,7 +222,7 @@ class _DocumentScannerViewState extends State<DocumentScannerView> {
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Icon(
-                            Icons.qr_code_scanner,
+                            AppIcons.scanDocument,
                             color: AppColors.primaryGoldenWheat,
                             size: 20.ic(context),
                           ),

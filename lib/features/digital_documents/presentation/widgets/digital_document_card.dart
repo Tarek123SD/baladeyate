@@ -4,6 +4,7 @@ import 'package:qr_flutter/qr_flutter.dart';
 import 'package:responsive_x_toolkit/responsive_x.dart';
 
 import 'package:baladeyate/config/theme/app_colors.dart';
+import 'package:baladeyate/config/theme/app_icons.dart';
 import 'package:baladeyate/features/digital_documents/models/digital_document_model.dart';
 
 /// Premium Wallet Card widget for a Digital Municipal Document.
@@ -219,7 +220,7 @@ class DigitalDocumentCard extends StatelessWidget {
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               Icon(
-                                Icons.qr_code_scanner_rounded,
+                                AppIcons.scanDocument,
                                 size: 11.ic(context),
                                 color: const Color(0xFFFFD54F),
                               ),

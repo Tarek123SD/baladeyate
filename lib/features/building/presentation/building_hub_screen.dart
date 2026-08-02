@@ -1,4 +1,5 @@
 import 'package:baladeyate/config/theme/app_colors.dart';
+import 'package:baladeyate/config/theme/app_icons.dart';
 import 'package:baladeyate/core/constants/app_assets.dart';
 import 'package:baladeyate/core/responsive/responsive_helper.dart';
 import 'package:baladeyate/core/services/service_locator.dart';
@@ -36,6 +37,29 @@ class BuildingHubScreen extends StatelessWidget {
     context.go('/delegate/buildings');
   }
 
+  Future<void> _addFloor(BuildContext context) async {
+    await context.push(
+      '/floor',
+      extra: SurveyNavigationContext(
+        pinId: pinId,
+        isNewFloor: true,
+      ),
+    );
+    if (!context.mounted) return;
+    context.read<BuildingSurveyCubit>().loadSurvey(pinId);
+  }
+
+  static String floorTitle(FloorDraft floor) {
+    final name = floor.floorName.trim();
+    final number = floor.floorNumber.trim();
+    final candidate = name.isNotEmpty ? name : number;
+    if (candidate.isEmpty) return 'طابق بدون رقم';
+    if (RegExp(r'^\d+$').hasMatch(candidate)) {
+      return 'الطابق $candidate';
+    }
+    return candidate;
+  }
+
   @override
   Widget build(BuildContext context) {
     final horizontalPadding = ResponsiveHelper.horizontalPadding(context);
@@ -56,6 +80,13 @@ class BuildingHubScreen extends StatelessWidget {
         }
 
         final isCompleted = survey.phase == SurveyPhase.completed;
+        final expectedTotal = survey.floors.fold<int>(0, (sum, floor) {
+          return sum + (int.tryParse(floor.expectedApartmentCount) ?? 0);
+        });
+        final savedTotal = survey.totalSavedApartments;
+        final apartmentProgress = expectedTotal > 0
+            ? (savedTotal / expectedTotal).clamp(0.0, 1.0)
+            : (savedTotal > 0 ? 1.0 : 0.0);
 
         return Container(
           decoration: const BoxDecoration(
@@ -71,6 +102,25 @@ class BuildingHubScreen extends StatelessWidget {
               showSettings: false,
               showNotifications: false,
             ),
+            floatingActionButton: isCompleted
+                ? null
+                : FloatingActionButton.extended(
+                    onPressed: () => _addFloor(context),
+                    backgroundColor: AppColors.primaryForest,
+                    icon: Icon(
+                      Icons.add_rounded,
+                      color: Colors.white,
+                      size: 20.ic(context),
+                    ),
+                    label: Text(
+                      'إضافة طابق',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w800,
+                        fontSize: 13.f(context),
+                      ),
+                    ),
+                  ),
             body: SafeArea(
               child: Directionality(
                 textDirection: TextDirection.rtl,
@@ -89,43 +139,21 @@ class BuildingHubScreen extends StatelessWidget {
                             ),
                             sliver: SliverList(
                               delegate: SliverChildListDelegate([
-                                _HeaderCard(survey: survey)
+                                _HeaderCard(
+                                  survey: survey,
+                                  apartmentProgress: apartmentProgress,
+                                  savedApartments: savedTotal,
+                                  expectedApartments: expectedTotal,
+                                )
                                     .animate()
-                                    .fadeIn(duration: 350.ms)
-                                    .slideY(begin: -0.08, end: 0),
-                                SizedBox(height: 20.h(context)),
+                                    .fadeIn(duration: 320.ms)
+                                    .slideY(begin: -0.06, end: 0),
+                                SizedBox(height: 14.h(context)),
                                 _SectionHeader(
                                   title: 'الطوابق',
                                   count: survey.floors.length,
-                                  action: TextButton.icon(
-                                    onPressed: () async {
-                                      await context.push(
-                                        '/floor',
-                                        extra: SurveyNavigationContext(
-                                          pinId: pinId,
-                                          isNewFloor: true,
-                                        ),
-                                      );
-                                      if (!context.mounted) return;
-                                      context.read<BuildingSurveyCubit>().loadSurvey(pinId);
-                                    },
-                                    style: TextButton.styleFrom(
-                                      foregroundColor: AppColors.green,
-                                    ),
-                                    icon: Icon(
-                                      Icons.add_circle_outline_rounded,
-                                      size: 20.ic(context),
-                                    ),
-                                    label: Text(
-                                      'إضافة طابق',
-                                      style: TextStyle(
-                                        fontWeight: FontWeight.w700,
-                                        fontSize: 13.f(context),
-                                      ),
-                                    ),
-                                  ),
                                 ),
-                                SizedBox(height: 12.h(context)),
+                                SizedBox(height: 8.h(context)),
                               ]),
                             ),
                           ),
@@ -136,17 +164,7 @@ class BuildingHubScreen extends StatelessWidget {
                                   horizontal: horizontalPadding,
                                 ),
                                 child: _EmptyFloorsState(
-                                  onAddFloor: () async {
-                                    await context.push(
-                                      '/floor',
-                                      extra: SurveyNavigationContext(
-                                        pinId: pinId,
-                                        isNewFloor: true,
-                                      ),
-                                    );
-                                    if (!context.mounted) return;
-                                    context.read<BuildingSurveyCubit>().loadSurvey(pinId);
-                                  },
+                                  onAddFloor: () => _addFloor(context),
                                 ),
                               ),
                             )
@@ -156,28 +174,30 @@ class BuildingHubScreen extends StatelessWidget {
                                 horizontalPadding,
                                 0,
                                 horizontalPadding,
-                                16.h(context),
+                                88.h(context),
                               ),
                               sliver: SliverList.separated(
                                 itemCount: survey.floors.length,
                                 separatorBuilder: (_, __) =>
-                                    SizedBox(height: 12.h(context)),
+                                    SizedBox(height: 8.h(context)),
                                 itemBuilder: (context, index) {
                                   final floor = survey.floors[index];
-                                  final label = floor.floorName.isNotEmpty
-                                      ? floor.floorName
-                                      : 'الطابق ${floor.floorNumber}';
+                                  final expected =
+                                      int.tryParse(floor.expectedApartmentCount) ??
+                                          0;
+                                  final saved = floor.savedApartmentCount;
                                   return _FloorCard(
-                                    title: label,
-                                    subtitle:
-                                        '${floor.savedApartmentCount} شقة مسجلة'
-                                        '${floor.expectedApartmentCount.isNotEmpty ? ' / ${floor.expectedApartmentCount} متوقعة' : ''}',
+                                    title: floorTitle(floor),
+                                    saved: saved,
+                                    expected: expected,
                                     onTap: () async {
                                       await context.push(
                                         '/building/$pinId/floor/${floor.localId}',
                                       );
                                       if (!context.mounted) return;
-                                      context.read<BuildingSurveyCubit>().loadSurvey(pinId);
+                                      context
+                                          .read<BuildingSurveyCubit>()
+                                          .loadSurvey(pinId);
                                     },
                                     onEdit: () async {
                                       await context.push(
@@ -188,15 +208,17 @@ class BuildingHubScreen extends StatelessWidget {
                                         ),
                                       );
                                       if (!context.mounted) return;
-                                      context.read<BuildingSurveyCubit>().loadSurvey(pinId);
+                                      context
+                                          .read<BuildingSurveyCubit>()
+                                          .loadSurvey(pinId);
                                     },
                                   )
                                       .animate()
                                       .fadeIn(
-                                        duration: 300.ms,
-                                        delay: (40 * index).ms,
+                                        duration: 260.ms,
+                                        delay: (30 * index).ms,
                                       )
-                                      .slideY(begin: 0.06, end: 0);
+                                      .slideY(begin: 0.04, end: 0);
                                 },
                               ),
                             ),
@@ -211,82 +233,35 @@ class BuildingHubScreen extends StatelessWidget {
                           horizontalPadding,
                           16.h(context),
                         ),
-                        child: SizedBox(
-                          height: 52.h(context),
-                          width: double.infinity,
-                          child: Material(
-                            color: Colors.transparent,
-                            child: InkWell(
-                              onTap: isCompleted
-                                  ? null
-                                  : () => _finishSurvey(context, survey),
-                              borderRadius:
-                                  BorderRadius.circular(16.r(context)),
-                              child: Ink(
-                                decoration: BoxDecoration(
-                                  gradient: isCompleted
-                                      ? null
-                                      : const LinearGradient(
-                                          begin: Alignment.topRight,
-                                          end: Alignment.bottomLeft,
-                                          colors: [
-                                            AppColors.primaryForest,
-                                            AppColors.secondaryForest,
-                                            AppColors.thirdForest,
-                                          ],
-                                        ),
-                                  color: isCompleted
-                                      ? AppColors.secondaryCharcoal
-                                          .withValues(alpha: 0.12)
-                                      : null,
-                                  borderRadius:
-                                      BorderRadius.circular(16.r(context)),
-                                  boxShadow: isCompleted
-                                      ? null
-                                      : [
-                                          BoxShadow(
-                                            color: AppColors.primaryForest
-                                                .withValues(alpha: 0.28),
-                                            blurRadius: 16,
-                                            offset: const Offset(0, 8),
-                                          ),
-                                        ],
-                                ),
-                                child: Center(
-                                  child: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Icon(
-                                        isCompleted
-                                            ? Icons.check_circle_rounded
-                                            : Icons.flag_rounded,
-                                        color: isCompleted
-                                            ? AppColors.secondaryCharcoal
-                                                .withValues(alpha: 0.55)
-                                            : AppColors.thirdGoldenWheat,
-                                        size: 20.ic(context),
-                                      ),
-                                      SizedBox(width: 8.w(context)),
-                                      Text(
-                                        isCompleted
-                                            ? 'تم إنهاء المسح'
-                                            : 'إنهاء مسح المبنى',
-                                        style: TextStyle(
-                                          color: isCompleted
-                                              ? AppColors.secondaryCharcoal
-                                                  .withValues(alpha: 0.55)
-                                              : AppColors.thirdGoldenWheat,
-                                          fontSize: 15.f(context),
-                                          fontWeight: FontWeight.w800,
-                                        ),
-                                      ),
-                                    ],
+                        child: isCompleted
+                            ? _CompletedBanner()
+                            : SizedBox(
+                                height: 48.h(context),
+                                width: double.infinity,
+                                child: FilledButton.icon(
+                                  onPressed: () =>
+                                      _finishSurvey(context, survey),
+                                  style: FilledButton.styleFrom(
+                                    backgroundColor: AppColors.primaryForest,
+                                    foregroundColor: Colors.white,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius:
+                                          BorderRadius.circular(14.r(context)),
+                                    ),
+                                  ),
+                                  icon: Icon(
+                                    AppIcons.flag,
+                                    size: 18.ic(context),
+                                  ),
+                                  label: Text(
+                                    'إنهاء مسح المبنى',
+                                    style: TextStyle(
+                                      fontSize: 14.f(context),
+                                      fontWeight: FontWeight.w800,
+                                    ),
                                   ),
                                 ),
                               ),
-                            ),
-                          ),
-                        ),
                       ),
                   ],
                 ),
@@ -300,9 +275,17 @@ class BuildingHubScreen extends StatelessWidget {
 }
 
 class _HeaderCard extends StatelessWidget {
-  const _HeaderCard({required this.survey});
+  const _HeaderCard({
+    required this.survey,
+    required this.apartmentProgress,
+    required this.savedApartments,
+    required this.expectedApartments,
+  });
 
   final BuildingSurvey survey;
+  final double apartmentProgress;
+  final int savedApartments;
+  final int expectedApartments;
 
   String get _title {
     if (survey.building.name.trim().isNotEmpty) {
@@ -328,7 +311,7 @@ class _HeaderCard extends StatelessWidget {
 
     return Container(
       width: double.infinity,
-      padding: EdgeInsets.all(20.s(context)),
+      padding: EdgeInsets.all(14.s(context)),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
           begin: Alignment.topRight,
@@ -339,173 +322,176 @@ class _HeaderCard extends StatelessWidget {
             AppColors.thirdForest,
           ],
         ),
-        borderRadius: BorderRadius.circular(24.r(context)),
+        borderRadius: BorderRadius.circular(18.r(context)),
         boxShadow: [
           BoxShadow(
-            color: AppColors.primaryForest.withValues(alpha: 0.28),
-            blurRadius: 22,
-            offset: const Offset(0, 12),
+            color: AppColors.primaryForest.withValues(alpha: 0.22),
+            blurRadius: 16,
+            offset: const Offset(0, 8),
           ),
         ],
       ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Row(
+            textDirection: TextDirection.rtl,
             children: [
               Container(
-                padding: EdgeInsets.all(12.s(context)),
+                width: 36.s(context),
+                height: 36.s(context),
                 decoration: BoxDecoration(
                   color: Colors.white.withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(16.r(context)),
-                  border: Border.all(
-                    color: Colors.white.withValues(alpha: 0.25),
-                  ),
+                  borderRadius: BorderRadius.circular(10.r(context)),
                 ),
                 child: Icon(
-                  Icons.apartment_rounded,
+                  AppIcons.buildings,
                   color: Colors.white,
-                  size: 28.ic(context),
+                  size: 20.ic(context),
                 ),
               ),
-              SizedBox(width: 12.w(context)),
+              SizedBox(width: 10.w(context)),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       _title,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                       style: TextStyle(
                         color: Colors.white,
-                        fontSize: 17.f(context),
+                        fontSize: 15.f(context),
                         fontWeight: FontWeight.w800,
-                        height: 1.3,
                       ),
                     ),
-                    if (_address != null) ...[
-                      SizedBox(height: 4.h(context)),
+                    if (_address != null)
                       Text(
                         _address!,
                         style: TextStyle(
                           color: Colors.white.withValues(alpha: 0.8),
-                          fontSize: 12.f(context),
+                          fontSize: 11.f(context),
                         ),
                       ),
-                    ],
                   ],
                 ),
               ),
               Container(
                 padding: EdgeInsets.symmetric(
-                  horizontal: 10.w(context),
-                  vertical: 6.h(context),
+                  horizontal: 8.w(context),
+                  vertical: 4.h(context),
                 ),
                 decoration: BoxDecoration(
-                  color: AppColors.thirdGoldenWheat.withValues(alpha: 0.9),
-                  borderRadius: BorderRadius.circular(20.r(context)),
+                  color: Colors.white.withValues(alpha: 0.16),
+                  borderRadius: BorderRadius.circular(12.r(context)),
                 ),
                 child: Text(
                   isCompleted ? 'مكتمل' : 'قيد الإدخال',
                   style: TextStyle(
-                    color: AppColors.primaryForest,
-                    fontSize: 11.f(context),
+                    color: Colors.white,
+                    fontSize: 10.f(context),
                     fontWeight: FontWeight.w800,
                   ),
                 ),
               ),
             ],
           ),
-          SizedBox(height: 18.h(context)),
-          Text(
-            'أضف الطوابق والشقق لإكمال مسح المبنى، ثم أنهِ المسح عند الانتهاء.',
-            style: TextStyle(
-              color: Colors.white.withValues(alpha: 0.85),
-              fontSize: 12.f(context),
-              height: 1.55,
-            ),
-          ),
-          SizedBox(height: 16.h(context)),
-          Row(
-            children: [
-              Expanded(
-                child: _StatPill(
-                  icon: Icons.layers_outlined,
-                  label: 'الطوابق',
-                  value: '${survey.floors.length}',
-                ),
+          if (!isCompleted) ...[
+            SizedBox(height: 10.h(context)),
+            Text(
+              'أضف الطوابق والشقق ثم أنهِ المسح عند الانتهاء.',
+              style: TextStyle(
+                color: Colors.white.withValues(alpha: 0.85),
+                fontSize: 11.f(context),
+                height: 1.4,
               ),
-              SizedBox(width: 10.w(context)),
-              Expanded(
-                child: _StatPill(
-                  icon: Icons.meeting_room_outlined,
-                  label: 'الشقق',
-                  value: '${survey.totalSavedApartments}',
-                ),
+            ),
+          ],
+          SizedBox(height: 12.h(context)),
+          Row(
+            textDirection: TextDirection.rtl,
+            children: [
+              _MiniStat(
+                label: 'طوابق',
+                value: '${survey.floors.length}',
+              ),
+              SizedBox(width: 8.w(context)),
+              _MiniStat(
+                label: 'شقق',
+                value: expectedApartments > 0
+                    ? '$savedApartments/$expectedApartments'
+                    : '$savedApartments',
               ),
               if (survey.building.totalFloors.trim().isNotEmpty) ...[
-                SizedBox(width: 10.w(context)),
-                Expanded(
-                  child: _StatPill(
-                    icon: Icons.tag_outlined,
-                    label: 'المخطط',
-                    value: survey.building.totalFloors.trim(),
-                  ),
+                SizedBox(width: 8.w(context)),
+                _MiniStat(
+                  label: 'مخطط',
+                  value: survey.building.totalFloors.trim(),
                 ),
               ],
             ],
           ),
+          if (expectedApartments > 0) ...[
+            SizedBox(height: 10.h(context)),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(8.r(context)),
+              child: LinearProgressIndicator(
+                value: apartmentProgress,
+                minHeight: 6.h(context),
+                backgroundColor: Colors.white.withValues(alpha: 0.2),
+                color: AppColors.thirdGoldenWheat,
+              ),
+            ),
+            SizedBox(height: 4.h(context)),
+            Text(
+              'تقدم الشقق ${(apartmentProgress * 100).round()}%',
+              style: TextStyle(
+                color: Colors.white.withValues(alpha: 0.85),
+                fontSize: 10.f(context),
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
         ],
       ),
     );
   }
 }
 
-class _StatPill extends StatelessWidget {
-  const _StatPill({
-    required this.icon,
-    required this.label,
-    required this.value,
-  });
+class _MiniStat extends StatelessWidget {
+  const _MiniStat({required this.label, required this.value});
 
-  final IconData icon;
   final String label;
   final String value;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: EdgeInsets.symmetric(
-        horizontal: 10.w(context),
-        vertical: 10.h(context),
-      ),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(14.r(context)),
-        border: Border.all(
-          color: Colors.white.withValues(alpha: 0.18),
+    return Expanded(
+      child: Container(
+        padding: EdgeInsets.symmetric(vertical: 8.h(context)),
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.12),
+          borderRadius: BorderRadius.circular(10.r(context)),
         ),
-      ),
-      child: Column(
-        children: [
-          Icon(icon, color: AppColors.thirdGoldenWheat, size: 18.ic(context)),
-          SizedBox(height: 6.h(context)),
-          Text(
-            value,
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 16.f(context),
-              fontWeight: FontWeight.w800,
+        child: Column(
+          children: [
+            Text(
+              value,
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 14.f(context),
+                fontWeight: FontWeight.w800,
+              ),
             ),
-          ),
-          SizedBox(height: 2.h(context)),
-          Text(
-            label,
-            style: TextStyle(
-              color: Colors.white.withValues(alpha: 0.75),
-              fontSize: 11.f(context),
+            Text(
+              label,
+              style: TextStyle(
+                color: Colors.white.withValues(alpha: 0.8),
+                fontSize: 10.f(context),
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -515,20 +501,19 @@ class _SectionHeader extends StatelessWidget {
   const _SectionHeader({
     required this.title,
     required this.count,
-    required this.action,
   });
 
   final String title;
   final int count;
-  final Widget action;
 
   @override
   Widget build(BuildContext context) {
     return Row(
+      textDirection: TextDirection.rtl,
       children: [
         Container(
-          width: 5.w(context),
-          height: 20.h(context),
+          width: 4.w(context),
+          height: 16.h(context),
           decoration: BoxDecoration(
             color: AppColors.green,
             borderRadius: BorderRadius.circular(4.r(context)),
@@ -538,32 +523,30 @@ class _SectionHeader extends StatelessWidget {
         Text(
           title,
           style: TextStyle(
-            fontSize: 16.f(context),
-            fontWeight: FontWeight.bold,
+            fontSize: 14.f(context),
+            fontWeight: FontWeight.w800,
             color: AppColors.primaryForest,
           ),
         ),
         SizedBox(width: 8.w(context)),
         Container(
           padding: EdgeInsets.symmetric(
-            horizontal: 10.w(context),
-            vertical: 4.h(context),
+            horizontal: 8.w(context),
+            vertical: 3.h(context),
           ),
           decoration: BoxDecoration(
             color: AppColors.primaryForest.withValues(alpha: 0.08),
-            borderRadius: BorderRadius.circular(20.r(context)),
+            borderRadius: BorderRadius.circular(12.r(context)),
           ),
           child: Text(
             '$count',
             style: TextStyle(
-              fontSize: 12.f(context),
+              fontSize: 11.f(context),
               fontWeight: FontWeight.w700,
               color: AppColors.primaryForest,
             ),
           ),
         ),
-        const Spacer(),
-        action,
       ],
     );
   }
@@ -579,71 +562,50 @@ class _EmptyFloorsState extends StatelessWidget {
     return Container(
       width: double.infinity,
       padding: EdgeInsets.symmetric(
-        vertical: 36.h(context),
-        horizontal: 20.w(context),
+        vertical: 28.h(context),
+        horizontal: 16.w(context),
       ),
       decoration: BoxDecoration(
         color: Colors.white.withValues(alpha: 0.75),
-        borderRadius: BorderRadius.circular(24.r(context)),
+        borderRadius: BorderRadius.circular(16.r(context)),
         border: Border.all(
           color: AppColors.primaryForest.withValues(alpha: 0.08),
         ),
       ),
       child: Column(
         children: [
-          Container(
-            padding: EdgeInsets.all(18.s(context)),
-            decoration: BoxDecoration(
-              color: AppColors.thirdGoldenWheat.withValues(alpha: 0.5),
-              shape: BoxShape.circle,
-            ),
-            child: Icon(
-              Icons.layers_outlined,
-              size: 40.ic(context),
-              color: AppColors.primaryForest,
-            ),
+          Icon(
+            AppIcons.layers,
+            size: 34.ic(context),
+            color: AppColors.primaryForest,
           ),
-          SizedBox(height: 16.h(context)),
+          SizedBox(height: 10.h(context)),
           Text(
             'لا توجد طوابق بعد',
             style: TextStyle(
-              fontSize: 16.f(context),
+              fontSize: 14.f(context),
               fontWeight: FontWeight.bold,
               color: AppColors.primaryForest,
             ),
           ),
-          SizedBox(height: 8.h(context)),
+          SizedBox(height: 6.h(context)),
           Text(
-            'ابدأ بإضافة أول طابق لتسجيل الشقق وبيانات الأسر.',
+            'أضف أول طابق لتسجيل الشقق.',
             textAlign: TextAlign.center,
             style: TextStyle(
-              fontSize: 13.f(context),
+              fontSize: 12.f(context),
               color: AppColors.secondaryCharcoal.withValues(alpha: 0.75),
-              height: 1.6,
             ),
           ),
-          SizedBox(height: 18.h(context)),
-          SizedBox(
-            height: 46.h(context),
-            child: ElevatedButton.icon(
-              onPressed: onAddFloor,
-              style: ElevatedButton.styleFrom(
-                elevation: 0,
-                backgroundColor: AppColors.green,
-                foregroundColor: AppColors.thirdGoldenWheat,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(14.r(context)),
-                ),
-              ),
-              icon: const Icon(Icons.add_rounded),
-              label: Text(
-                'إضافة طابق',
-                style: TextStyle(
-                  fontWeight: FontWeight.w800,
-                  fontSize: 14.f(context),
-                ),
-              ),
+          SizedBox(height: 12.h(context)),
+          FilledButton.icon(
+            onPressed: onAddFloor,
+            style: FilledButton.styleFrom(
+              backgroundColor: AppColors.primaryForest,
+              foregroundColor: Colors.white,
             ),
+            icon: const Icon(Icons.add_rounded),
+            label: const Text('إضافة طابق'),
           ),
         ],
       ),
@@ -654,62 +616,72 @@ class _EmptyFloorsState extends StatelessWidget {
 class _FloorCard extends StatelessWidget {
   const _FloorCard({
     required this.title,
-    required this.subtitle,
+    required this.saved,
+    required this.expected,
     required this.onTap,
     required this.onEdit,
   });
 
   final String title;
-  final String subtitle;
+  final int saved;
+  final int expected;
   final VoidCallback onTap;
   final VoidCallback onEdit;
 
   @override
   Widget build(BuildContext context) {
+    final progress = expected > 0
+        ? (saved / expected).clamp(0.0, 1.0)
+        : (saved > 0 ? 1.0 : 0.0);
+    final subtitle = expected > 0 ? '$saved / $expected شقة' : '$saved شقة';
+
     return Material(
       color: Colors.transparent,
+      elevation: 1,
+      shadowColor: Colors.black.withValues(alpha: 0.08),
+      borderRadius: BorderRadius.circular(14.r(context)),
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(20.r(context)),
+        borderRadius: BorderRadius.circular(14.r(context)),
         child: Ink(
-          padding: EdgeInsets.all(16.s(context)),
+          padding: EdgeInsets.fromLTRB(
+            12.w(context),
+            10.h(context),
+            8.w(context),
+            10.h(context),
+          ),
           decoration: BoxDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.circular(20.r(context)),
-            border: Border.all(
-              color: AppColors.secondaryCharcoal.withValues(alpha: 0.08),
-            ),
-            boxShadow: const [
-              BoxShadow(
-                color: Color.fromRGBO(0, 0, 0, 0.05),
-                blurRadius: 16,
-                offset: Offset(0, 8),
-              ),
-            ],
+            borderRadius: BorderRadius.circular(14.r(context)),
+            border: Border.all(color: Colors.black.withValues(alpha: 0.05)),
           ),
           child: Row(
+            textDirection: TextDirection.rtl,
             children: [
               Container(
-                padding: EdgeInsets.all(10.s(context)),
+                width: 34.s(context),
+                height: 34.s(context),
                 decoration: BoxDecoration(
-                  color: AppColors.thirdGoldenWheat.withValues(alpha: 0.55),
-                  borderRadius: BorderRadius.circular(14.r(context)),
+                  color: AppColors.primaryForest.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(10.r(context)),
                 ),
                 child: Icon(
-                  Icons.layers_rounded,
+                  AppIcons.layers,
                   color: AppColors.primaryForest,
-                  size: 22.ic(context),
+                  size: 18.ic(context),
                 ),
               ),
-              SizedBox(width: 12.w(context)),
+              SizedBox(width: 10.w(context)),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       title,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                       style: TextStyle(
-                        fontSize: 15.f(context),
+                        fontSize: 13.f(context),
                         fontWeight: FontWeight.w800,
                         color: AppColors.primaryForest,
                       ),
@@ -718,41 +690,88 @@ class _FloorCard extends StatelessWidget {
                     Text(
                       subtitle,
                       style: TextStyle(
-                        fontSize: 12.f(context),
+                        fontSize: 11.f(context),
                         color: AppColors.secondaryCharcoal
                             .withValues(alpha: 0.7),
                         fontWeight: FontWeight.w600,
                       ),
                     ),
+                    if (expected > 0) ...[
+                      SizedBox(height: 6.h(context)),
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(6.r(context)),
+                        child: LinearProgressIndicator(
+                          value: progress,
+                          minHeight: 4.h(context),
+                          backgroundColor:
+                              AppColors.primaryForest.withValues(alpha: 0.08),
+                          color: progress >= 1
+                              ? AppColors.thirdForest
+                              : AppColors.primaryForest,
+                        ),
+                      ),
+                    ],
                   ],
                 ),
               ),
-              Material(
-                color: AppColors.primaryForest.withValues(alpha: 0.06),
-                borderRadius: BorderRadius.circular(12.r(context)),
-                child: InkWell(
-                  onTap: onEdit,
-                  borderRadius: BorderRadius.circular(12.r(context)),
-                  child: SizedBox(
-                    width: 40.w(context),
-                    height: 40.h(context),
-                    child: Icon(
-                      Icons.edit_outlined,
-                      color: AppColors.primaryForest,
-                      size: 18.ic(context),
-                    ),
-                  ),
+              IconButton(
+                onPressed: onEdit,
+                tooltip: 'تعديل',
+                visualDensity: VisualDensity.compact,
+                icon: Icon(
+                  AppIcons.edit,
+                  color: AppColors.primaryForest,
+                  size: 18.ic(context),
                 ),
               ),
-              SizedBox(width: 6.w(context)),
               Icon(
                 Icons.chevron_left_rounded,
-                color: AppColors.primaryForest.withValues(alpha: 0.7),
-                size: 22.ic(context),
+                color: AppColors.primaryForest.withValues(alpha: 0.45),
+                size: 20.ic(context),
               ),
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _CompletedBanner extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: EdgeInsets.symmetric(
+        horizontal: 14.w(context),
+        vertical: 12.h(context),
+      ),
+      decoration: BoxDecoration(
+        color: AppColors.thirdForest.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(14.r(context)),
+        border: Border.all(
+          color: AppColors.thirdForest.withValues(alpha: 0.28),
+        ),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        textDirection: TextDirection.rtl,
+        children: [
+          Icon(
+            AppIcons.statsDone,
+            color: AppColors.thirdForest,
+            size: 20.ic(context),
+          ),
+          SizedBox(width: 8.w(context)),
+          Text(
+            'المسح مكتمل',
+            style: TextStyle(
+              color: AppColors.thirdForest,
+              fontSize: 14.f(context),
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+        ],
       ),
     );
   }

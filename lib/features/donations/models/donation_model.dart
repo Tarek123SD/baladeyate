@@ -1,4 +1,5 @@
 import 'package:baladeyate/config/theme/app_colors.dart';
+import 'package:baladeyate/config/theme/app_icons.dart';
 import 'package:flutter/material.dart';
 
 class DonationModel {
@@ -140,17 +141,17 @@ class DonationModel {
   IconData get categoryIcon {
     switch (category.toLowerCase()) {
       case 'health':
-        return Icons.local_hospital;
+        return AppIcons.health;
       case 'food':
-        return Icons.food_bank;
+        return AppIcons.food;
       case 'education':
-        return Icons.school;
+        return AppIcons.education;
       case 'housing':
-        return Icons.home_work_rounded;
+        return AppIcons.housing;
       case 'water':
-        return Icons.water_drop_rounded;
+        return AppIcons.water;
       default:
-        return Icons.volunteer_activism_rounded;
+        return AppIcons.donate;
     }
   }
 

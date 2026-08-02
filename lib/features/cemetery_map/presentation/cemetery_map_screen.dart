@@ -1,4 +1,5 @@
 import 'package:baladeyate/config/theme/app_colors.dart';
+import 'package:baladeyate/config/theme/app_icons.dart';
 import 'package:baladeyate/core/widgets/custom_app_bar.dart';
 import 'package:baladeyate/features/cemetery_map/cubits/cemetery_map_cubit/cemetery_map_cubit.dart';
 import 'package:baladeyate/features/cemetery_map/cubits/cemetery_map_cubit/cemetery_map_state.dart';
@@ -83,7 +84,7 @@ class _CemeteryMapScreenState extends State<CemeteryMapScreen> {
             child: Icon(
               state.isAddingMode
                   ? Icons.close_rounded
-                  : Icons.add_location_alt_rounded,
+                  : AppIcons.addLocation,
               color: Colors.white,
             ),
           ),
@@ -352,10 +353,10 @@ class _GraveDetailsSheet extends StatelessWidget {
 
   IconData get _statusIcon {
     return switch (grave.status) {
-      'available' => Icons.check_circle_rounded,
-      'occupied' => Icons.person_rounded,
-      'booked' => Icons.bookmark_rounded,
-      _ => Icons.info_rounded,
+      'available' => AppIcons.plotAvailable,
+      'occupied' => AppIcons.plotOccupied,
+      'booked' => AppIcons.plotBooked,
+      _ => AppIcons.plotInfo,
     };
   }
 
@@ -742,7 +743,7 @@ class _AddGraveDialogState extends State<_AddGraveDialog> {
                           borderRadius: BorderRadius.circular(14),
                         ),
                         child: const Icon(
-                          Icons.add_location_alt_rounded,
+                          AppIcons.addLocation,
                           color: AppColors.primaryForest,
                         ),
                       ),

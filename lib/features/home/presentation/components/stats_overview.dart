@@ -1,4 +1,5 @@
 import 'package:baladeyate/config/theme/app_colors.dart';
+import 'package:baladeyate/config/theme/app_icons.dart';
 import 'package:baladeyate/features/complaints/cubits/complaints_cubit/complaints_cubit.dart';
 import 'package:baladeyate/features/complaints/cubits/complaints_cubit/complaints_state.dart';
 import 'package:flutter/material.dart';
@@ -71,7 +72,7 @@ class StatsOverview extends StatelessWidget {
                           child: _StatTile(
                             label: 'الإجمالي',
                             count: total,
-                            icon: Icons.assignment_outlined,
+                            icon: AppIcons.statsTotal,
                             color: AppColors.primaryForest,
                           ),
                         ),
@@ -80,7 +81,7 @@ class StatsOverview extends StatelessWidget {
                           child: _StatTile(
                             label: 'قيد المعالجة',
                             count: inProgress,
-                            icon: Icons.hourglass_top_outlined,
+                            icon: AppIcons.statsPending,
                             color: AppColors.secondaryGoldenWheat,
                           ),
                         ),
@@ -89,7 +90,7 @@ class StatsOverview extends StatelessWidget {
                           child: _StatTile(
                             label: 'تم الحل',
                             count: resolved,
-                            icon: Icons.check_circle_outline,
+                            icon: AppIcons.statsDone,
                             color: AppColors.thirdForest,
                           ),
                         ),

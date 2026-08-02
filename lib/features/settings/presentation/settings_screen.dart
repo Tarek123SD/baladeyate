@@ -1,5 +1,6 @@
 import 'package:baladeyate/core/auth/app_role.dart';
 import 'package:baladeyate/config/theme/app_colors.dart';
+import 'package:baladeyate/config/theme/app_icons.dart';
 import 'package:baladeyate/core/constants/app_assets.dart';
 import 'package:baladeyate/core/responsive/dimensions.dart';
 import 'package:baladeyate/core/responsive/responsive_helper.dart';
@@ -88,12 +89,12 @@ class SettingsScreen extends StatelessWidget {
                         const CustomSettingsOptionCard(
                           title: 'تغيير اللغة',
                           subtitle: 'العربية',
-                          leadingIcon: Icons.language_rounded,
+                          leadingIcon: AppIcons.language,
                         ),
                         SizedBox(height: 10.h(context)),
                         CustomSettingsOptionCard(
                           title: 'تغيير كلمة المرور',
-                          leadingIcon: Icons.lock_outline_rounded,
+                          leadingIcon: AppIcons.lock,
                           onTap: () => _openResetPassword(context),
                         ),
                         SizedBox(height: 24.h(context)),
@@ -101,12 +102,12 @@ class SettingsScreen extends StatelessWidget {
                         SizedBox(height: 12.h(context)),
                         const CustomSettingsOptionCard(
                           title: 'سياسة الخصوصية',
-                          leadingIcon: Icons.privacy_tip_outlined,
+                          leadingIcon: AppIcons.privacy,
                         ),
                         SizedBox(height: 10.h(context)),
                         const CustomSettingsOptionCard(
                           title: 'الشروط والأحكام العامة',
-                          leadingIcon: Icons.gavel_rounded,
+                          leadingIcon: AppIcons.terms,
                         ),
                         SizedBox(height: 24.h(context)),
                         _buildLogoutButton(context),
@@ -236,7 +237,7 @@ class SettingsScreen extends StatelessWidget {
                 backgroundColor:
                     AppColors.primaryForest.withValues(alpha: 0.12),
                 child: Icon(
-                  Icons.person,
+                  AppIcons.user,
                   size: 30.ic(context),
                   color: AppColors.primaryForest,
                 ),
@@ -259,7 +260,7 @@ class SettingsScreen extends StatelessWidget {
             CustomSettingsOptionCard(
               title: 'تحديث رقم الهاتف',
               subtitle: user.phoneNumber ?? 'إضافة رقم',
-              leadingIcon: Icons.phone_outlined,
+              leadingIcon: AppIcons.phone,
               onTap: () => _showPhoneDialog(context, user),
             ),
             if (!user.isDelegateLike && !user.isVerified) ...[
@@ -269,7 +270,7 @@ class SettingsScreen extends StatelessWidget {
                     ? 'إعادة إرسال طلب التوثيق'
                     : 'توثيق الهوية',
                 subtitle: _verificationSubtitle(user),
-                leadingIcon: Icons.verified_user_outlined,
+                leadingIcon: AppIcons.verified,
                 onTap: () => context.push('/verify-identity'),
               ),
             ],
@@ -373,7 +374,7 @@ class SettingsScreen extends StatelessWidget {
                       valueColor: AlwaysStoppedAnimation(Colors.white),
                     ),
                   )
-                : Icon(Icons.logout_rounded, size: 20.ic(context)),
+                : Icon(AppIcons.logout, size: 20.ic(context)),
             label: Text(
               'تسجيل الخروج',
               style: Theme.of(context).textTheme.titleMedium?.copyWith(

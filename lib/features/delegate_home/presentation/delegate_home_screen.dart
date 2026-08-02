@@ -1,9 +1,11 @@
 import 'package:baladeyate/config/theme/app_colors.dart';
+import 'package:baladeyate/config/theme/app_icons.dart';
 import 'package:baladeyate/core/responsive/dimensions.dart';
 import 'package:baladeyate/core/widgets/app_background.dart';
 import 'package:baladeyate/core/widgets/custom_app_bar.dart';
 import 'package:baladeyate/core/widgets/custom_daily_task_card.dart';
 import 'package:baladeyate/core/widgets/custom_track_statistic_card.dart';
+import 'package:baladeyate/core/widgets/delegate_bottom_navigation_bar.dart';
 import 'package:baladeyate/features/auth/cubits/auth_cubit/auth_cubit.dart';
 import 'package:baladeyate/features/auth/cubits/auth_cubit/auth_state.dart';
 import 'package:baladeyate/features/daily_tasks/cubits/daily_tasks_cubit/daily_tasks_cubit.dart';
@@ -114,7 +116,7 @@ class DelegateHomeScreen extends StatefulWidget {
             Expanded(
               child: tile(
                 'الخريطة',
-                Icons.map_rounded,
+                AppIcons.map,
                 () => context.push('/delegate/map'),
               ),
             ),
@@ -122,7 +124,7 @@ class DelegateHomeScreen extends StatefulWidget {
             Expanded(
               child: tile(
                 'المهام',
-                Icons.assignment_rounded,
+                AppIcons.tasks,
                 () => context.push('/delegate/tasks'),
               ),
             ),
@@ -134,7 +136,7 @@ class DelegateHomeScreen extends StatefulWidget {
             Expanded(
               child: tile(
                 'فحص الوثائق',
-                Icons.qr_code_scanner_rounded,
+                AppIcons.scanDocument,
                 () => context.push('/delegate/home/verify-document'),
               ),
             ),
@@ -142,7 +144,7 @@ class DelegateHomeScreen extends StatefulWidget {
             Expanded(
               child: tile(
                 'خريطة المقبرة',
-                Icons.park_rounded,
+                AppIcons.cemetery,
                 () => context.push('/delegate/cemetery-map'),
               ),
             ),
@@ -197,13 +199,15 @@ class DelegateHomeScreen extends StatefulWidget {
     for (final task in assignedTasks) {
       widgets.add(
         Padding(
-          padding: EdgeInsets.only(bottom: 12.h(context)),
+          padding: EdgeInsets.only(bottom: 8.h(context)),
           child: CustomDailyTaskCard(
             title: task.title,
             location: locationLabelForDelegateTask(task),
-            distance: statusLabelForDelegateTask(task),
-            time: timeLabelForDelegateTask(task),
+            statusLabel: statusLabelForDelegateTask(task),
+            metaLabel: timeLabelForDelegateTask(task),
             status: cardStatusForDelegateTask(task),
+            isPriority: task.isInProgress,
+            emphasized: true,
             startLabel:
                 task.isInProgress ? 'متابعة المهمة' : 'بدء المهمة',
             onTap: () => showDelegateAssignedTaskSheet(context, task),
@@ -213,7 +217,6 @@ class DelegateHomeScreen extends StatefulWidget {
                       id: task.id,
                       status: 'in_progress',
                     ),
-            onInfo: () => showDelegateAssignedTaskSheet(context, task),
           ),
         ),
       );
@@ -222,26 +225,22 @@ class DelegateHomeScreen extends StatefulWidget {
     for (final pin in priorityPins) {
       widgets.add(
         Padding(
-          padding: EdgeInsets.only(bottom: 12.h(context)),
+          padding: EdgeInsets.only(bottom: 8.h(context)),
           child: CustomDailyTaskCard(
-            title: pin.displayTitle,
-            location: pin.displayLocation,
-            distance: statusLabelForPin(pin),
-            time: pin.status == SurveyPinStatus.completed ? 'محفوظ' : 'مفتوح',
+            title: friendlyTitleForPin(pin),
+            location: friendlyLocationForPin(pin),
+            statusLabel: statusLabelForPin(pin),
+            metaLabel: distanceLabelForPin(pin, state.currentPosition),
             status: cardStatusForPin(pin),
-            startLabel: pin.status == SurveyPinStatus.inProgress
-                ? 'متابعة المهمة'
-                : 'بدء المهمة',
-            onTap: () {
-              context.read<DailyTasksCubit>().selectPin(pin.id);
-              context.go('/delegate/map');
-            },
-            onStart: () => resumeDelegateSurvey(context, pin),
+            startLabel: actionLabelForPin(pin),
+            onTap: () => showPinInfoSheet(context, pin),
+            onStart: pin.status == SurveyPinStatus.completed
+                ? null
+                : () => resumeDelegateSurvey(context, pin),
             onNavigate: () {
               context.read<DailyTasksCubit>().selectPin(pin.id);
               context.go('/delegate/map');
             },
-            onInfo: () => showPinInfoSheet(context, pin),
           ),
         ),
       );
@@ -266,7 +265,7 @@ class DelegateHomeScreen extends StatefulWidget {
           title: 'لا يوجد نشاط مكتمل بعد',
           time: 'اليوم',
           description: 'ستظهر هنا المهام المكتملة بعد إنهاء المسوحات الميدانية.',
-          icon: Icons.assignment_turned_in_outlined,
+          icon: AppIcons.transactions,
           iconBgColor: AppColors.primaryForest,
         ),
       ];
@@ -282,7 +281,7 @@ class DelegateHomeScreen extends StatefulWidget {
             title: 'اكتملت مهمة: ${task.title}',
             time: 'مكتمل',
             description: locationLabelForDelegateTask(task),
-            icon: Icons.check_circle_outline,
+            icon: AppIcons.statsDone,
             iconBgColor: AppColors.primaryForest,
           ),
         ),
@@ -294,10 +293,10 @@ class DelegateHomeScreen extends StatefulWidget {
         Padding(
           padding: EdgeInsets.only(bottom: 12.h(context)),
           child: UpdateCard(
-            title: 'اكتمل مسح: ${pin.displayTitle}',
+            title: 'اكتمل مسح: ${friendlyTitleForPin(pin)}',
             time: 'مكتمل',
-            description: pin.displayLocation,
-            icon: Icons.check_circle_outline,
+            description: friendlyLocationForPin(pin),
+            icon: AppIcons.statsDone,
             iconBgColor: AppColors.primaryForest,
           ),
         ),
@@ -342,6 +341,7 @@ class _DelegateHomeScreenState extends State<DelegateHomeScreen> {
         backgroundColor: Colors.transparent,
         appBar: const CustomAppBar(),
         body: SafeArea(
+          bottom: false,
           child: Center(
             child: ConstrainedBox(
               constraints: BoxConstraints(
@@ -349,10 +349,18 @@ class _DelegateHomeScreenState extends State<DelegateHomeScreen> {
               ),
               child: BlocBuilder<DailyTasksCubit, DailyTasksState>(
                 builder: (context, tasksState) {
+                  final bottomClearance =
+                      DelegateBottomNavigationBar.clearance(context) +
+                          16.h(context);
                   return CustomScrollView(
                     slivers: [
                       SliverPadding(
-                        padding: EdgeInsets.all(horizontalPadding),
+                        padding: EdgeInsets.fromLTRB(
+                          horizontalPadding,
+                          horizontalPadding,
+                          horizontalPadding,
+                          bottomClearance,
+                        ),
                         sliver: SliverList(
                           delegate: SliverChildListDelegate([
                             widget._buildGreeting(context),
@@ -374,7 +382,6 @@ class _DelegateHomeScreenState extends State<DelegateHomeScreen> {
                             const SectionHeader(title: 'آخر النشاط'),
                             SizedBox(height: 16.h(context)),
                             ...widget._buildRecentActivity(context, tasksState),
-                            SizedBox(height: 24.h(context)),
                           ]),
                         ),
                       ),

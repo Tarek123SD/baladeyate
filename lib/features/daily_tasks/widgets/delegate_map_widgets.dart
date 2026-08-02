@@ -1,4 +1,5 @@
 import 'package:baladeyate/config/theme/app_colors.dart';
+import 'package:baladeyate/config/theme/app_icons.dart';
 import 'package:baladeyate/features/daily_tasks/models/daily_task.dart';
 import 'package:baladeyate/features/daily_tasks/widgets/delegate_map_marker_icons.dart';
 import 'package:baladeyate/features/delegate/models/survey_pin.dart';
@@ -135,7 +136,7 @@ class DelegateLocationBanner extends StatelessWidget {
           textDirection: TextDirection.rtl,
           children: [
             Icon(
-              Icons.location_off_outlined,
+              AppIcons.locationOff,
               color: AppColors.primaryGoldenWheat,
               size: 18.ic(context),
             ),
@@ -422,7 +423,7 @@ class DelegateSelectedPinCard extends StatelessWidget {
                     shape: BoxShape.circle,
                   ),
                   child: Icon(
-                    Icons.location_on_rounded,
+                    AppIcons.location,
                     color: statusColor,
                     size: 22.ic(context),
                   ),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:responsive_x_toolkit/responsive_x.dart';
 import 'package:baladeyate/config/theme/app_colors.dart';
+import 'package:baladeyate/config/theme/app_icons.dart';
 
 /// Clean Empty State for Digital Documents Wallet
 class DigitalDocumentsEmptyState extends StatelessWidget {
@@ -42,7 +43,7 @@ class DigitalDocumentsEmptyState extends StatelessWidget {
               ),
               child: Center(
                 child: Icon(
-                  Icons.wallet_rounded,
+                  AppIcons.wallet,
                   size: 48.ic(context),
                   color: AppColors.primaryForest,
                 ),
@@ -86,7 +87,7 @@ class DigitalDocumentsEmptyState extends StatelessWidget {
                 OutlinedButton.icon(
                   onPressed: onRefresh,
                   icon: Icon(
-                    Icons.refresh_rounded,
+                    AppIcons.refresh,
                     size: 16.ic(context),
                     color: primaryColor,
                   ),
@@ -113,7 +114,7 @@ class DigitalDocumentsEmptyState extends StatelessWidget {
                   ElevatedButton.icon(
                     onPressed: onSubmitNewTransaction,
                     icon: Icon(
-                      Icons.add_task_rounded,
+                      AppIcons.transactions,
                       size: 16.ic(context),
                       color: Colors.white,
                     ),

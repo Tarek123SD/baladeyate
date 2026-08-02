@@ -1,4 +1,5 @@
 import 'package:baladeyate/config/theme/app_colors.dart';
+import 'package:baladeyate/config/theme/app_icons.dart';
 import 'package:baladeyate/core/constants/app_assets.dart';
 import 'package:baladeyate/core/responsive/responsive_helper.dart';
 import 'package:baladeyate/core/widgets/custom_app_bar.dart';
@@ -267,19 +268,19 @@ class TrackComplaintsScreen extends StatelessWidget {
         title: 'إجمالي',
         value: '${state.totalCount}',
         color: AppColors.primaryForest,
-        icon: Icons.assignment_outlined,
+        icon: AppIcons.statsTotal,
       ),
       (
         title: 'قيد المعالجة',
         value: '${state.inProgressCount}',
         color: const Color(0xFFB26A00),
-        icon: Icons.timelapse_rounded,
+        icon: AppIcons.statsPending,
       ),
       (
         title: 'تم الحل',
         value: '${state.resolvedCount}',
         color: const Color(0xFF1B7B3A),
-        icon: Icons.task_alt_rounded,
+        icon: AppIcons.statsDone,
       ),
     ];
 

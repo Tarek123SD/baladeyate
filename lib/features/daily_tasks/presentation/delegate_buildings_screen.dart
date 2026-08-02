@@ -1,8 +1,10 @@
 import 'package:baladeyate/config/theme/app_colors.dart';
+import 'package:baladeyate/config/theme/app_icons.dart';
 import 'package:baladeyate/core/responsive/dimensions.dart';
 import 'package:baladeyate/core/responsive/responsive_helper.dart';
 import 'package:baladeyate/core/services/service_locator.dart';
 import 'package:baladeyate/core/widgets/custom_delegate_building_card.dart';
+import 'package:baladeyate/core/widgets/delegate_bottom_navigation_bar.dart';
 import 'package:baladeyate/features/daily_tasks/cubits/daily_tasks_cubit/daily_tasks_cubit.dart';
 import 'package:baladeyate/features/delegate/data/local_building_survey_store.dart';
 import 'package:baladeyate/features/delegate/data/local_survey_pin_store.dart';
@@ -30,10 +32,18 @@ class _DelegateBuildingsScreenState extends State<DelegateBuildingsScreen>
   bool _isLoading = true;
   List<BuildingSurvey> _surveys = const [];
   int? _lastShellIndex;
+  SurveyPhase? _phaseFilter;
+  final TextEditingController _searchController = TextEditingController();
+  String _query = '';
 
   @override
   void initState() {
     super.initState();
+    _searchController.addListener(() {
+      final next = _searchController.text.trim();
+      if (next == _query) return;
+      setState(() => _query = next);
+    });
     _loadBuildings();
   }
 
@@ -65,6 +75,7 @@ class _DelegateBuildingsScreenState extends State<DelegateBuildingsScreen>
 
   @override
   void dispose() {
+    _searchController.dispose();
     appRouteObserver.unsubscribe(this);
     super.dispose();
   }
@@ -164,7 +175,7 @@ class _DelegateBuildingsScreenState extends State<DelegateBuildingsScreen>
                             ),
                           ),
                           child: Icon(
-                            Icons.apartment_rounded,
+                            AppIcons.buildings,
                             color: AppColors.thirdGoldenWheat,
                             size: 24.ic(context),
                           ),
@@ -387,13 +398,36 @@ class _DelegateBuildingsScreenState extends State<DelegateBuildingsScreen>
     await _performDelete(survey);
   }
 
+  List<BuildingSurvey> get _visibleSurveys {
+    final query = _query.toLowerCase();
+    return _surveys.where((survey) {
+      if (_phaseFilter != null && survey.phase != _phaseFilter) {
+        return false;
+      }
+      if (query.isEmpty) return true;
+      final name = survey.building.name.toLowerCase();
+      final estate = survey.building.realEstateNumber.toLowerCase();
+      return name.contains(query) || estate.contains(query);
+    }).toList();
+  }
+
   @override
   Widget build(BuildContext context) {
     final horizontalPadding = ResponsiveHelper.horizontalPadding(context);
+    final bottomClearance =
+        DelegateBottomNavigationBar.clearance(context) + 16.h(context);
+    final visible = _visibleSurveys;
+    final completedCount =
+        _surveys.where((s) => s.phase == SurveyPhase.completed).length;
+    final inProgressCount =
+        _surveys.where((s) => s.phase == SurveyPhase.floorsInProgress).length;
+    final pendingCount =
+        _surveys.where((s) => s.phase == SurveyPhase.buildingPending).length;
 
     return Scaffold(
       backgroundColor: Colors.transparent,
       body: SafeArea(
+        bottom: false,
         child: Directionality(
           textDirection: TextDirection.rtl,
           child: Center(
@@ -410,19 +444,29 @@ class _DelegateBuildingsScreenState extends State<DelegateBuildingsScreen>
                     SliverPadding(
                       padding: EdgeInsets.fromLTRB(
                         horizontalPadding,
-                        16.h(context),
+                        14.h(context),
                         horizontalPadding,
                         0,
                       ),
                       sliver: SliverList(
                         delegate: SliverChildListDelegate([
-                          _buildHeader(context)
+                          _buildStatsHeader(
+                            context,
+                            total: _surveys.length,
+                            completed: completedCount,
+                            inProgress: inProgressCount,
+                            pending: pendingCount,
+                          )
                               .animate()
-                              .fadeIn(duration: 350.ms)
-                              .slideY(begin: -0.08, end: 0),
-                          SizedBox(height: 20.h(context)),
-                          _buildListHeader(context),
+                              .fadeIn(duration: 320.ms)
+                              .slideY(begin: -0.06, end: 0),
                           SizedBox(height: 12.h(context)),
+                          _buildSearchField(context),
+                          SizedBox(height: 10.h(context)),
+                          _buildFilters(context),
+                          SizedBox(height: 12.h(context)),
+                          _buildListHeader(context, visible.length),
+                          SizedBox(height: 8.h(context)),
                         ]),
                       ),
                     ),
@@ -433,11 +477,26 @@ class _DelegateBuildingsScreenState extends State<DelegateBuildingsScreen>
                       )
                     else if (_surveys.isEmpty)
                       SliverPadding(
-                        padding: EdgeInsets.symmetric(
-                          horizontal: horizontalPadding,
+                        padding: EdgeInsets.fromLTRB(
+                          horizontalPadding,
+                          0,
+                          horizontalPadding,
+                          bottomClearance,
                         ),
                         sliver: SliverToBoxAdapter(
                           child: _buildEmptyState(context),
+                        ),
+                      )
+                    else if (visible.isEmpty)
+                      SliverPadding(
+                        padding: EdgeInsets.fromLTRB(
+                          horizontalPadding,
+                          0,
+                          horizontalPadding,
+                          bottomClearance,
+                        ),
+                        sliver: SliverToBoxAdapter(
+                          child: _buildNoResultsState(context),
                         ),
                       )
                     else
@@ -446,26 +505,25 @@ class _DelegateBuildingsScreenState extends State<DelegateBuildingsScreen>
                           horizontalPadding,
                           0,
                           horizontalPadding,
-                          24.h(context),
+                          bottomClearance,
                         ),
                         sliver: SliverList.builder(
-                          itemCount: _surveys.length,
+                          itemCount: visible.length,
                           itemBuilder: (context, index) {
-                            final survey = _surveys[index];
+                            final survey = visible[index];
                             return Padding(
-                              padding: EdgeInsets.only(bottom: 14.h(context)),
+                              padding: EdgeInsets.only(bottom: 8.h(context)),
                               child: CustomDelegateBuildingCard(
                                 survey: survey,
                                 onTap: () => _openSurvey(survey),
-                                onEdit: () => _openSurvey(survey),
                                 onDelete: () => _deleteSurvey(survey),
                               )
                                   .animate()
                                   .fadeIn(
-                                    duration: 300.ms,
-                                    delay: (40 * index).ms,
+                                    duration: 260.ms,
+                                    delay: (30 * index).ms,
                                   )
-                                  .slideY(begin: 0.06, end: 0),
+                                  .slideY(begin: 0.04, end: 0),
                             );
                           },
                         ),
@@ -480,10 +538,16 @@ class _DelegateBuildingsScreenState extends State<DelegateBuildingsScreen>
     );
   }
 
-  Widget _buildHeader(BuildContext context) {
+  Widget _buildStatsHeader(
+    BuildContext context, {
+    required int total,
+    required int completed,
+    required int inProgress,
+    required int pending,
+  }) {
     return Container(
       width: double.infinity,
-      padding: EdgeInsets.all(20.s(context)),
+      padding: EdgeInsets.all(14.s(context)),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
           begin: Alignment.topRight,
@@ -494,69 +558,145 @@ class _DelegateBuildingsScreenState extends State<DelegateBuildingsScreen>
             AppColors.thirdForest,
           ],
         ),
-        borderRadius: BorderRadius.circular(24.r(context)),
+        borderRadius: BorderRadius.circular(18.r(context)),
         boxShadow: [
           BoxShadow(
-            color: AppColors.primaryForest.withValues(alpha: 0.28),
-            blurRadius: 22,
-            offset: const Offset(0, 12),
+            color: AppColors.primaryForest.withValues(alpha: 0.22),
+            blurRadius: 16,
+            offset: const Offset(0, 8),
           ),
         ],
       ),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Container(
-            padding: EdgeInsets.all(12.s(context)),
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.15),
-              borderRadius: BorderRadius.circular(16.r(context)),
-              border: Border.all(
-                color: Colors.white.withValues(alpha: 0.25),
+          Row(
+            textDirection: TextDirection.rtl,
+            children: [
+              Icon(
+                AppIcons.buildings,
+                color: Colors.white,
+                size: 20.ic(context),
               ),
-            ),
-            child: Icon(
-              Icons.apartment_rounded,
-              color: Colors.white,
-              size: 30.ic(context),
-            ),
-          ),
-          SizedBox(width: 14.w(context)),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
+              SizedBox(width: 8.w(context)),
+              Expanded(
+                child: Text(
                   'المباني المُدخلة',
                   style: TextStyle(
                     color: Colors.white,
-                    fontSize: 18.f(context),
-                    fontWeight: FontWeight.bold,
-                    height: 1.3,
+                    fontSize: 15.f(context),
+                    fontWeight: FontWeight.w800,
                   ),
                 ),
-                SizedBox(height: 8.h(context)),
-                Text(
-                  'راجع وعدّل المباني والطوابق والشقق التي أدخلتها أثناء المسوحات الميدانية.',
-                  style: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.85),
-                    fontSize: 12.f(context),
-                    height: 1.6,
-                  ),
+              ),
+              Text(
+                '$total',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 16.f(context),
+                  fontWeight: FontWeight.w800,
                 ),
-              ],
-            ),
+              ),
+            ],
+          ),
+          SizedBox(height: 10.h(context)),
+          Row(
+            textDirection: TextDirection.rtl,
+            children: [
+              _StatPill(label: 'مكتمل', value: '$completed'),
+              SizedBox(width: 8.w(context)),
+              _StatPill(label: 'قيد الإدخال', value: '$inProgress'),
+              SizedBox(width: 8.w(context)),
+              _StatPill(label: 'بيانات', value: '$pending'),
+            ],
           ),
         ],
       ),
     );
   }
 
-  Widget _buildListHeader(BuildContext context) {
+  Widget _buildSearchField(BuildContext context) {
+    return TextField(
+      controller: _searchController,
+      textDirection: TextDirection.rtl,
+      style: TextStyle(
+        color: AppColors.primaryForest,
+        fontSize: 13.f(context),
+      ),
+      decoration: InputDecoration(
+        hintText: 'ابحث بالاسم أو رقم العقار',
+        hintTextDirection: TextDirection.rtl,
+        prefixIcon: Icon(
+          AppIcons.search,
+          color: AppColors.primaryForest.withValues(alpha: 0.55),
+        ),
+        suffixIcon: _query.isEmpty
+            ? null
+            : IconButton(
+                onPressed: () {
+                  _searchController.clear();
+                },
+                icon: const Icon(Icons.close_rounded),
+              ),
+        filled: true,
+        fillColor: Colors.white,
+        contentPadding: EdgeInsets.symmetric(
+          horizontal: 12.w(context),
+          vertical: 10.h(context),
+        ),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14.r(context)),
+          borderSide: BorderSide(
+            color: AppColors.primaryForest.withValues(alpha: 0.1),
+          ),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14.r(context)),
+          borderSide: BorderSide(
+            color: AppColors.primaryForest.withValues(alpha: 0.1),
+          ),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14.r(context)),
+          borderSide: const BorderSide(color: AppColors.primaryForest),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFilters(BuildContext context) {
+    final options = <(SurveyPhase?, String)>[
+      (null, 'الكل'),
+      (SurveyPhase.floorsInProgress, 'قيد الإدخال'),
+      (SurveyPhase.completed, 'مكتمل'),
+      (SurveyPhase.buildingPending, 'بيانات'),
+    ];
+
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Row(
+        textDirection: TextDirection.rtl,
+        children: [
+          for (final option in options) ...[
+            _FilterChip(
+              label: option.$2,
+              selected: _phaseFilter == option.$1,
+              onTap: () => setState(() => _phaseFilter = option.$1),
+            ),
+            SizedBox(width: 8.w(context)),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildListHeader(BuildContext context, int count) {
     return Row(
+      textDirection: TextDirection.rtl,
       children: [
         Container(
-          width: 5.w(context),
-          height: 20.h(context),
+          width: 4.w(context),
+          height: 16.h(context),
           decoration: BoxDecoration(
             color: AppColors.green,
             borderRadius: BorderRadius.circular(4.r(context)),
@@ -566,25 +706,25 @@ class _DelegateBuildingsScreenState extends State<DelegateBuildingsScreen>
         Text(
           'قائمة المباني',
           style: TextStyle(
-            fontSize: 16.f(context),
-            fontWeight: FontWeight.bold,
+            fontSize: 14.f(context),
+            fontWeight: FontWeight.w800,
             color: AppColors.primaryForest,
           ),
         ),
         const Spacer(),
         Container(
           padding: EdgeInsets.symmetric(
-            horizontal: 12.w(context),
-            vertical: 5.h(context),
+            horizontal: 10.w(context),
+            vertical: 4.h(context),
           ),
           decoration: BoxDecoration(
             color: AppColors.primaryForest.withValues(alpha: 0.08),
-            borderRadius: BorderRadius.circular(20.r(context)),
+            borderRadius: BorderRadius.circular(16.r(context)),
           ),
           child: Text(
-            '${_surveys.length} مبنى',
+            '$count مبنى',
             style: TextStyle(
-              fontSize: 12.f(context),
+              fontSize: 11.f(context),
               fontWeight: FontWeight.w700,
               color: AppColors.primaryForest,
             ),
@@ -598,50 +738,171 @@ class _DelegateBuildingsScreenState extends State<DelegateBuildingsScreen>
     return Container(
       width: double.infinity,
       padding: EdgeInsets.symmetric(
-        vertical: 40.h(context),
+        vertical: 36.h(context),
         horizontal: 20.w(context),
       ),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.7),
-        borderRadius: BorderRadius.circular(24.r(context)),
+        color: Colors.white.withValues(alpha: 0.75),
+        borderRadius: BorderRadius.circular(20.r(context)),
         border: Border.all(
           color: AppColors.primaryForest.withValues(alpha: 0.08),
         ),
       ),
       child: Column(
         children: [
-          Container(
-            padding: EdgeInsets.all(18.s(context)),
-            decoration: BoxDecoration(
-              color: AppColors.thirdGoldenWheat.withValues(alpha: 0.5),
-              shape: BoxShape.circle,
-            ),
-            child: Icon(
-              Icons.domain_disabled_outlined,
-              size: 40.ic(context),
-              color: AppColors.primaryForest,
-            ),
+          Icon(
+            AppIcons.buildings,
+            size: 36.ic(context),
+            color: AppColors.primaryForest,
           ),
-          SizedBox(height: 16.h(context)),
+          SizedBox(height: 12.h(context)),
           Text(
             'لا توجد مباني مُدخلة بعد',
             style: TextStyle(
-              fontSize: 16.f(context),
+              fontSize: 15.f(context),
               fontWeight: FontWeight.bold,
               color: AppColors.primaryForest,
             ),
           ),
-          SizedBox(height: 8.h(context)),
+          SizedBox(height: 6.h(context)),
           Text(
-            'ابدأ مسحاً جديداً من الخريطة، ثم احفظ بيانات المبنى لتظهر هنا للمراجعة والتعديل.',
+            'ابدأ مسحاً جديداً من تبويب الخريطة لتظهر هنا.',
             textAlign: TextAlign.center,
             style: TextStyle(
-              fontSize: 13.f(context),
+              fontSize: 12.f(context),
               color: AppColors.secondaryCharcoal.withValues(alpha: 0.75),
-              height: 1.6,
+              height: 1.5,
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildNoResultsState(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: EdgeInsets.symmetric(
+        vertical: 28.h(context),
+        horizontal: 16.w(context),
+      ),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.75),
+        borderRadius: BorderRadius.circular(16.r(context)),
+      ),
+      child: Column(
+        children: [
+          Text(
+            'لا نتائج مطابقة',
+            style: TextStyle(
+              fontSize: 14.f(context),
+              fontWeight: FontWeight.w800,
+              color: AppColors.primaryForest,
+            ),
+          ),
+          SizedBox(height: 8.h(context)),
+          TextButton(
+            onPressed: () {
+              setState(() {
+                _phaseFilter = null;
+                _searchController.clear();
+              });
+            },
+            child: Text(
+              'مسح الفلاتر',
+              style: TextStyle(
+                color: AppColors.primaryForest,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _StatPill extends StatelessWidget {
+  const _StatPill({required this.label, required this.value});
+
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    return Expanded(
+      child: Container(
+        padding: EdgeInsets.symmetric(vertical: 8.h(context)),
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.14),
+          borderRadius: BorderRadius.circular(12.r(context)),
+        ),
+        child: Column(
+          children: [
+            Text(
+              value,
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 15.f(context),
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+            Text(
+              label,
+              style: TextStyle(
+                color: Colors.white.withValues(alpha: 0.85),
+                fontSize: 10.f(context),
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _FilterChip extends StatelessWidget {
+  const _FilterChip({
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: selected ? AppColors.primaryForest : Colors.white,
+      borderRadius: BorderRadius.circular(16.r(context)),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(16.r(context)),
+        child: Container(
+          padding: EdgeInsets.symmetric(
+            horizontal: 12.w(context),
+            vertical: 7.h(context),
+          ),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(16.r(context)),
+            border: Border.all(
+              color: selected
+                  ? AppColors.primaryForest
+                  : AppColors.primaryForest.withValues(alpha: 0.14),
+            ),
+          ),
+          child: Text(
+            label,
+            style: TextStyle(
+              color: selected ? Colors.white : AppColors.primaryForest,
+              fontSize: 11.f(context),
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ),
       ),
     );
   }

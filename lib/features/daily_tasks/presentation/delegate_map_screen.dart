@@ -1,5 +1,6 @@
 import 'package:baladeyate/core/navigation/delegate_shell_indices.dart';
 import 'package:baladeyate/config/theme/app_colors.dart';
+import 'package:baladeyate/config/theme/app_icons.dart';
 import 'package:baladeyate/core/responsive/responsive_helper.dart';
 import 'package:baladeyate/core/widgets/delegate_bottom_navigation_bar.dart';
 import 'package:baladeyate/features/auth/cubits/auth_cubit/auth_cubit.dart';
@@ -368,7 +369,7 @@ class _DelegateMapViewState extends State<_DelegateMapView> with RouteAware {
                                   DelegateMapControlButton(
                                     icon: controls.isLocating
                                         ? null
-                                        : Icons.my_location_rounded,
+                                        : AppIcons.myLocation,
                                     isLoading: controls.isLocating,
                                     tooltip: 'موقعي الحالي',
                                     onTap: () => _animateToCurrentLocation(
@@ -378,8 +379,8 @@ class _DelegateMapViewState extends State<_DelegateMapView> with RouteAware {
                                   SizedBox(height: 8.h(context)),
                                   DelegateMapControlButton(
                                     icon: isHybrid
-                                        ? Icons.map_rounded
-                                        : Icons.layers_rounded,
+                                        ? AppIcons.map
+                                        : AppIcons.layers,
                                     isActive: isHybrid,
                                     tooltip: isHybrid
                                         ? 'عرض الخريطة العادية'
@@ -388,7 +389,7 @@ class _DelegateMapViewState extends State<_DelegateMapView> with RouteAware {
                                   ),
                                   SizedBox(height: 8.h(context)),
                                   DelegateMapControlButton(
-                                    icon: Icons.add_location_alt_rounded,
+                                    icon: AppIcons.addLocation,
                                     onTap: cubit.toggleAddPinMode,
                                     isActive: controls.isAddPinMode,
                                     tooltip: controls.isAddPinMode
@@ -535,7 +536,7 @@ class _DelegateMapHeader extends StatelessWidget {
                     child: Padding(
                       padding: EdgeInsets.all(9.s(context)),
                       child: Icon(
-                        Icons.notifications_none_rounded,
+                        AppIcons.notification,
                         color: AppColors.primaryForest,
                         size: 20.ic(context),
                       ),

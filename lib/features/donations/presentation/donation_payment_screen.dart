@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:baladeyate/config/theme/app_colors.dart';
+import 'package:baladeyate/config/theme/app_icons.dart';
 import 'package:baladeyate/core/responsive/responsive_helper.dart';
 import 'package:baladeyate/core/utils/app_snackbar.dart';
 import 'package:baladeyate/core/widgets/custom_app_bar.dart';
@@ -200,7 +201,7 @@ class _DonationPaymentScreenState extends State<DonationPaymentScreen> {
               borderRadius: BorderRadius.circular(14.r(context)),
             ),
             child: Icon(
-              Icons.volunteer_activism_rounded,
+              AppIcons.donate,
               color: Colors.white,
               size: 24.ic(context),
             ),

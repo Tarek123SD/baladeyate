@@ -1,4 +1,5 @@
 import 'package:baladeyate/config/theme/app_colors.dart';
+import 'package:baladeyate/config/theme/app_icons.dart';
 import 'package:baladeyate/core/responsive/dimensions.dart';
 import 'package:baladeyate/core/responsive/responsive_helper.dart';
 import 'package:baladeyate/core/widgets/app_background.dart';
@@ -180,7 +181,7 @@ class ProfileScreen extends StatelessWidget {
         cardColor = const Color(0xFFE8F5E9);
         borderColor = const Color(0xFFC8E6C9);
         iconColor = const Color(0xFF2E7D32);
-        iconData = Icons.verified_user_rounded;
+        iconData = AppIcons.verified;
         title = 'الحساب موثّق بالكامل';
         subtitle = 'تم توثيق هويتك الوطنية بنجاح. جميع خدمات البلدية والشكاوى مفعلة بالكامل لحسابك.';
         break;
@@ -188,7 +189,7 @@ class ProfileScreen extends StatelessWidget {
         cardColor = const Color(0xFFFFF3E0);
         borderColor = const Color(0xFFFFE0B2);
         iconColor = const Color(0xFFE65100);
-        iconData = Icons.pending_actions_rounded;
+        iconData = AppIcons.statsPending;
         title = 'قيد المراجعة';
         subtitle = 'طلب توثيق الهوية قيد المراجعة حالياً من قبل إدارة البلدية. سيتم إشعارك فور اكتمال التوثيق.';
         break;
@@ -196,7 +197,7 @@ class ProfileScreen extends StatelessWidget {
         cardColor = const Color(0xFFFFEBEE);
         borderColor = const Color(0xFFFFCDD2);
         iconColor = const Color(0xFFC62828);
-        iconData = Icons.gpp_bad_rounded;
+        iconData = AppIcons.error;
         title = 'تم رفض طلب التوثيق';
         subtitle = 'سبب الرفض: ${user.rejectionReason ?? "الرجاء التحقق من البيانات وصورة الهوية وإعادة المحاولة."}';
         actionWidget = Padding(
@@ -211,7 +212,7 @@ class ProfileScreen extends StatelessWidget {
               ),
               padding: EdgeInsets.symmetric(horizontal: 16.w(context), vertical: 10.h(context)),
             ),
-            icon: Icon(Icons.refresh_rounded, size: 18.s(context)),
+            icon: Icon(AppIcons.refresh, size: 18.s(context)),
             label: Text(
               'إعادة تقديم طلب التوثيق',
               style: TextStyle(fontSize: 14.f(context), fontWeight: FontWeight.bold),
@@ -224,7 +225,7 @@ class ProfileScreen extends StatelessWidget {
         cardColor = const Color(0xFFECEFF1);
         borderColor = const Color(0xFFCFD8DC);
         iconColor = const Color(0xFF37474F);
-        iconData = Icons.shield_outlined;
+        iconData = AppIcons.privacy;
         title = 'حسابك غير موثّق';
         subtitle = 'يرجى توثيق هويتك الوطنية لتتمكن من تقديم البلاغات والشكاوى والاستفادة من خدمات البلدية كاملة.';
         actionWidget = Padding(
@@ -239,7 +240,7 @@ class ProfileScreen extends StatelessWidget {
               ),
               padding: EdgeInsets.symmetric(horizontal: 20.w(context), vertical: 12.h(context)),
             ),
-            icon: Icon(Icons.verified_user_outlined, size: 18.s(context)),
+            icon: Icon(AppIcons.verified, size: 18.s(context)),
             label: Text(
               'ابدأ توثيق الهوية الآن',
               style: TextStyle(fontSize: 14.f(context), fontWeight: FontWeight.bold),
@@ -332,21 +333,21 @@ class ProfileScreen extends StatelessWidget {
           SizedBox(height: 16.h(context)),
           _buildDetailItem(
             context,
-            icon: Icons.badge_outlined,
+            icon: AppIcons.personalCard,
             label: 'رقم الهوية الوطنية',
             value: nationalId,
           ),
           const Divider(height: 24, thickness: 0.8),
           _buildDetailItem(
             context,
-            icon: Icons.phone_android_rounded,
+            icon: AppIcons.phone,
             label: 'رقم الهاتف',
             value: phoneNumber,
           ),
           const Divider(height: 24, thickness: 0.8),
           _buildDetailItem(
             context,
-            icon: Icons.alternate_email_rounded,
+            icon: AppIcons.email,
             label: 'البريد الإلكتروني',
             value: user.email,
           ),

@@ -1,3 +1,4 @@
+import 'package:baladeyate/config/theme/app_icons.dart';
 import 'package:baladeyate/features/auth/presentation/widgets/signup_success_dialog.dart';
 import 'package:baladeyate/features/auth/cubits/auth_cubit/auth_cubit.dart';
 import 'package:baladeyate/features/auth/cubits/auth_cubit/auth_state.dart';
@@ -178,17 +179,17 @@ class _HomeScreenState extends State<HomeScreen> {
                         [
                           _buildServiceCard(
                             title: 'المعاملات والرخص',
-                            icon: Icons.assignment_turned_in_outlined,
+                            icon: AppIcons.transactions,
                             onTap: () => context.push('/transactions'),
                           ),
                           _buildServiceCard(
                             title: 'الوثائق الرقمية',
-                            icon: Icons.qr_code_scanner,
+                            icon: AppIcons.digitalDocs,
                             onTap: () => context.push('/profile'),
                           ),
                           _buildServiceCard(
                             title: 'تقديم شكوى',
-                            icon: Icons.campaign_outlined,
+                            icon: AppIcons.complaint,
                             onTap: () => context.push('/complains'),
                           ),
                         ],
@@ -427,15 +428,15 @@ class _HomeScreenState extends State<HomeScreen> {
     Color bgColor;
 
     if (typeLower.contains('transaction')) {
-      icon = Icons.check_circle_outline;
+      icon = AppIcons.statsDone;
       iconColor = const Color(0xFF2E7D32);
       bgColor = const Color(0xFFE8F5E9);
     } else if (typeLower.contains('complaint')) {
-      icon = Icons.radar_outlined;
+      icon = AppIcons.complaint;
       iconColor = const Color(0xFF1565C0);
       bgColor = const Color(0xFFE3F2FD);
     } else {
-      icon = Icons.campaign_outlined;
+      icon = AppIcons.announcements;
       iconColor = const Color(0xFFC62828);
       bgColor = const Color(0xFFFFEBEE);
     }

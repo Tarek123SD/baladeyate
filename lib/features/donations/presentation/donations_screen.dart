@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:baladeyate/config/theme/app_colors.dart';
+import 'package:baladeyate/config/theme/app_icons.dart';
 import 'package:baladeyate/core/constants/app_assets.dart';
 import 'package:baladeyate/core/responsive/responsive_helper.dart';
 import 'package:baladeyate/core/services/service_locator.dart';
@@ -373,7 +374,7 @@ class _DonationsScreenState extends State<DonationsScreen> {
       child: Column(
         children: [
           Icon(
-            Icons.volunteer_activism_rounded,
+            AppIcons.donate,
             size: 40.ic(context),
             color: AppColors.primaryForest,
           ),
@@ -605,7 +606,7 @@ class _DonationsScreenState extends State<DonationsScreen> {
                   icon: isLoading
                       ? const SizedBox.shrink()
                       : Icon(
-                          Icons.favorite_rounded,
+                          AppIcons.donateActive,
                           color: Colors.white,
                           size: 20.ic(context),
                         ),
@@ -651,7 +652,7 @@ class _DonationsScreenState extends State<DonationsScreen> {
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(
-            Icons.campaign_rounded,
+            AppIcons.announcements,
             size: 16.ic(context),
             color: AppColors.primaryForest,
           ),
@@ -727,22 +728,22 @@ class _DonationStatsGrid extends StatelessWidget {
     (
       value: '89K',
       label: 'متبرع نشط',
-      icon: Icons.people_alt_rounded,
+      icon: AppIcons.people,
     ),
     (
       value: '+145',
       label: 'مشروع مدعوم',
-      icon: Icons.volunteer_activism_rounded,
+      icon: AppIcons.donateActive,
     ),
     (
       value: '24/7',
       label: 'خدمة كاملة',
-      icon: Icons.support_agent_rounded,
+      icon: AppIcons.support,
     ),
     (
       value: '12',
       label: 'محافظة مستفيدة',
-      icon: Icons.location_city_rounded,
+      icon: AppIcons.city,
     ),
   ];
 

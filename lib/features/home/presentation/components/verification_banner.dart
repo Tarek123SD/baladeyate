@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:responsive_x_toolkit/responsive_x.dart';
 import 'package:baladeyate/config/theme/app_colors.dart';
+import 'package:baladeyate/config/theme/app_icons.dart';
 
 /// Prominent call-to-action shown when the current user still needs to
 /// verify their national identity. Routes to the verification flow on tap.
@@ -56,8 +57,8 @@ class VerificationBanner extends StatelessWidget {
                 ),
                 child: Icon(
                   wasRejected
-                      ? Icons.gpp_maybe_outlined
-                      : Icons.verified_user_outlined,
+                      ? AppIcons.warning
+                      : AppIcons.verified,
                   color: Colors.white,
                   size: 26.s(context),
                 ),

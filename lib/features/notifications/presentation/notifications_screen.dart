@@ -6,10 +6,10 @@ import 'package:baladeyate/core/widgets/app_background.dart';
 import 'package:baladeyate/core/widgets/custom_notification_card.dart';
 import 'package:baladeyate/features/auth/cubits/auth_cubit/auth_cubit.dart';
 import 'package:baladeyate/features/auth/cubits/auth_cubit/auth_state.dart';
+import 'package:baladeyate/features/auth/models/user.dart';
 import 'package:baladeyate/features/notifications/cubits/notifications_cubit/notifications_cubit.dart';
 import 'package:baladeyate/features/notifications/cubits/notifications_cubit/notifications_state.dart';
 import 'package:baladeyate/features/notifications/models/app_notification.dart';
-import 'package:baladeyate/features/notifications/presentation/components/notifications_hero_card.dart';
 import 'package:baladeyate/features/notifications/utils/notification_display.dart';
 import 'package:baladeyate/features/profile/presentation/components/profile_empty_state.dart';
 import 'package:baladeyate/features/profile/presentation/components/profile_section_header.dart';
@@ -20,7 +20,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:responsive_x_toolkit/responsive_x.dart';
 
-enum _NotificationFilter { all, unread }
+enum _ReadFilter { all, unread }
 
 enum _NotificationGroup { today, yesterday, earlier }
 
@@ -32,7 +32,8 @@ class NotificationsScreen extends StatefulWidget {
 }
 
 class _NotificationsScreenState extends State<NotificationsScreen> {
-  _NotificationFilter _filter = _NotificationFilter.all;
+  _ReadFilter _readFilter = _ReadFilter.all;
+  NotificationCategory? _categoryFilter;
 
   @override
   void initState() {
@@ -42,6 +43,11 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
         context.read<NotificationsCubit>().loadNotifications();
       }
     });
+  }
+
+  User? get _currentUser {
+    final auth = sl<AuthCubit>().state;
+    return auth is AuthSuccess ? auth.user : null;
   }
 
   @override
@@ -105,40 +111,50 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                         child: CustomScrollView(
                           physics: const AlwaysScrollableScrollPhysics(),
                           slivers: [
+                            if (loaded.hasUnread)
+                              SliverPadding(
+                                padding: EdgeInsets.fromLTRB(
+                                  horizontalPadding,
+                                  12.h(context),
+                                  horizontalPadding,
+                                  0,
+                                ),
+                                sliver: SliverToBoxAdapter(
+                                  child: _UnreadBanner(
+                                    unreadCount: loaded.unreadCount,
+                                    isSubmitting: loaded.isSubmitting,
+                                    onMarkAllRead: () => context
+                                        .read<NotificationsCubit>()
+                                        .markAllAsRead(),
+                                  )
+                                      .animate()
+                                      .fadeIn(duration: 280.ms)
+                                      .slideY(begin: -0.06, end: 0),
+                                ),
+                              ),
                             SliverPadding(
                               padding: EdgeInsets.fromLTRB(
                                 horizontalPadding,
-                                16.h(context),
+                                loaded.hasUnread ? 12.h(context) : 14.h(context),
                                 horizontalPadding,
-                                0,
+                                6.h(context),
                               ),
                               sliver: SliverToBoxAdapter(
-                                child: NotificationsHeroCard(
-                                  totalCount: loaded.notifications.length,
-                                  unreadCount: loaded.unreadCount,
-                                  isSubmitting: loaded.isSubmitting,
-                                  onMarkAllRead: loaded.hasUnread
-                                      ? () => context
-                                          .read<NotificationsCubit>()
-                                          .markAllAsRead()
-                                      : null,
-                                )
-                                    .animate()
-                                    .fadeIn(duration: 350.ms)
-                                    .slideY(begin: -0.08, end: 0),
+                                child: _buildReadFilters(context, loaded),
                               ),
                             ),
                             SliverPadding(
                               padding: EdgeInsets.fromLTRB(
                                 horizontalPadding,
-                                18.h(context),
+                                0,
                                 horizontalPadding,
                                 8.h(context),
                               ),
                               sliver: SliverToBoxAdapter(
-                                child: _buildFilterChips(context, loaded)
-                                    .animate()
-                                    .fadeIn(duration: 300.ms, delay: 60.ms),
+                                child: _buildCategoryFilters(
+                                  context,
+                                  loaded.notifications,
+                                ),
                               ),
                             ),
                             if (filtered.isEmpty)
@@ -158,7 +174,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                                 horizontalPadding,
                               ),
                             SliverToBoxAdapter(
-                              child: SizedBox(height: 28.h(context)),
+                              child: SizedBox(height: 24.h(context)),
                             ),
                           ],
                         ),
@@ -176,26 +192,11 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
 
   PreferredSizeWidget _buildAppBar(BuildContext context) {
     return AppBar(
-      backgroundColor: Colors.white,
+      backgroundColor: Colors.white.withValues(alpha: 0.92),
       elevation: 0,
-      scrolledUnderElevation: 2,
-      shadowColor: AppColors.primaryForest.withValues(alpha: 0.12),
+      scrolledUnderElevation: 1,
+      shadowColor: Colors.black.withValues(alpha: 0.06),
       automaticallyImplyLeading: false,
-      bottom: PreferredSize(
-        preferredSize: Size.fromHeight(1.h(context)),
-        child: Container(
-          height: 1,
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [
-                AppColors.primaryForest.withValues(alpha: 0.0),
-                AppColors.primaryForest.withValues(alpha: 0.12),
-                AppColors.primaryForest.withValues(alpha: 0.0),
-              ],
-            ),
-          ),
-        ),
-      ),
       title: Row(
         textDirection: TextDirection.rtl,
         children: [
@@ -204,87 +205,146 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
               if (context.canPop()) {
                 context.pop();
               } else {
-                final authState = sl<AuthCubit>().state;
-                final home = authState is AuthSuccess
-                    ? homeRouteFor(authState.user)
-                    : '/login';
+                final home = homeRouteFor(_currentUser);
                 context.go(home);
               }
             },
             icon: Icon(
               Icons.arrow_forward_ios_rounded,
               color: AppColors.primaryForest,
-              size: 20.ic(context),
+              size: 18.ic(context),
             ),
             padding: EdgeInsets.zero,
           ),
           Expanded(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  'الإشعارات',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    color: AppColors.primaryForest,
-                    fontSize: 20.f(context),
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                SizedBox(height: 2.h(context)),
-                Text(
-                  'تنبيهاتك في مكان واحد',
-                  textAlign: TextAlign.center,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    color: AppColors.secondaryCharcoal.withValues(alpha: 0.55),
-                    fontSize: 12.f(context),
-                  ),
-                ),
-              ],
+            child: Text(
+              'الإشعارات',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: AppColors.primaryForest,
+                fontSize: 18.f(context),
+                fontWeight: FontWeight.w800,
+              ),
             ),
           ),
-          SizedBox(width: 48.s(context)),
+          BlocBuilder<NotificationsCubit, NotificationsState>(
+            builder: (context, state) {
+              final hasUnread =
+                  state is NotificationsLoaded && state.hasUnread;
+              if (!hasUnread) {
+                return SizedBox(width: 40.s(context));
+              }
+              return IconButton(
+                tooltip: 'تعليم الكل كمقروء',
+                onPressed: () =>
+                    context.read<NotificationsCubit>().markAllAsRead(),
+                icon: Icon(
+                  Icons.done_all_rounded,
+                  color: AppColors.primaryForest,
+                  size: 22.ic(context),
+                ),
+              );
+            },
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildFilterChips(
+  Widget _buildReadFilters(
     BuildContext context,
     NotificationsLoaded state,
   ) {
-    final unreadCount = state.unreadCount;
-
     return Row(
       textDirection: TextDirection.rtl,
       children: [
         _FilterChip(
           label: 'الكل',
           count: state.notifications.length,
-          isSelected: _filter == _NotificationFilter.all,
-          onTap: () => setState(() => _filter = _NotificationFilter.all),
+          isSelected: _readFilter == _ReadFilter.all,
+          onTap: () => setState(() => _readFilter = _ReadFilter.all),
         ),
-        SizedBox(width: 10.w(context)),
+        SizedBox(width: 8.w(context)),
         _FilterChip(
           label: 'غير مقروء',
-          count: unreadCount,
-          isSelected: _filter == _NotificationFilter.unread,
-          highlight: unreadCount > 0,
-          onTap: () => setState(() => _filter = _NotificationFilter.unread),
+          count: state.unreadCount,
+          isSelected: _readFilter == _ReadFilter.unread,
+          highlight: state.unreadCount > 0,
+          onTap: () => setState(() => _readFilter = _ReadFilter.unread),
         ),
       ],
+    );
+  }
+
+  Widget _buildCategoryFilters(
+    BuildContext context,
+    List<AppNotification> notifications,
+  ) {
+    final counts = <NotificationCategory, int>{};
+    for (final item in notifications) {
+      final category = categoryForNotificationType(item.type);
+      counts[category] = (counts[category] ?? 0) + 1;
+    }
+
+    final available = NotificationCategory.values
+        .where((category) => (counts[category] ?? 0) > 0)
+        .toList();
+
+    if (available.length <= 1) {
+      return const SizedBox.shrink();
+    }
+
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Row(
+        textDirection: TextDirection.rtl,
+        children: [
+          _TypeChip(
+            label: 'كل الأنواع',
+            selected: _categoryFilter == null,
+            onTap: () => setState(() => _categoryFilter = null),
+          ),
+          SizedBox(width: 8.w(context)),
+          for (final category in available) ...[
+            _TypeChip(
+              label:
+                  '${labelForNotificationCategory(category)} ${counts[category]}',
+              selected: _categoryFilter == category,
+              onTap: () => setState(() => _categoryFilter = category),
+            ),
+            SizedBox(width: 8.w(context)),
+          ],
+        ],
+      ),
     );
   }
 
   List<AppNotification> _filteredNotifications(
     List<AppNotification> notifications,
   ) {
-    if (_filter == _NotificationFilter.unread) {
-      return notifications.where((n) => !n.isRead).toList();
+    return notifications.where((notification) {
+      if (_readFilter == _ReadFilter.unread && notification.isRead) {
+        return false;
+      }
+      if (_categoryFilter != null &&
+          categoryForNotificationType(notification.type) != _categoryFilter) {
+        return false;
+      }
+      return true;
+    }).toList();
+  }
+
+  Future<void> _handleNotificationTap(AppNotification notification) async {
+    final cubit = context.read<NotificationsCubit>();
+    if (!notification.isRead) {
+      await cubit.markAsRead(notification.id);
     }
-    return notifications;
+    if (!mounted) return;
+
+    final route = routeForNotification(notification, user: _currentUser);
+    if (route != null) {
+      context.push(route);
+    }
   }
 
   List<Widget> _buildGroupedSlivers(
@@ -313,7 +373,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
         SliverPadding(
           padding: EdgeInsets.fromLTRB(
             horizontalPadding,
-            8.h(context),
+            6.h(context),
             horizontalPadding,
             4.h(context),
           ),
@@ -331,30 +391,75 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
           padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
           sliver: SliverList.separated(
             itemCount: items.length,
-            separatorBuilder: (_, __) => SizedBox(height: 12.h(context)),
+            separatorBuilder: (_, __) => SizedBox(height: 8.h(context)),
             itemBuilder: (context, index) {
               final notification = items[index];
               final currentIndex = animationIndex++;
-              return CustomNotificationCard(
+              final typeLabel = shouldShowTypeLabel(
+                title: notification.title,
+                type: notification.type,
+              )
+                  ? typeLabelForNotificationType(notification.type)
+                  : null;
+
+              final card = CustomNotificationCard(
                 isRead: notification.isRead,
                 time: formatNotificationTime(notification.createdAt),
                 title: notification.title,
                 message: notificationDescription(notification),
-                typeLabel: typeLabelForNotificationType(notification.type),
+                typeLabel: typeLabel,
                 icon: iconForNotificationType(notification.type),
                 iconColor: iconColorForNotificationType(notification.type),
-                onTap: notification.isRead
-                    ? null
-                    : () => context
-                        .read<NotificationsCubit>()
-                        .markAsRead(notification.id),
-              )
-                  .animate()
-                  .fadeIn(
-                    duration: 300.ms,
-                    delay: (40 * currentIndex).ms,
-                  )
-                  .slideY(begin: 0.06, end: 0);
+                onTap: () => _handleNotificationTap(notification),
+              );
+
+              return Dismissible(
+                key: ValueKey('notification-${notification.id}'),
+                direction: notification.isRead
+                    ? DismissDirection.none
+                    : DismissDirection.startToEnd,
+                confirmDismiss: (_) async {
+                  await context
+                      .read<NotificationsCubit>()
+                      .markAsRead(notification.id);
+                  return false;
+                },
+                background: Container(
+                  alignment: Alignment.centerRight,
+                  padding: EdgeInsets.symmetric(horizontal: 16.w(context)),
+                  decoration: BoxDecoration(
+                    color: AppColors.primaryForest.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(14.r(context)),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    textDirection: TextDirection.rtl,
+                    children: [
+                      Icon(
+                        Icons.done_rounded,
+                        color: AppColors.primaryForest,
+                        size: 18.ic(context),
+                      ),
+                      SizedBox(width: 6.w(context)),
+                      Text(
+                        'تعليم كمقروء',
+                        style: TextStyle(
+                          color: AppColors.primaryForest,
+                          fontSize: 12.f(context),
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                child: card
+                    .animate()
+                    .fadeIn(
+                      duration: 260.ms,
+                      delay: (30 * currentIndex).ms,
+                    )
+                    .slideY(begin: 0.04, end: 0),
+              );
             },
           ),
         ),
@@ -376,37 +481,56 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
         24.h(context),
       ),
       children: [
-        _SkeletonBox(height: 160.h(context), radius: 24.r(context)),
-        SizedBox(height: 20.h(context)),
+        _SkeletonBox(height: 44.h(context), radius: 12.r(context)),
+        SizedBox(height: 14.h(context)),
         Row(
           children: [
-            Expanded(child: _SkeletonBox(height: 36.h(context), radius: 20)),
-            SizedBox(width: 10.w(context)),
-            Expanded(child: _SkeletonBox(height: 36.h(context), radius: 20)),
+            Expanded(child: _SkeletonBox(height: 34.h(context), radius: 18)),
+            SizedBox(width: 8.w(context)),
+            Expanded(child: _SkeletonBox(height: 34.h(context), radius: 18)),
           ],
         ),
-        SizedBox(height: 24.h(context)),
-        for (var i = 0; i < 4; i++) ...[
-          _SkeletonBox(height: 110.h(context), radius: 20.r(context)),
-          SizedBox(height: 12.h(context)),
+        SizedBox(height: 18.h(context)),
+        for (var i = 0; i < 5; i++) ...[
+          _SkeletonBox(height: 78.h(context), radius: 14.r(context)),
+          SizedBox(height: 8.h(context)),
         ],
       ],
     );
   }
 
   Widget _buildEmptyState(BuildContext context) {
-    final isUnreadFilter = _filter == _NotificationFilter.unread;
+    final isUnreadFilter = _readFilter == _ReadFilter.unread;
 
-    return ProfileEmptyState(
-      icon: isUnreadFilter
-          ? Icons.mark_email_read_rounded
-          : Icons.notifications_off_outlined,
-      title: isUnreadFilter
-          ? 'لا توجد إشعارات غير مقروءة'
-          : 'لا توجد إشعارات بعد',
-      description: isUnreadFilter
-          ? 'رائع! لقد اطلعت على جميع التنبيهات.'
-          : 'ستظهر هنا أحدث التنبيهات والتحديثات الخاصة بك.',
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        ProfileEmptyState(
+          icon: isUnreadFilter
+              ? Icons.mark_email_read_rounded
+              : Icons.notifications_off_outlined,
+          title: isUnreadFilter
+              ? 'لا توجد إشعارات غير مقروءة'
+              : 'لا توجد إشعارات بعد',
+          description: isUnreadFilter
+              ? 'رائع! لقد اطلعت على جميع التنبيهات.'
+              : 'ستظهر هنا أحدث التنبيهات والتحديثات الخاصة بك.',
+        ),
+        if (isUnreadFilter) ...[
+          SizedBox(height: 12.h(context)),
+          TextButton(
+            onPressed: () => setState(() => _readFilter = _ReadFilter.all),
+            child: Text(
+              'عرض الكل',
+              style: TextStyle(
+                color: AppColors.primaryForest,
+                fontWeight: FontWeight.w800,
+                fontSize: 13.f(context),
+              ),
+            ),
+          ),
+        ],
+      ],
     );
   }
 
@@ -452,7 +576,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       return _NotificationGroup.today;
     }
 
-    final parsed = DateTime.tryParse(createdAt);
+    final parsed = DateTime.tryParse(createdAt)?.toLocal();
     if (parsed == null) {
       return _NotificationGroup.earlier;
     }
@@ -479,6 +603,81 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   }
 }
 
+class _UnreadBanner extends StatelessWidget {
+  const _UnreadBanner({
+    required this.unreadCount,
+    required this.onMarkAllRead,
+    this.isSubmitting = false,
+  });
+
+  final int unreadCount;
+  final VoidCallback onMarkAllRead;
+  final bool isSubmitting;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: EdgeInsets.symmetric(
+        horizontal: 12.w(context),
+        vertical: 10.h(context),
+      ),
+      decoration: BoxDecoration(
+        color: AppColors.primaryForest.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(12.r(context)),
+        border: Border.all(
+          color: AppColors.primaryForest.withValues(alpha: 0.14),
+        ),
+      ),
+      child: Row(
+        textDirection: TextDirection.rtl,
+        children: [
+          Icon(
+            Icons.mark_email_unread_rounded,
+            color: AppColors.primaryForest,
+            size: 18.ic(context),
+          ),
+          SizedBox(width: 8.w(context)),
+          Expanded(
+            child: Text(
+              unreadCount == 1
+                  ? 'لديك إشعار واحد غير مقروء'
+                  : 'لديك $unreadCount إشعارات غير مقروءة',
+              textDirection: TextDirection.rtl,
+              style: TextStyle(
+                color: AppColors.primaryForest,
+                fontSize: 12.f(context),
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+          TextButton(
+            onPressed: isSubmitting ? null : onMarkAllRead,
+            style: TextButton.styleFrom(
+              foregroundColor: AppColors.primaryForest,
+              padding: EdgeInsets.symmetric(horizontal: 8.w(context)),
+              minimumSize: Size.zero,
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            ),
+            child: isSubmitting
+                ? SizedBox(
+                    width: 14.s(context),
+                    height: 14.s(context),
+                    child: const CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : Text(
+                    'تعليم الكل',
+                    style: TextStyle(
+                      fontSize: 12.f(context),
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class _FilterChip extends StatelessWidget {
   const _FilterChip({
     required this.label,
@@ -501,41 +700,21 @@ class _FilterChip extends StatelessWidget {
         color: Colors.transparent,
         child: InkWell(
           onTap: onTap,
-          borderRadius: BorderRadius.circular(20.r(context)),
+          borderRadius: BorderRadius.circular(18.r(context)),
           child: AnimatedContainer(
-            duration: const Duration(milliseconds: 200),
+            duration: const Duration(milliseconds: 180),
             padding: EdgeInsets.symmetric(
-              horizontal: 14.w(context),
-              vertical: 10.h(context),
+              horizontal: 12.w(context),
+              vertical: 8.h(context),
             ),
             decoration: BoxDecoration(
-              gradient: isSelected
-                  ? const LinearGradient(
-                      colors: [
-                        AppColors.primaryForest,
-                        AppColors.secondaryForest,
-                      ],
-                    )
-                  : null,
-              color: isSelected
-                  ? null
-                  : Colors.white.withValues(alpha: 0.75),
-              borderRadius: BorderRadius.circular(20.r(context)),
+              color: isSelected ? AppColors.primaryForest : Colors.white,
+              borderRadius: BorderRadius.circular(18.r(context)),
               border: Border.all(
                 color: isSelected
-                    ? Colors.transparent
-                    : AppColors.primaryForest.withValues(alpha: 0.1),
+                    ? AppColors.primaryForest
+                    : AppColors.primaryForest.withValues(alpha: 0.12),
               ),
-              boxShadow: isSelected
-                  ? [
-                      BoxShadow(
-                        color:
-                            AppColors.primaryForest.withValues(alpha: 0.2),
-                        blurRadius: 10,
-                        offset: const Offset(0, 4),
-                      ),
-                    ]
-                  : null,
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -544,19 +723,17 @@ class _FilterChip extends StatelessWidget {
                 Text(
                   label,
                   style: TextStyle(
-                    color: isSelected
-                        ? Colors.white
-                        : AppColors.primaryForest,
-                    fontSize: 13.f(context),
-                    fontWeight: FontWeight.bold,
+                    color: isSelected ? Colors.white : AppColors.primaryForest,
+                    fontSize: 12.f(context),
+                    fontWeight: FontWeight.w800,
                   ),
                 ),
                 if (count > 0) ...[
-                  SizedBox(width: 6.w(context)),
+                  SizedBox(width: 5.w(context)),
                   Container(
                     padding: EdgeInsets.symmetric(
-                      horizontal: 7.w(context),
-                      vertical: 2.h(context),
+                      horizontal: 6.w(context),
+                      vertical: 1.h(context),
                     ),
                     decoration: BoxDecoration(
                       color: isSelected
@@ -565,7 +742,7 @@ class _FilterChip extends StatelessWidget {
                               ? AppColors.alertRed.withValues(alpha: 0.1)
                               : AppColors.primaryForest
                                   .withValues(alpha: 0.08)),
-                      borderRadius: BorderRadius.circular(12.r(context)),
+                      borderRadius: BorderRadius.circular(10.r(context)),
                     ),
                     child: Text(
                       '$count',
@@ -575,13 +752,63 @@ class _FilterChip extends StatelessWidget {
                             : (highlight
                                 ? AppColors.alertRed
                                 : AppColors.primaryForest),
-                        fontSize: 11.f(context),
-                        fontWeight: FontWeight.bold,
+                        fontSize: 10.f(context),
+                        fontWeight: FontWeight.w800,
                       ),
                     ),
                   ),
                 ],
               ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _TypeChip extends StatelessWidget {
+  const _TypeChip({
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: selected
+          ? AppColors.thirdForest.withValues(alpha: 0.16)
+          : Colors.white.withValues(alpha: 0.85),
+      borderRadius: BorderRadius.circular(16.r(context)),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(16.r(context)),
+        child: Container(
+          padding: EdgeInsets.symmetric(
+            horizontal: 12.w(context),
+            vertical: 7.h(context),
+          ),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(16.r(context)),
+            border: Border.all(
+              color: selected
+                  ? AppColors.thirdForest.withValues(alpha: 0.45)
+                  : AppColors.primaryForest.withValues(alpha: 0.1),
+            ),
+          ),
+          child: Text(
+            label,
+            style: TextStyle(
+              color: selected
+                  ? AppColors.primaryForest
+                  : AppColors.secondaryCharcoal.withValues(alpha: 0.8),
+              fontSize: 11.f(context),
+              fontWeight: FontWeight.w700,
             ),
           ),
         ),

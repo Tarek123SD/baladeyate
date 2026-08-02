@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:responsive_x_toolkit/responsive_x.dart';
 import 'package:baladeyate/config/theme/app_colors.dart';
+import 'package:baladeyate/config/theme/app_icons.dart';
 import 'package:baladeyate/features/digital_documents/models/verified_document_model.dart';
 
 class VerificationResultBottomSheet {
@@ -105,21 +106,21 @@ class VerificationResultBottomSheet {
                         bottomSheetContext,
                         label: 'اسم المواطن',
                         value: document.citizenName,
-                        icon: Icons.person_outline_rounded,
+                        icon: AppIcons.user,
                       ),
                       const Divider(height: 20),
                       _buildDetailRow(
                         bottomSheetContext,
                         label: 'نوع الوثيقة',
                         value: document.documentType,
-                        icon: Icons.description_outlined,
+                        icon: AppIcons.notifTransaction,
                       ),
                       const Divider(height: 20),
                       _buildDetailRow(
                         bottomSheetContext,
                         label: 'رقم المعاملة',
                         value: document.transactionNumber,
-                        icon: Icons.qr_code_rounded,
+                        icon: AppIcons.digitalDocs,
                       ),
                     ],
                   ),
@@ -136,7 +137,7 @@ class VerificationResultBottomSheet {
                       onScanAnother();
                     },
                     icon: Icon(
-                      Icons.qr_code_scanner_rounded,
+                      AppIcons.scanDocument,
                       size: 20.ic(bottomSheetContext),
                       color: Colors.white,
                     ),
