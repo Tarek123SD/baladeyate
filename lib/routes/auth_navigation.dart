@@ -10,11 +10,11 @@ String homeRouteFor(User? user) {
 /// Citizen-only shell routes (bottom navigation branches).
 const citizenShellRoutes = {
   '/main',
-  '/profile',
-  '/donations',
-  '/track',
-  '/complains',
   '/transactions',
+  '/track',
+  '/donations',
+  '/profile',
+  '/complains',
 };
 
 /// Top-level [StatefulShellRoute] tab paths.
@@ -24,13 +24,13 @@ const citizenShellRoutes = {
 /// shell's page key and throws `!keyReservation.contains(key)`.
 const indexedShellTabRoutes = {
   '/main',
-  '/profile',
-  '/donations',
-  '/track',
   '/transactions',
+  '/track',
+  '/donations',
+  '/profile',
   '/delegate/home',
-  '/delegate/map',
   '/delegate/tasks',
+  '/delegate/map',
   '/delegate/buildings',
 };
 
@@ -40,8 +40,8 @@ bool isIndexedShellTabRoute(String path) =>
 /// Delegate field-work routes.
 const delegateRoutes = {
   '/delegate/home',
-  '/delegate/map',
   '/delegate/tasks',
+  '/delegate/map',
   '/delegate/buildings',
   '/delegate/cemetery-map',
   '/tasks',

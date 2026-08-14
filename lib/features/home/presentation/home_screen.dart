@@ -190,8 +190,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
                       if (filteredUpdates.isEmpty) {
                         return SliverPadding(
-                          padding:
-                              EdgeInsets.symmetric(horizontal: paddingVal),
+                          padding: EdgeInsets.symmetric(horizontal: paddingVal),
                           sliver: const SliverToBoxAdapter(
                             child: HomeUpdatesEmptyState(),
                           ),
@@ -205,24 +204,12 @@ class _HomeScreenState extends State<HomeScreen> {
                           itemBuilder: (context, index) {
                             return HomeNotificationUpdateCard(
                               notification: filteredUpdates[index],
-                              onActionTap: () =>
-                                  context.push('/notifications'),
+                              onActionTap: () => context.push('/notifications'),
                             );
                           },
                         ),
                       );
                     },
-                  ),
-                  SliverPadding(
-                    padding: EdgeInsets.fromLTRB(
-                      paddingVal,
-                      24.h(context),
-                      paddingVal,
-                      paddingVal,
-                    ),
-                    sliver: const SliverToBoxAdapter(
-                      child: HomeHeritageSection(),
-                    ),
                   ),
                 ],
               ),

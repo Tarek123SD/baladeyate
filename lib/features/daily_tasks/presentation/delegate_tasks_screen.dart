@@ -1,4 +1,5 @@
 import 'package:baladeyate/config/theme/app_colors.dart';
+import 'package:baladeyate/core/navigation/delegate_shell_indices.dart';
 import 'package:baladeyate/core/responsive/dimensions.dart';
 import 'package:baladeyate/core/responsive/responsive_helper.dart';
 import 'package:baladeyate/core/widgets/custom_daily_task_card.dart';
@@ -42,7 +43,8 @@ class _DelegateTasksScreenState extends State<DelegateTasksScreen>
     final shell = StatefulNavigationShell.maybeOf(context);
     if (shell != null) {
       final index = shell.currentIndex;
-      if (index == 2 && _lastShellIndex != 2) {
+      if (index == DelegateShellIndices.tasks &&
+          _lastShellIndex != DelegateShellIndices.tasks) {
         _refreshTasks();
       }
       _lastShellIndex = index;

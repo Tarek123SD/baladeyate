@@ -566,16 +566,16 @@ GoRouter _createAppRouter() {
           StatefulShellBranch(
             routes: [
               GoRoute(
-                path: '/delegate/map',
-                builder: (context, state) => const DelegateMapScreen(),
+                path: '/delegate/tasks',
+                builder: (context, state) => const DelegateTasksScreen(),
               ),
             ],
           ),
           StatefulShellBranch(
             routes: [
               GoRoute(
-                path: '/delegate/tasks',
-                builder: (context, state) => const DelegateTasksScreen(),
+                path: '/delegate/map',
+                builder: (context, state) => const DelegateMapScreen(),
               ),
             ],
           ),
@@ -621,27 +621,27 @@ GoRouter _createAppRouter() {
           ),
 
           StatefulShellBranch(
-
             routes: [
-
               GoRoute(
-
-                path: '/profile',
-
+                path: '/transactions',
                 builder: (context, state) => BlocProvider(
-
-                  create: (_) => sl<ProfileCubit>()..loadProfile(),
-
-                  child: const ProfileScreen(),
-
+                  create: (_) => sl<TransactionsCubit>()..fetchTransactions(),
+                  child: const TransactionsScreen(),
                 ),
-
               ),
-
             ],
-
           ),
-
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/track',
+                builder: (context, state) => BlocProvider(
+                  create: (_) => sl<ComplaintsCubit>()..loadComplaints(),
+                  child: const TrackComplaintsScreen(),
+                ),
+              ),
+            ],
+          ),
           StatefulShellBranch(
 
             routes: [
@@ -680,26 +680,25 @@ GoRouter _createAppRouter() {
           ),
 
           StatefulShellBranch(
+
             routes: [
+
               GoRoute(
-                path: '/track',
+
+                path: '/profile',
+
                 builder: (context, state) => BlocProvider(
-                  create: (_) => sl<ComplaintsCubit>()..loadComplaints(),
-                  child: const TrackComplaintsScreen(),
+
+                  create: (_) => sl<ProfileCubit>()..loadProfile(),
+
+                  child: const ProfileScreen(),
+
                 ),
+
               ),
+
             ],
-          ),
-          StatefulShellBranch(
-            routes: [
-              GoRoute(
-                path: '/transactions',
-                builder: (context, state) => BlocProvider(
-                  create: (_) => sl<TransactionsCubit>()..fetchTransactions(),
-                  child: const TransactionsScreen(),
-                ),
-              ),
-            ],
+
           ),
         ],
 

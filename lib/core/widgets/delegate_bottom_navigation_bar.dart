@@ -15,22 +15,22 @@ class DelegateBottomNavigationBar extends StatelessWidget {
 
   static const _labels = [
     'الرئيسية',
-    'الخريطة',
     'المهام',
+    'الخريطة',
     'المباني',
   ];
 
   static const _icons = [
     AppIcons.navHome,
-    AppIcons.navMap,
     AppIcons.navTasks,
+    AppIcons.navMap,
     AppIcons.navBuildings,
   ];
 
   static const _activeIcons = [
     AppIcons.navHomeActive,
-    AppIcons.navMapActive,
     AppIcons.navTasksActive,
+    AppIcons.navMapActive,
     AppIcons.navBuildingsActive,
   ];
 

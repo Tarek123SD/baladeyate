@@ -15,26 +15,26 @@ class CustomBottomNavigationBar extends StatelessWidget {
 
   static const _labels = [
     'الرئيسية',
-    'الملف الشخصي',
-    'التبرعات',
-    'الشكاوي',
     'المعاملات',
+    'الشكاوي',
+    'التبرعات',
+    'الملف الشخصي',
   ];
 
   static const _icons = [
     AppIcons.navHome,
-    AppIcons.navProfile,
-    AppIcons.navDonations,
-    AppIcons.navComplaints,
     AppIcons.navTransactions,
+    AppIcons.navComplaints,
+    AppIcons.navDonations,
+    AppIcons.navProfile,
   ];
 
   static const _activeIcons = [
     AppIcons.navHomeActive,
-    AppIcons.navProfileActive,
-    AppIcons.navDonationsActive,
-    AppIcons.navComplaintsActive,
     AppIcons.navTransactionsActive,
+    AppIcons.navComplaintsActive,
+    AppIcons.navDonationsActive,
+    AppIcons.navProfileActive,
   ];
 
   @override

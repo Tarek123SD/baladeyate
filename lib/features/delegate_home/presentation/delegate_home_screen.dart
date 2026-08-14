@@ -1,3 +1,4 @@
+import 'package:baladeyate/core/navigation/delegate_shell_indices.dart';
 import 'package:baladeyate/core/responsive/dimensions.dart';
 import 'package:baladeyate/core/widgets/app_background.dart';
 import 'package:baladeyate/core/widgets/custom_app_bar.dart';
@@ -31,7 +32,8 @@ class _DelegateHomeScreenState extends State<DelegateHomeScreen> {
     final shell = StatefulNavigationShell.maybeOf(context);
     if (shell != null) {
       final index = shell.currentIndex;
-      if (index == 0 && _lastShellIndex != 0) {
+      if (index == DelegateShellIndices.home &&
+          _lastShellIndex != DelegateShellIndices.home) {
         if (mounted) {
           context.read<DailyTasksCubit>().refreshDashboard();
         }

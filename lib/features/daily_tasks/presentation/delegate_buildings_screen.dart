@@ -1,4 +1,5 @@
 import 'package:baladeyate/config/theme/app_colors.dart';
+import 'package:baladeyate/core/navigation/delegate_shell_indices.dart';
 import 'package:baladeyate/core/responsive/dimensions.dart';
 import 'package:baladeyate/core/responsive/responsive_helper.dart';
 import 'package:baladeyate/core/services/service_locator.dart';
@@ -60,7 +61,8 @@ class _DelegateBuildingsScreenState extends State<DelegateBuildingsScreen>
     final shell = StatefulNavigationShell.maybeOf(context);
     if (shell != null) {
       final index = shell.currentIndex;
-      if (index == 3 && _lastShellIndex != 3) {
+      if (index == DelegateShellIndices.buildings &&
+          _lastShellIndex != DelegateShellIndices.buildings) {
         _loadBuildings();
       }
       _lastShellIndex = index;
