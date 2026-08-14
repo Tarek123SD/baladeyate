@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:baladeyate/core/utils/api_response_parser.dart';
 import 'package:baladeyate/features/digital_documents/repo/digital_documents_repository.dart';
 import 'scanner_state.dart';
 
@@ -52,7 +53,12 @@ class ScannerCubit extends Cubit<ScannerState> {
       final verifiedDoc = await _repository.verifyDocument(transactionNumber);
       emit(ScannerSuccess(verifiedDoc));
     } catch (error) {
-      emit(ScannerError(error.toString()));
+      emit(ScannerError(
+        ApiResponseParser.toUserMessage(
+          error,
+          fallback: 'فشل التحقق من الوثيقة',
+        ),
+      ));
     }
   }
 

@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:baladeyate/core/utils/api_response_parser.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:baladeyate/features/donations/cubits/donate_cubit/donate_state.dart';
 import 'package:baladeyate/features/donations/repo/donations_repository.dart';
@@ -37,9 +38,11 @@ class DonateCubit extends Cubit<DonateState> {
       );
       emit(const DonateSuccess());
     } catch (error) {
-      final errorMessage = error.toString().replaceFirst('Exception: ', '');
       emit(DonateFailure(
-        message: errorMessage.isNotEmpty ? errorMessage : 'فشل إرسال التبرع',
+        message: ApiResponseParser.toUserMessage(
+          error,
+          fallback: 'فشل إرسال التبرع',
+        ),
       ));
     }
   }

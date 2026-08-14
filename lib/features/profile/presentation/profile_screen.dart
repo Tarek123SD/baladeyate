@@ -1,6 +1,7 @@
 import 'package:baladeyate/config/theme/app_colors.dart';
 import 'package:baladeyate/core/responsive/dimensions.dart';
 import 'package:baladeyate/core/responsive/responsive_helper.dart';
+import 'package:baladeyate/core/utils/app_snackbar.dart';
 import 'package:baladeyate/core/widgets/app_background.dart';
 import 'package:baladeyate/core/widgets/custom_app_bar.dart';
 import 'package:baladeyate/features/auth/cubits/auth_cubit/auth_cubit.dart';
@@ -26,9 +27,7 @@ class ProfileScreen extends StatelessWidget {
     return BlocConsumer<ProfileCubit, ProfileState>(
       listener: (context, state) {
         if (state is ProfileFailure) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(state.message)),
-          );
+          AppSnackBar.showError(context, state.message);
         }
       },
       builder: (context, profileState) {

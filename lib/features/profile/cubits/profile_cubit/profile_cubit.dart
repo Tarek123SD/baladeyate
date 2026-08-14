@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:baladeyate/core/utils/api_response_parser.dart';
 import 'package:baladeyate/features/auth/cubits/auth_cubit/auth_cubit.dart';
 import 'package:baladeyate/features/auth/cubits/auth_cubit/auth_state.dart';
 import 'package:baladeyate/features/delegate/models/registered_household.dart';
@@ -134,7 +135,9 @@ class ProfileCubit extends Cubit<ProfileState> {
   }
 
   String _messageFromError(Object error) {
-    final message = error.toString().replaceFirst('Exception: ', '');
-    return message.isNotEmpty ? message : 'حدث خطأ غير متوقع';
+    return ApiResponseParser.toUserMessage(
+      error,
+      fallback: 'حدث خطأ غير متوقع',
+    );
   }
 }

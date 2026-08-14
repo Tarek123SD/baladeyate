@@ -1,3 +1,4 @@
+import 'package:baladeyate/core/utils/api_response_parser.dart';
 import 'package:baladeyate/features/daily_tasks/cubits/daily_tasks_cubit/daily_tasks_state.dart';
 import 'package:baladeyate/features/daily_tasks/repo/daily_tasks_repository.dart';
 import 'package:baladeyate/features/delegate/models/survey_pin.dart';
@@ -226,7 +227,9 @@ class DailyTasksCubit extends Cubit<DailyTasksState> {
   }
 
   String _messageFromError(Object error) {
-    final message = error.toString().replaceFirst('Exception: ', '');
-    return message.isNotEmpty ? message : 'حدث خطأ غير متوقع';
+    return ApiResponseParser.toUserMessage(
+      error,
+      fallback: 'حدث خطأ غير متوقع',
+    );
   }
 }

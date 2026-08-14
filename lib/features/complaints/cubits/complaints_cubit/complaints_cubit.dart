@@ -1,3 +1,4 @@
+import 'package:baladeyate/core/utils/api_response_parser.dart';
 import 'package:baladeyate/features/complaints/cubits/complaints_cubit/complaints_state.dart';
 import 'package:baladeyate/features/complaints/models/complaint.dart';
 import 'package:baladeyate/features/complaints/repo/complaints_repository.dart';
@@ -137,7 +138,9 @@ class ComplaintsCubit extends Cubit<ComplaintsState> {
   }
 
   String _messageFromError(Object error) {
-    final message = error.toString().replaceFirst('Exception: ', '');
-    return message.isNotEmpty ? message : 'حدث خطأ غير متوقع';
+    return ApiResponseParser.toUserMessage(
+      error,
+      fallback: 'حدث خطأ غير متوقع',
+    );
   }
 }

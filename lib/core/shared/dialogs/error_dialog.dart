@@ -39,6 +39,7 @@ void showErrorDialog(BuildContext context, String errorMessage) {
                 Text(
                   errorMessage,
                   textAlign: TextAlign.center,
+                  textDirection: TextDirection.rtl,
                   style: TextStyle(
                     color: Colors.grey.shade600,
                     fontSize: context.text(14),

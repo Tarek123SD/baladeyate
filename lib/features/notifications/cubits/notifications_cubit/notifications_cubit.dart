@@ -1,3 +1,4 @@
+import 'package:baladeyate/core/utils/api_response_parser.dart';
 import 'package:baladeyate/features/notifications/cubits/notifications_cubit/notifications_state.dart';
 import 'package:baladeyate/features/notifications/repo/notifications_repository.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -97,7 +98,9 @@ class NotificationsCubit extends Cubit<NotificationsState> {
   }
 
   String _messageFromError(Object error) {
-    final message = error.toString().replaceFirst('Exception: ', '');
-    return message.isNotEmpty ? message : 'حدث خطأ غير متوقع';
+    return ApiResponseParser.toUserMessage(
+      error,
+      fallback: 'تعذّر تحميل الإشعارات',
+    );
   }
 }

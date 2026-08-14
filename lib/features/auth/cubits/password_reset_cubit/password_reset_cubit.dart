@@ -1,3 +1,4 @@
+import 'package:baladeyate/core/utils/api_response_parser.dart';
 import 'package:baladeyate/features/auth/cubits/password_reset_cubit/password_reset_state.dart';
 import 'package:baladeyate/features/auth/repo/auth_repository.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -94,7 +95,9 @@ class PasswordResetCubit extends Cubit<PasswordResetState> {
   }
 
   String _messageFromError(Object error) {
-    final message = error.toString().replaceFirst('Exception: ', '');
-    return message.isNotEmpty ? message : 'حدث خطأ غير متوقع';
+    return ApiResponseParser.toUserMessage(
+      error,
+      fallback: 'حدث خطأ غير متوقع',
+    );
   }
 }

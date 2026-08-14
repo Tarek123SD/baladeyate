@@ -83,6 +83,7 @@ class AppSnackBar {
             Expanded(
               child: Text(
                 message,
+                textDirection: TextDirection.rtl,
                 style: const TextStyle(
                   color: Colors.white,
                   fontSize: 14,

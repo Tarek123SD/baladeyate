@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:baladeyate/core/services/fcm/fcm_service.dart';
 import 'package:baladeyate/core/services/service_locator.dart';
+import 'package:baladeyate/core/utils/api_response_parser.dart';
 import 'package:baladeyate/features/auth/models/user.dart';
 import 'package:baladeyate/features/auth/cubits/auth_cubit/auth_state.dart';
 import 'package:baladeyate/features/auth/repo/auth_repository.dart';
@@ -209,7 +210,9 @@ class AuthCubit extends Cubit<AuthState> {
   Future<void> syncPushToken() => _fcmService.syncTokenWithBackend();
 
   String _messageFromError(Object error) {
-    final message = error.toString().replaceFirst('Exception: ', '');
-    return message.isNotEmpty ? message : 'حدث خطأ غير متوقع';
+    return ApiResponseParser.toUserMessage(
+      error,
+      fallback: 'حدث خطأ غير متوقع',
+    );
   }
 }

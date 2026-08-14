@@ -54,7 +54,7 @@ class AuthRepository {
 
       return _saveSessionFromResponse(response.data);
     } catch (error) {
-      throw _mapToAuthException(error, fallback: 'فشل إنشاء الحساب');
+      throw ApiResponseParser.mapError(error, fallback: 'فشل إنشاء الحساب');
     }
   }
 
@@ -76,7 +76,7 @@ class AuthRepository {
 
       return _saveSessionFromResponse(response.data);
     } catch (error) {
-      throw _mapToAuthException(error, fallback: 'فشل تسجيل الدخول');
+      throw ApiResponseParser.mapError(error, fallback: 'فشل تسجيل الدخول');
     }
   }
 
@@ -110,7 +110,7 @@ class AuthRepository {
         fallback: 'تم إرسال رمز التحقق إلى بريدك الإلكتروني',
       );
     } catch (error) {
-      throw _mapToAuthException(
+      throw ApiResponseParser.mapError(
         error,
         fallback: 'فشل إرسال رمز التحقق',
       );
@@ -143,7 +143,7 @@ class AuthRepository {
       }
       throw Exception('لم يتم استلام رمز إعادة التعيين');
     } catch (error) {
-      throw _mapToAuthException(error, fallback: 'فشل التحقق من الرمز');
+      throw ApiResponseParser.mapError(error, fallback: 'فشل التحقق من الرمز');
     }
   }
 
@@ -174,7 +174,7 @@ class AuthRepository {
         fallback: 'تم تغيير كلمة المرور بنجاح',
       );
     } catch (error) {
-      throw _mapToAuthException(
+      throw ApiResponseParser.mapError(
         error,
         fallback: 'فشل تغيير كلمة المرور',
       );
@@ -304,28 +304,15 @@ class AuthRepository {
     return authResponse.data.user;
   }
 
-  Exception _mapToAuthException(
-    Object error, {
-    required String fallback,
-  }) {
-    if (error is DioException) {
-      return Exception(_extractApiMessage(error) ?? fallback);
-    }
-
-    if (error is Exception) {
-      return error;
-    }
-
-    return Exception(fallback);
-  }
-
   String _readSuccessMessage(dynamic data, {required String fallback}) {
     if (data is Map<String, dynamic>) {
       final success = data['success'];
       if (success == false) {
-        final message = data['message'];
         throw Exception(
-          message is String && message.isNotEmpty ? message : fallback,
+          ApiResponseParser.toUserMessage(
+            Exception(ApiResponseParser.extractMessage(data) ?? fallback),
+            fallback: fallback,
+          ),
         );
       }
 
@@ -336,30 +323,5 @@ class AuthRepository {
     }
 
     return fallback;
-  }
-
-  String? _extractApiMessage(DioException exception) {
-    final data = exception.response?.data;
-    if (data is! Map<String, dynamic>) {
-      return null;
-    }
-
-    final message = data['message'];
-    if (message is String && message.isNotEmpty) {
-      return message;
-    }
-
-    final errors = data['errors'];
-    if (errors is Map<String, dynamic> && errors.isNotEmpty) {
-      final firstError = errors.values.first;
-      if (firstError is List && firstError.isNotEmpty) {
-        return firstError.first.toString();
-      }
-      if (firstError is String && firstError.isNotEmpty) {
-        return firstError;
-      }
-    }
-
-    return null;
   }
 }

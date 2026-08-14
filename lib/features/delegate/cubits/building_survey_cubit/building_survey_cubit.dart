@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:baladeyate/core/utils/api_response_parser.dart';
 import 'package:baladeyate/features/delegate/repo/local_building_survey_store.dart';
 import 'package:baladeyate/features/delegate/models/building_survey.dart';
 import 'package:baladeyate/features/delegate/models/survey_location.dart';
@@ -135,7 +136,10 @@ class BuildingSurveyCubit extends Cubit<BuildingSurveyState> {
       emit(
         BuildingSurveyFailure(
           survey: current,
-          message: error.toString().replaceFirst('Exception: ', ''),
+          message: ApiResponseParser.toUserMessage(
+            error,
+            fallback: 'حدث خطأ غير متوقع',
+          ),
         ),
       );
       return false;
@@ -381,7 +385,10 @@ class BuildingSurveyCubit extends Cubit<BuildingSurveyState> {
       emit(
         BuildingSurveyFailure(
           survey: current,
-          message: error.toString().replaceFirst('Exception: ', ''),
+          message: ApiResponseParser.toUserMessage(
+            error,
+            fallback: 'حدث خطأ غير متوقع',
+          ),
         ),
       );
       return false;
@@ -447,7 +454,10 @@ class BuildingSurveyCubit extends Cubit<BuildingSurveyState> {
       emit(
         BuildingSurveyFailure(
           survey: current,
-          message: error.toString().replaceFirst('Exception: ', ''),
+          message: ApiResponseParser.toUserMessage(
+            error,
+            fallback: 'حدث خطأ غير متوقع',
+          ),
         ),
       );
       return false;

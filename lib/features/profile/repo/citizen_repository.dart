@@ -128,20 +128,11 @@ class CitizenRepository {
         return null;
       }
 
-      if (statusCode == 403) {
-        final data = error.response?.data;
-        final message = data is Map<String, dynamic>
-            ? ApiResponseParser.extractMessage(data)
-            : null;
-        throw Exception(
-          message ??
-              'يجب توثيق حسابك وموافقة الإدارة أولاً لعرض السجل السكني.',
-        );
-      }
-
       throw ApiResponseParser.mapError(
         error,
-        fallback: 'فشل استرجاع السجل السكني',
+        fallback: statusCode == 403
+            ? 'يجب توثيق حسابك وموافقة الإدارة أولاً لعرض السجل السكني.'
+            : 'فشل استرجاع السجل السكني',
       );
     } catch (error) {
       throw ApiResponseParser.mapError(

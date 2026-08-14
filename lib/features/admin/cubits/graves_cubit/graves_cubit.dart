@@ -1,3 +1,4 @@
+import 'package:baladeyate/core/utils/api_response_parser.dart';
 import 'package:baladeyate/features/admin/cubits/graves_cubit/graves_state.dart';
 import 'package:baladeyate/features/admin/repo/admin_repository.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -27,7 +28,9 @@ class GravesCubit extends Cubit<GravesState> {
   }
 
   String _messageFromError(Object error) {
-    final message = error.toString().replaceFirst('Exception: ', '');
-    return message.isNotEmpty ? message : 'حدث خطأ غير متوقع';
+    return ApiResponseParser.toUserMessage(
+      error,
+      fallback: 'حدث خطأ غير متوقع',
+    );
   }
 }

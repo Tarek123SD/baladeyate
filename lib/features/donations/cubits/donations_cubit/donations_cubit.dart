@@ -1,3 +1,4 @@
+import 'package:baladeyate/core/utils/api_response_parser.dart';
 import 'package:baladeyate/features/donations/cubits/donations_cubit/donations_state.dart';
 import 'package:baladeyate/features/donations/repo/donations_repository.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -26,7 +27,9 @@ class DonationsCubit extends Cubit<DonationsState> {
   Future<void> loadCases() => fetchDonations();
 
   String _messageFromError(Object error) {
-    final message = error.toString().replaceFirst('Exception: ', '');
-    return message.isNotEmpty ? message : 'حدث خطأ غير متوقع';
+    return ApiResponseParser.toUserMessage(
+      error,
+      fallback: 'فشل تحميل الحملات',
+    );
   }
 }

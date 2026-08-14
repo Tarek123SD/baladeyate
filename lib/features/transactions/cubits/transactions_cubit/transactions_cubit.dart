@@ -1,4 +1,5 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:baladeyate/core/utils/api_response_parser.dart';
 import '../../repo/transactions_repository.dart';
 import 'transactions_state.dart';
 
@@ -27,8 +28,12 @@ class TransactionsCubit extends Cubit<TransactionsState> {
         selectedTypeFilter: type,
       ));
     } catch (e) {
-      final cleanMessage = e.toString().replaceAll('Exception: ', '');
-      emit(TransactionsError(cleanMessage));
+      emit(TransactionsError(
+        ApiResponseParser.toUserMessage(
+          e,
+          fallback: 'فشل جلب قائمة المعاملات',
+        ),
+      ));
     }
   }
 }

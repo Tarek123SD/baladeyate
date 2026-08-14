@@ -1,3 +1,4 @@
+import 'package:baladeyate/core/utils/api_response_parser.dart';
 import 'package:baladeyate/features/cemetery_map/cubits/cemetery_map_cubit/cemetery_map_state.dart';
 import 'package:baladeyate/features/cemetery_map/models/grave_model.dart';
 import 'package:baladeyate/features/cemetery_map/repo/cemetery_map_repository.dart';
@@ -106,7 +107,9 @@ class CemeteryMapCubit extends Cubit<CemeteryMapState> {
   }
 
   String _messageFromError(Object error) {
-    final message = error.toString().replaceFirst('Exception: ', '');
-    return message.isNotEmpty ? message : 'حدث خطأ غير متوقع';
+    return ApiResponseParser.toUserMessage(
+      error,
+      fallback: 'حدث خطأ غير متوقع',
+    );
   }
 }

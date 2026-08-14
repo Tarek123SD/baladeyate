@@ -2,6 +2,7 @@ import 'package:baladeyate/config/theme/app_colors.dart';
 import 'package:baladeyate/core/responsive/dimensions.dart';
 import 'package:baladeyate/core/responsive/responsive_helper.dart';
 import 'package:baladeyate/core/services/service_locator.dart';
+import 'package:baladeyate/core/utils/app_snackbar.dart';
 import 'package:baladeyate/core/widgets/app_background.dart';
 import 'package:baladeyate/features/auth/cubits/auth_cubit/auth_cubit.dart';
 import 'package:baladeyate/features/auth/cubits/auth_cubit/auth_state.dart';
@@ -69,9 +70,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
           context.read<NotificationsCubit>().clearActionError();
         }
         if (message != null) {
-          ScaffoldMessenger.of(context)
-            ..hideCurrentSnackBar()
-            ..showSnackBar(SnackBar(content: Text(message)));
+          AppSnackBar.showError(context, message);
         }
       },
       child: AppBackground(

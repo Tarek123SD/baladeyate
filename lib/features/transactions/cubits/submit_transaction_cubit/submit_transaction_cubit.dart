@@ -1,5 +1,6 @@
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:baladeyate/core/utils/api_response_parser.dart';
 import 'package:baladeyate/features/transactions/cubits/submit_transaction_cubit/submit_transaction_state.dart';
 import 'package:baladeyate/features/transactions/repo/transactions_repository.dart';
 
@@ -55,9 +56,9 @@ class SubmitTransactionCubit extends Cubit<SubmitTransactionState> {
           formData: state.formData,
         ));
       }
-    } catch (e) {
+    } catch (_) {
       emit(SubmitTransactionFailure(
-        error: 'فشل في اختيار الملفات: $e',
+        error: 'تعذر اختيار الملفات. يرجى المحاولة مرة أخرى',
         selectedType: state.selectedType,
         attachedFiles: state.attachedFiles,
         formData: state.formData,
@@ -117,9 +118,11 @@ class SubmitTransactionCubit extends Cubit<SubmitTransactionState> {
         formData: state.formData,
       ));
     } catch (error) {
-      final errorMessage = error.toString().replaceFirst('Exception: ', '');
       emit(SubmitTransactionFailure(
-        error: errorMessage,
+        error: ApiResponseParser.toUserMessage(
+          error,
+          fallback: 'فشل تقديم المعاملة',
+        ),
         selectedType: state.selectedType,
         attachedFiles: state.attachedFiles,
         formData: state.formData,
