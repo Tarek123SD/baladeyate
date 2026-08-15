@@ -124,7 +124,10 @@ class ResetPasswordResendButton extends StatelessWidget {
           ? SizedBox(
               width: 16.s(context),
               height: 16.s(context),
-              child: const CircularProgressIndicator(strokeWidth: 2),
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                color: AppColors.pageProgress(context),
+              ),
             )
           : Icon(
               Icons.refresh_rounded,

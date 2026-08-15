@@ -1,5 +1,5 @@
 import 'package:equatable/equatable.dart';
-import '../../models/transaction_model.dart';
+import 'package:baladeyate/features/transactions/models/transaction_model.dart';
 
 abstract class TransactionsState extends Equatable {
   const TransactionsState();
@@ -14,17 +14,27 @@ class TransactionsLoading extends TransactionsState {}
 
 class TransactionsLoaded extends TransactionsState {
   final List<TransactionModel> transactions;
-  final int selectedFilterIndex;
+  final int selectedTypeFilterIndex;
+  final int selectedStatusFilterIndex;
   final String? selectedTypeFilter;
+  final String? selectedStatusFilter;
 
   const TransactionsLoaded({
     required this.transactions,
-    this.selectedFilterIndex = 0,
+    this.selectedTypeFilterIndex = 0,
+    this.selectedStatusFilterIndex = 0,
     this.selectedTypeFilter,
+    this.selectedStatusFilter,
   });
 
   @override
-  List<Object?> get props => [transactions, selectedFilterIndex, selectedTypeFilter];
+  List<Object?> get props => [
+        transactions,
+        selectedTypeFilterIndex,
+        selectedStatusFilterIndex,
+        selectedTypeFilter,
+        selectedStatusFilter,
+      ];
 }
 
 class TransactionsError extends TransactionsState {

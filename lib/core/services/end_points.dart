@@ -20,6 +20,11 @@ class EndPoints {
   static const String complaints = 'v1/complaints';
   static String complaintById(int id) => 'v1/complaints/$id';
   static const String transactions = 'v1/citizen/transactions';
+  static String transactionById(int id) => 'v1/citizen/transactions/$id';
+  static String transactionDocuments(int id) =>
+      'v1/citizen/transactions/$id/documents';
+  static String transactionCancel(int id) =>
+      'v1/citizen/transactions/$id/cancel';
   static const String digitalDocuments = 'v1/citizen/digital-documents';
 
   // Delegate
@@ -34,6 +39,11 @@ class EndPoints {
   static String delegateMyTaskById(int id) => 'v1/delegate/my-tasks/$id';
   static String delegateMyTaskStatus(int id) =>
       'v1/delegate/my-tasks/$id/status';
+  static const String delegateTransactions = 'v1/delegate/transactions';
+  static String delegateTransactionById(int id) =>
+      'v1/delegate/transactions/$id';
+  static String delegateTransactionInspect(int id) =>
+      'v1/delegate/transactions/$id/inspect';
   static const String verifyDocument = 'v1/delegate/verify-document';
 
   // Admin

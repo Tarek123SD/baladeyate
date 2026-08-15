@@ -62,7 +62,10 @@ class NotificationsUnreadBanner extends StatelessWidget {
                 ? SizedBox(
                     width: 14.s(context),
                     height: 14.s(context),
-                    child: const CircularProgressIndicator(strokeWidth: 2),
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: AppColors.pageProgress(context),
+                    ),
                   )
                 : Text(
                     'تم الكل',

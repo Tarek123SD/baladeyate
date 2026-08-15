@@ -41,4 +41,18 @@ class AppColors {
 
   /// Border color when a text field is focused.
   static const Color inputFocusedBorder = green;
+
+  /// Progress indicator color that stays visible on [background].
+  static Color contrastingProgress(Color background) {
+    return ThemeData.estimateBrightnessForColor(background) == Brightness.dark
+        ? Colors.white
+        : primaryForest;
+  }
+
+  /// Page-level progress color for light and dark scaffolds.
+  static Color pageProgress(BuildContext context) {
+    return Theme.of(context).brightness == Brightness.dark
+        ? thirdForest
+        : primaryForest;
+  }
 }

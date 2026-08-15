@@ -205,11 +205,11 @@ class _DelegateTasksScreenState extends State<DelegateTasksScreen>
                           ),
                         ),
                         if (isInitialLoading)
-                          const SliverFillRemaining(
+                          SliverFillRemaining(
                             hasScrollBody: false,
                             child: Center(
                               child: CircularProgressIndicator(
-                                color: AppColors.primaryForest,
+                                color: AppColors.pageProgress(context),
                               ),
                             ),
                           )

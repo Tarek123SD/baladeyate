@@ -64,9 +64,11 @@ class WorkflowNavigationButtons extends StatelessWidget {
                   ? SizedBox(
                       width: 18.w(context),
                       height: 18.w(context),
-                      child: const CircularProgressIndicator(
+                      child: CircularProgressIndicator(
                         strokeWidth: 2,
-                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                        color: AppColors.contrastingProgress(
+                          AppColors.primaryForest,
+                        ),
                       ),
                     )
                   : Icon(Icons.arrow_back_rounded, size: 20.s(context)),

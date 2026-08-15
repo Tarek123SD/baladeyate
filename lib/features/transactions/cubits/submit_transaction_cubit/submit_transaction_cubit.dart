@@ -2,6 +2,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:baladeyate/core/utils/api_response_parser.dart';
 import 'package:baladeyate/features/transactions/cubits/submit_transaction_cubit/submit_transaction_state.dart';
+import 'package:baladeyate/features/transactions/models/transaction_document_catalog.dart';
 import 'package:baladeyate/features/transactions/repo/transactions_repository.dart';
 
 class SubmitTransactionCubit extends Cubit<SubmitTransactionState> {
@@ -90,6 +91,19 @@ class SubmitTransactionCubit extends Cubit<SubmitTransactionState> {
     if (targetType == null || targetType.isEmpty) {
       emit(SubmitTransactionFailure(
         error: 'يرجى اختيار نوع المعاملة أولاً',
+        selectedType: state.selectedType,
+        attachedFiles: state.attachedFiles,
+        formData: state.formData,
+      ));
+      return;
+    }
+
+    final minRequired =
+        TransactionDocumentCatalog.minimumRequiredAttachments(targetType);
+    if (state.attachedFiles.length < minRequired) {
+      emit(SubmitTransactionFailure(
+        error:
+            'يرجى إرفاق $minRequired ملفات إلزامية على الأقل حسب قائمة الوثائق المطلوبة',
         selectedType: state.selectedType,
         attachedFiles: state.attachedFiles,
         formData: state.formData,

@@ -1,3 +1,4 @@
+import 'package:baladeyate/config/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 
 class LoadingWidget extends StatelessWidget {
@@ -11,7 +12,13 @@ class LoadingWidget extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.center,
         crossAxisAlignment: CrossAxisAlignment.center,
         mainAxisSize: MainAxisSize.max,
-        children: [Center(child: CircularProgressIndicator())],
+        children: [
+          Center(
+            child: CircularProgressIndicator(
+              color: AppColors.pageProgress(context),
+            ),
+          ),
+        ],
       ),
     );
   }

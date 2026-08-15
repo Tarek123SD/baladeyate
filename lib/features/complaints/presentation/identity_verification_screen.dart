@@ -255,6 +255,9 @@ class _IdentityVerificationScreenState
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.green,
                 foregroundColor: Colors.white,
+                disabledBackgroundColor:
+                    AppColors.green.withValues(alpha: 0.7),
+                disabledForegroundColor: Colors.white,
                 elevation: 0,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(14.r(context)),
@@ -264,9 +267,9 @@ class _IdentityVerificationScreenState
                   ? SizedBox(
                       width: 18.s(context),
                       height: 18.s(context),
-                      child: const CircularProgressIndicator(
+                      child: CircularProgressIndicator(
                         strokeWidth: 2,
-                        valueColor: AlwaysStoppedAnimation(Colors.white),
+                        color: AppColors.contrastingProgress(AppColors.green),
                       ),
                     )
                   : Icon(Icons.upload_rounded, size: 20.s(context)),

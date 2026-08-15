@@ -1,3 +1,4 @@
+import 'package:baladeyate/config/theme/app_colors.dart';
 import 'package:baladeyate/core/constants/app_assets.dart';
 import 'package:baladeyate/core/responsive/responsive_helper.dart';
 import 'package:baladeyate/core/services/service_locator.dart';
@@ -134,17 +135,20 @@ class _TransactionsViewState extends State<TransactionsView> {
                             child: BlocBuilder<TransactionsCubit,
                                 TransactionsState>(
                               builder: (context, state) {
-                                final selectedIndex =
-                                    state is TransactionsLoaded
-                                        ? state.selectedFilterIndex
-                                        : 0;
+                                final typeIndex = state is TransactionsLoaded
+                                    ? state.selectedTypeFilterIndex
+                                    : 0;
+                                final statusIndex = state is TransactionsLoaded
+                                    ? state.selectedStatusFilterIndex
+                                    : 0;
 
                                 return Column(
                                   crossAxisAlignment:
                                       CrossAxisAlignment.stretch,
                                   children: [
                                     TransactionsFilters(
-                                      selectedIndex: selectedIndex,
+                                      selectedTypeIndex: typeIndex,
+                                      selectedStatusIndex: statusIndex,
                                     ),
                                     SizedBox(height: 16.h(context)),
                                     TransactionsListHeader(
@@ -169,7 +173,7 @@ class _TransactionsViewState extends State<TransactionsView> {
                                 sliver: SliverToBoxAdapter(
                                   child: Center(
                                     child: CircularProgressIndicator(
-                                      color: primaryColor,
+                                      color: AppColors.pageProgress(context),
                                     ),
                                   ),
                                 ),

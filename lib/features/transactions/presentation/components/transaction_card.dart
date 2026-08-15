@@ -1,7 +1,7 @@
 import 'package:baladeyate/features/transactions/models/transaction_model.dart';
-import 'package:baladeyate/features/transactions/presentation/components/transaction_details_sheet.dart';
 import 'package:baladeyate/features/transactions/presentation/transaction_display.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:responsive_x_toolkit/responsive_x.dart';
 
 class TransactionCard extends StatelessWidget {
@@ -136,10 +136,7 @@ class TransactionCard extends StatelessWidget {
               TransactionCardFooterFormData(rawFormData: transaction.formData),
               SizedBox(width: 8.w(context)),
               InkWell(
-                onTap: () => showTransactionDetailsSheet(
-                  context,
-                  transaction,
-                ),
+                onTap: () => context.push('/transactions/${transaction.id}'),
                 borderRadius: BorderRadius.circular(8.r(context)),
                 child: Padding(
                   padding: EdgeInsets.symmetric(
@@ -150,7 +147,7 @@ class TransactionCard extends StatelessWidget {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Text(
-                        'التفاصيل',
+                        transaction.needsDocuments ? 'استكمال' : 'التفاصيل',
                         style: TextStyle(
                           color: primaryColor,
                           fontWeight: FontWeight.bold,

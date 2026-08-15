@@ -23,6 +23,7 @@ const Map<String, String> transactionFormDataLabels = {
   'building_area': 'مساحة البناء',
   'floors_count': 'عدد الطوابق',
   'apartment_number': 'رقم الشقة',
+  'service_description': 'وصف الخدمة',
   'notes': 'ملاحظات',
   'address': 'العنوان',
 };
@@ -37,6 +38,13 @@ TransactionStatusProps getTransactionStatusProps(String status) {
         bgColor: Color(0xFFEDE7F6),
         icon: Icons.fact_check_outlined,
       );
+    case 'needs_documents':
+      return const TransactionStatusProps(
+        label: 'بحاجة لوثائق',
+        color: Color(0xFF6D4C41),
+        bgColor: Color(0xFFEFEBE9),
+        icon: Icons.upload_file_outlined,
+      );
     case 'under_review':
     case 'processing':
     case 'in_progress':
@@ -47,12 +55,18 @@ TransactionStatusProps getTransactionStatusProps(String status) {
         icon: Icons.sync_rounded,
       );
     case 'approved':
-    case 'completed':
       return const TransactionStatusProps(
         label: 'مقبولة',
         color: Color(0xFF2E7D32),
         bgColor: Color(0xFFE8F5E9),
         icon: Icons.check_circle_rounded,
+      );
+    case 'completed':
+      return const TransactionStatusProps(
+        label: 'مكتملة',
+        color: Color(0xFF1B5E20),
+        bgColor: Color(0xFFE8F5E9),
+        icon: Icons.verified_rounded,
       );
     case 'rejected':
       return const TransactionStatusProps(
@@ -78,6 +92,8 @@ String getTransactionTypeLabel(String type) {
       return 'رخصة تجارية';
     case 'building_permit':
       return 'رخصة بناء';
+    case 'general_service':
+      return 'خدمة عامة';
     default:
       if (type.trim().isNotEmpty) {
         return type;

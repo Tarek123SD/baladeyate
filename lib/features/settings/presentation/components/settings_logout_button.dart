@@ -33,9 +33,9 @@ class SettingsLogoutButton extends StatelessWidget {
                 ? SizedBox(
                     width: 20.s(context),
                     height: 20.s(context),
-                    child: const CircularProgressIndicator(
+                    child: CircularProgressIndicator(
                       strokeWidth: 2,
-                      valueColor: AlwaysStoppedAnimation(Colors.white),
+                      color: AppColors.contrastingProgress(AppColors.green),
                     ),
                   )
                 : Icon(AppIcons.logout, size: 20.ic(context)),

@@ -35,12 +35,14 @@ class PasswordResetPrimaryButton extends StatelessWidget {
           ),
         ),
         child: isLoading
-            ? const SizedBox(
+            ? SizedBox(
                 width: 24,
                 height: 24,
                 child: CircularProgressIndicator(
                   strokeWidth: 2.5,
-                  color: Colors.white,
+                  color: AppColors.contrastingProgress(
+                    AppColors.secondaryForest,
+                  ),
                 ),
               )
             : Row(

@@ -25,15 +25,20 @@ class PeopleSaveBar extends StatelessWidget {
           style: ElevatedButton.styleFrom(
             backgroundColor: AppColors.primaryForest,
             foregroundColor: Colors.white,
+            disabledBackgroundColor:
+                AppColors.primaryForest.withValues(alpha: 0.7),
+            disabledForegroundColor: Colors.white,
             padding: EdgeInsets.symmetric(vertical: 14.h(context)),
           ),
           child: isSaving
-              ? const SizedBox(
+              ? SizedBox(
                   height: 22,
                   width: 22,
                   child: CircularProgressIndicator(
                     strokeWidth: 2,
-                    color: Colors.white,
+                    color: AppColors.contrastingProgress(
+                      AppColors.primaryForest,
+                    ),
                   ),
                 )
               : Text(

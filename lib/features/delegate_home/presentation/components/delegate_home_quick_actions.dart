@@ -56,11 +56,24 @@ class DelegateHomeQuickActions extends StatelessWidget {
             SizedBox(width: gap),
             Expanded(
               child: tile(
+                'معاينة معاملات',
+                Icons.fact_check_outlined,
+                () => context.push('/delegate/transactions'),
+              ),
+            ),
+          ],
+        ),
+        SizedBox(height: gap),
+        Row(
+          children: [
+            Expanded(
+              child: tile(
                 'خريطة المقبرة',
                 AppIcons.cemetery,
                 () => context.push('/delegate/cemetery-map'),
               ),
             ),
+            const Expanded(child: SizedBox.shrink()),
           ],
         ),
       ],

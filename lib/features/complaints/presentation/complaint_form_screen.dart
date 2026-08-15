@@ -223,6 +223,9 @@ class _ComplaintFormScreenState extends State<ComplaintFormScreen> {
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.green,
                 foregroundColor: Colors.white,
+                disabledBackgroundColor:
+                    AppColors.green.withValues(alpha: 0.7),
+                disabledForegroundColor: Colors.white,
                 elevation: 0,
                 padding: EdgeInsets.symmetric(vertical: 13.h(context)),
                 shape: RoundedRectangleBorder(
@@ -233,9 +236,9 @@ class _ComplaintFormScreenState extends State<ComplaintFormScreen> {
                   ? SizedBox(
                       width: 18.s(context),
                       height: 18.s(context),
-                      child: const CircularProgressIndicator(
+                      child: CircularProgressIndicator(
                         strokeWidth: 2,
-                        valueColor: AlwaysStoppedAnimation(Colors.white),
+                        color: AppColors.contrastingProgress(AppColors.green),
                       ),
                     )
                   : Icon(

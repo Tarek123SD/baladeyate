@@ -341,9 +341,13 @@ class AuthPrimaryButton extends StatelessWidget {
         onPressed: active ? onPressed : null,
         style: ElevatedButton.styleFrom(
           backgroundColor: backgroundColor,
-          disabledBackgroundColor: Colors.grey.shade300,
+          // Keep brand color while loading so the white spinner stays visible.
+          disabledBackgroundColor: isLoading
+              ? backgroundColor
+              : Colors.grey.shade300,
           foregroundColor: Colors.white,
-          disabledForegroundColor: Colors.grey.shade500,
+          disabledForegroundColor:
+              isLoading ? Colors.white : Colors.grey.shade500,
           elevation: active ? 3 : 0,
           shadowColor: AppColors.primaryForest.withValues(alpha: 0.35),
           shape: RoundedRectangleBorder(
@@ -354,9 +358,9 @@ class AuthPrimaryButton extends StatelessWidget {
             ? SizedBox(
                 width: 24.s(context),
                 height: 24.s(context),
-                child: const CircularProgressIndicator(
+                child: CircularProgressIndicator(
                   strokeWidth: 2.5,
-                  valueColor: AlwaysStoppedAnimation(Colors.white),
+                  color: AppColors.contrastingProgress(backgroundColor),
                 ),
               )
             : Row(

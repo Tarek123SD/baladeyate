@@ -1,3 +1,4 @@
+import 'package:baladeyate/config/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:responsive_x_toolkit/responsive_x.dart';
 
@@ -16,7 +17,7 @@ class HomeUpdatesLoadingState extends StatelessWidget {
               height: 36.s(context),
               child: CircularProgressIndicator(
                 strokeWidth: 3,
-                color: Theme.of(context).colorScheme.primary,
+                color: AppColors.pageProgress(context),
               ),
             ),
             SizedBox(height: 16.h(context)),

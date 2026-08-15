@@ -328,14 +328,19 @@ class _DonationPaymentScreenState extends State<DonationPaymentScreen> {
 
   Widget _buildSubmitButton(BuildContext context, bool isLoading) {
     final isEnabled = _effectiveAmount > 0 && _receiptImage != null && !isLoading;
+    final buttonColor = isLoading || isEnabled
+        ? AppColors.primaryForest
+        : Colors.grey.shade300;
 
     return SizedBox(
       width: double.infinity,
       height: 54.h(context),
       child: ElevatedButton(
         style: ElevatedButton.styleFrom(
-          backgroundColor:
-              isEnabled ? AppColors.primaryForest : Colors.grey.shade300,
+          backgroundColor: buttonColor,
+          disabledBackgroundColor: isLoading
+              ? AppColors.primaryForest.withValues(alpha: 0.7)
+              : Colors.grey.shade300,
           elevation: isEnabled ? 2 : 0,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16.r(context)),
@@ -346,8 +351,8 @@ class _DonationPaymentScreenState extends State<DonationPaymentScreen> {
             ? SizedBox(
                 width: 24.w(context),
                 height: 24.w(context),
-                child: const CircularProgressIndicator(
-                  color: Colors.white,
+                child: CircularProgressIndicator(
+                  color: AppColors.contrastingProgress(AppColors.primaryForest),
                   strokeWidth: 2.5,
                 ),
               )

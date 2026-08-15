@@ -76,6 +76,8 @@ class AppTheme {
         style: ElevatedButton.styleFrom(
           backgroundColor: primaryColor,
           foregroundColor: Colors.white,
+          disabledBackgroundColor: primaryColor.withValues(alpha: 0.7),
+          disabledForegroundColor: Colors.white,
           elevation: 0,
           minimumSize: const Size(double.infinity, 54),
           shape: RoundedRectangleBorder(
@@ -86,6 +88,10 @@ class AppTheme {
             fontWeight: FontWeight.bold,
           ),
         ),
+      ),
+
+      progressIndicatorTheme: const ProgressIndicatorThemeData(
+        color: primaryColor,
       ),
 
       // 5. Bottom Navigation Bar Theme
@@ -214,6 +220,8 @@ class AppTheme {
         style: ElevatedButton.styleFrom(
           backgroundColor: primaryColor,
           foregroundColor: Colors.white,
+          disabledBackgroundColor: primaryColor.withValues(alpha: 0.7),
+          disabledForegroundColor: Colors.white,
           elevation: 0,
           minimumSize: const Size(double.infinity, 54),
           shape: RoundedRectangleBorder(
@@ -224,6 +232,9 @@ class AppTheme {
             fontWeight: FontWeight.bold,
           ),
         ),
+      ),
+      progressIndicatorTheme: const ProgressIndicatorThemeData(
+        color: AppColors.thirdForest,
       ),
       bottomNavigationBarTheme: BottomNavigationBarThemeData(
         backgroundColor: const Color(0xFF1E1E1E),

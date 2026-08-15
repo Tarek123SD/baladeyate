@@ -174,10 +174,19 @@ String? routeForNotification(
 
   switch (notification.type) {
     case 'NewTaskAssignedNotification':
-      return isDelegate ? '/delegate/tasks' : null;
+      if (!isDelegate) return null;
+      final txId = notification.data['transaction_id'];
+      if (txId != null && txId.toString().isNotEmpty) {
+        return '/delegate/transactions';
+      }
+      return '/delegate/tasks';
     case 'ComplaintStatusUpdatedNotification':
       return '/track';
     case 'TransactionStatusUpdatedNotification':
+      final id = notification.data['transaction_id'] ?? notification.data['id'];
+      if (id != null && id.toString().isNotEmpty) {
+        return '/transactions/$id';
+      }
       return '/transactions';
     case 'IdentityVerificationNotification':
       return '/profile';

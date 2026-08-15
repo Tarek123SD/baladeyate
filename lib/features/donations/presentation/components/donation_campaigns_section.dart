@@ -23,8 +23,10 @@ class DonationCampaignsSection extends StatelessWidget {
         if (state is DonationsLoading || state is DonationsInitial) {
           return Padding(
             padding: EdgeInsets.symmetric(vertical: 40.h(context)),
-            child: const Center(
-              child: CircularProgressIndicator(color: AppColors.primaryForest),
+            child: Center(
+              child: CircularProgressIndicator(
+                color: AppColors.pageProgress(context),
+              ),
             ),
           );
         }

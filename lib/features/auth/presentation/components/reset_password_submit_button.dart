@@ -43,9 +43,11 @@ class ResetPasswordSubmitButton extends StatelessWidget {
                 ? SizedBox(
                     width: 24.s(context),
                     height: 24.s(context),
-                    child: const CircularProgressIndicator(
+                    child: CircularProgressIndicator(
                       strokeWidth: 2.5,
-                      color: Colors.white,
+                      color: AppColors.contrastingProgress(
+                        AppColors.secondaryForest,
+                      ),
                     ),
                   )
                 : Row(

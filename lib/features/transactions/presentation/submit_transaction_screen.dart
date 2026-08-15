@@ -13,6 +13,7 @@ import '../cubits/submit_transaction_cubit/submit_transaction_cubit.dart';
 import '../cubits/submit_transaction_cubit/submit_transaction_state.dart';
 import 'components/file_attachments_list.dart';
 import 'components/file_picker_container.dart';
+import 'components/required_documents_guide.dart';
 
 class SubmitTransactionScreen extends StatelessWidget {
   final int? buildingId;
@@ -193,6 +194,36 @@ class _SubmitTransactionFormState extends State<SubmitTransactionForm> {
           ),
         ],
       );
+    } else if (state.selectedType == 'general_service') {
+      return Column(
+        key: const ValueKey('general_service_fields'),
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(height: 16.h(context)),
+          TextFormField(
+            initialValue: state.formData['service_description'] as String?,
+            enabled: !isLoading,
+            maxLines: 4,
+            style: TextStyle(
+              color: Colors.black87,
+              fontSize: 15.s(context),
+              fontWeight: FontWeight.w500,
+            ),
+            textDirection: TextDirection.rtl,
+            decoration: _buildInputDecoration(
+              context,
+              labelText: 'وصف الخدمة المطلوبة',
+              hintText: 'اشرح الخدمة البلدية التي تحتاجها',
+              prefixIcon: Icons.description_outlined,
+            ),
+            onChanged: (val) =>
+                cubit.updateFormField('service_description', val),
+            validator: (val) => (val == null || val.trim().isEmpty)
+                ? 'يرجى إدخال وصف الخدمة'
+                : null,
+          ),
+        ],
+      );
     }
 
     return const SizedBox.shrink(key: ValueKey('empty_fields'));
@@ -287,6 +318,17 @@ class _SubmitTransactionFormState extends State<SubmitTransactionForm> {
                                         ),
                                       ),
                                     ),
+                                    DropdownMenuItem(
+                                      value: 'general_service',
+                                      child: Text(
+                                        'خدمة عامة',
+                                        style: TextStyle(
+                                          color: Colors.black87,
+                                          fontSize: 15.s(context),
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                      ),
+                                    ),
                                   ],
                                   onChanged: isLoading
                                       ? null
@@ -311,6 +353,13 @@ class _SubmitTransactionFormState extends State<SubmitTransactionForm> {
                                   ),
                                 ),
 
+                                if (state.selectedType != null) ...[
+                                  SizedBox(height: 16.h(context)),
+                                  RequiredDocumentsGuide(
+                                    type: state.selectedType,
+                                  ),
+                                ],
+
                                 SizedBox(height: 24.h(context)),
 
                                 // File Picker Section
@@ -320,6 +369,14 @@ class _SubmitTransactionFormState extends State<SubmitTransactionForm> {
                                     fontSize: 14.s(context),
                                     fontWeight: FontWeight.bold,
                                     color: AppColors.secondaryCharcoal,
+                                  ),
+                                ),
+                                SizedBox(height: 6.h(context)),
+                                Text(
+                                  'ارفع الملفات حسب القائمة أعلاه (كل وثيقة إلزامية في ملف مستقل).',
+                                  style: TextStyle(
+                                    fontSize: 12.s(context),
+                                    color: Colors.grey.shade700,
                                   ),
                                 ),
                                 SizedBox(height: 10.h(context)),
@@ -349,6 +406,9 @@ class _SubmitTransactionFormState extends State<SubmitTransactionForm> {
                                   child: ElevatedButton(
                                     style: ElevatedButton.styleFrom(
                                       backgroundColor: primaryColor,
+                                      disabledBackgroundColor:
+                                          primaryColor.withValues(alpha: 0.7),
+                                      disabledForegroundColor: Colors.white,
                                       elevation: 0,
                                       shape: RoundedRectangleBorder(
                                         borderRadius: BorderRadius.circular(
@@ -366,12 +426,15 @@ class _SubmitTransactionFormState extends State<SubmitTransactionForm> {
                                             }
                                           },
                                     child: isLoading
-                                        ? const SizedBox(
+                                        ? SizedBox(
                                             width: 24,
                                             height: 24,
                                             child: CircularProgressIndicator(
                                               strokeWidth: 2.5,
-                                              color: Colors.white,
+                                              color: AppColors
+                                                  .contrastingProgress(
+                                                primaryColor,
+                                              ),
                                             ),
                                           )
                                         : Text(

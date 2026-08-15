@@ -6,16 +6,75 @@ import 'package:responsive_x_toolkit/responsive_x.dart';
 class TransactionsFilters extends StatelessWidget {
   const TransactionsFilters({
     super.key,
-    required this.selectedIndex,
+    required this.selectedTypeIndex,
+    required this.selectedStatusIndex,
   });
 
-  final int selectedIndex;
+  final int selectedTypeIndex;
+  final int selectedStatusIndex;
 
-  static const List<({String label, String? typeKey})> filterOptions = [
+  static const List<({String label, String? typeKey})> typeOptions = [
     (label: 'الكل', typeKey: null),
     (label: 'رخصة تجارية', typeKey: 'commercial_license'),
     (label: 'رخصة بناء', typeKey: 'building_permit'),
+    (label: 'خدمة عامة', typeKey: 'general_service'),
   ];
+
+  static const List<({String label, String? statusKey})> statusOptions = [
+    (label: 'كل الحالات', statusKey: null),
+    (label: 'قيد المراجعة', statusKey: 'pending'),
+    (label: 'قيد الدراسة', statusKey: 'under_review'),
+    (label: 'بحاجة لوثائق', statusKey: 'needs_documents'),
+    (label: 'كشف ميداني', statusKey: 'field_inspection'),
+    (label: 'مقبولة', statusKey: 'approved'),
+    (label: 'مرفوضة', statusKey: 'rejected'),
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        _FilterChipRow(
+          options: typeOptions
+              .map((e) => (label: e.label, value: e.typeKey))
+              .toList(),
+          selectedIndex: selectedTypeIndex,
+          onSelected: (index, value) {
+            context.read<TransactionsCubit>().applyTypeFilter(
+                  index: index,
+                  type: value,
+                );
+          },
+        ),
+        SizedBox(height: 8.h(context)),
+        _FilterChipRow(
+          options: statusOptions
+              .map((e) => (label: e.label, value: e.statusKey))
+              .toList(),
+          selectedIndex: selectedStatusIndex,
+          onSelected: (index, value) {
+            context.read<TransactionsCubit>().applyStatusFilter(
+                  index: index,
+                  status: value,
+                );
+          },
+        ),
+      ],
+    );
+  }
+}
+
+class _FilterChipRow extends StatelessWidget {
+  const _FilterChipRow({
+    required this.options,
+    required this.selectedIndex,
+    required this.onSelected,
+  });
+
+  final List<({String label, String? value})> options;
+  final int selectedIndex;
+  final void Function(int index, String? value) onSelected;
 
   @override
   Widget build(BuildContext context) {
@@ -25,9 +84,9 @@ class TransactionsFilters extends StatelessWidget {
       scrollDirection: Axis.horizontal,
       physics: const BouncingScrollPhysics(),
       child: Row(
-        children: List.generate(filterOptions.length, (index) {
+        children: List.generate(options.length, (index) {
           final isSelected = selectedIndex == index;
-          final filter = filterOptions[index];
+          final filter = options[index];
 
           return Padding(
             padding: EdgeInsets.only(left: 8.w(context)),
@@ -42,12 +101,7 @@ class TransactionsFilters extends StatelessWidget {
               ),
               selected: isSelected,
               showCheckmark: false,
-              onSelected: (_) {
-                context.read<TransactionsCubit>().fetchTransactions(
-                      type: filter.typeKey,
-                      filterIndex: index,
-                    );
-              },
+              onSelected: (_) => onSelected(index, filter.value),
               selectedColor: primaryColor,
               backgroundColor: Colors.white,
               side: BorderSide(

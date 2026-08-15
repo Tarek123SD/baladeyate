@@ -36,6 +36,7 @@ class NotificationsScreen extends StatefulWidget {
 class _NotificationsScreenState extends State<NotificationsScreen> {
   NotificationsReadFilter _readFilter = NotificationsReadFilter.all;
   NotificationCategory? _categoryFilter;
+  bool _isHandlingTap = false;
 
   @override
   void initState() {
@@ -241,20 +242,27 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   }
 
   Future<void> _handleNotificationTap(AppNotification notification) async {
-    final cubit = context.read<NotificationsCubit>();
-    if (!notification.isRead) {
-      await cubit.markAsRead(notification.id);
-    }
-    if (!mounted) return;
+    if (_isHandlingTap) return;
+    _isHandlingTap = true;
 
-    final route = routeForNotification(notification, user: _currentUser);
-    if (route != null) {
+    try {
+      final cubit = context.read<NotificationsCubit>();
+      if (!notification.isRead) {
+        await cubit.markAsRead(notification.id);
+      }
+      if (!mounted) return;
+
+      final route = routeForNotification(notification, user: _currentUser);
+      if (route == null) return;
+
       // Shell tabs must use go — push duplicates the StatefulShellRoute page key.
       if (isIndexedShellTabRoute(route)) {
         context.go(route);
       } else {
         context.push(route);
       }
+    } finally {
+      _isHandlingTap = false;
     }
   }
 }

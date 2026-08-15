@@ -71,7 +71,9 @@ import 'package:baladeyate/features/profile/cubits/profile_cubit/profile_cubit.d
 import 'package:baladeyate/features/profile/presentation/profile_screen.dart';
 import 'package:baladeyate/features/transactions/cubits/submit_transaction_cubit/submit_transaction_cubit.dart';
 import 'package:baladeyate/features/transactions/cubits/transactions_cubit/transactions_cubit.dart';
+import 'package:baladeyate/features/transactions/presentation/delegate_transactions_screen.dart';
 import 'package:baladeyate/features/transactions/presentation/submit_transaction_screen.dart';
+import 'package:baladeyate/features/transactions/presentation/transaction_detail_screen.dart';
 import 'package:baladeyate/features/transactions/presentation/transactions_screen.dart';
 import 'package:baladeyate/features/digital_documents/cubits/digital_documents_cubit/digital_documents_cubit.dart';
 import 'package:baladeyate/features/digital_documents/presentation/digital_documents_screen.dart';
@@ -265,10 +267,24 @@ GoRouter _createAppRouter() {
 
       GoRoute(
         path: '/transactions/submit',
-        builder: (context, state) => BlocProvider(
-          create: (_) => sl<SubmitTransactionCubit>(),
-          child: const SubmitTransactionScreen(),
-        ),
+        builder: (context, state) {
+          final buildingIdParam = state.uri.queryParameters['buildingId'];
+          final buildingId = buildingIdParam == null
+              ? null
+              : int.tryParse(buildingIdParam);
+          return BlocProvider(
+            create: (_) => sl<SubmitTransactionCubit>(),
+            child: SubmitTransactionScreen(buildingId: buildingId),
+          );
+        },
+      ),
+
+      GoRoute(
+        path: '/transactions/:id',
+        builder: (context, state) {
+          final id = int.tryParse(state.pathParameters['id'] ?? '') ?? 0;
+          return TransactionDetailScreen(transactionId: id);
+        },
       ),
 
       GoRoute(
@@ -281,13 +297,17 @@ GoRouter _createAppRouter() {
 
       GoRoute(
         path: '/notifications',
-
         builder: (context, state) => const NotificationsScreen(),
+      ),
 
+      // Outside the delegate shell — must be pushable from notifications
+      // without duplicating StatefulShellRoute GlobalKeys.
+      GoRoute(
+        path: '/delegate/transactions',
+        builder: (context, state) => const DelegateTransactionsScreen(),
       ),
 
       GoRoute(
-
         path: '/complains',
 
         builder: (context, state) => MultiBlocProvider(

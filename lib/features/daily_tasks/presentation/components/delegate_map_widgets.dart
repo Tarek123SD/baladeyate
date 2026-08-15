@@ -553,7 +553,12 @@ class DelegateMapControlButton extends StatelessWidget {
               ? SizedBox(
                   width: 20.s(context),
                   height: 20.s(context),
-                  child: const CircularProgressIndicator(strokeWidth: 2),
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: AppColors.contrastingProgress(
+                      isActive ? AppColors.primaryForest : Colors.white,
+                    ),
+                  ),
                 )
               : Icon(
                   icon,

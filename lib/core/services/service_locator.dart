@@ -31,6 +31,7 @@ import 'package:baladeyate/features/profile/cubits/profile_cubit/profile_cubit.d
 import 'package:baladeyate/features/profile/repo/citizen_repository.dart';
 import 'package:baladeyate/features/transactions/cubits/submit_transaction_cubit/submit_transaction_cubit.dart';
 import 'package:baladeyate/features/transactions/cubits/transactions_cubit/transactions_cubit.dart';
+import 'package:baladeyate/features/transactions/cubits/delegate_transactions_cubit/delegate_transactions_cubit.dart';
 import 'package:baladeyate/features/transactions/repo/transactions_repository.dart';
 import 'package:baladeyate/features/digital_documents/cubits/digital_documents_cubit/digital_documents_cubit.dart';
 import 'package:baladeyate/features/digital_documents/cubits/scanner_cubit/scanner_cubit.dart';
@@ -167,6 +168,10 @@ Future<void> setupServiceLocator() async {
 
   sl.registerFactory<TransactionsCubit>(
     () => TransactionsCubit(transactionsRepository: sl<TransactionsRepository>()),
+  );
+
+  sl.registerFactory<DelegateTransactionsCubit>(
+    () => DelegateTransactionsCubit(repository: sl<TransactionsRepository>()),
   );
 
   sl.registerFactory<DigitalDocumentsCubit>(

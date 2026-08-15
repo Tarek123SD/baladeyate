@@ -165,8 +165,11 @@ class DonationQuickDonateSection extends StatelessWidget {
                 height: 52.h(context),
                 child: ElevatedButton.icon(
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: isEnabled
+                    backgroundColor: isLoading || isEnabled
                         ? AppColors.primaryForest
+                        : Colors.grey.shade300,
+                    disabledBackgroundColor: isLoading
+                        ? AppColors.primaryForest.withValues(alpha: 0.7)
                         : Colors.grey.shade300,
                     elevation: isEnabled ? 2 : 0,
                     shape: RoundedRectangleBorder(
@@ -194,8 +197,10 @@ class DonationQuickDonateSection extends StatelessWidget {
                       ? SizedBox(
                           width: 22.w(context),
                           height: 22.w(context),
-                          child: const CircularProgressIndicator(
-                            color: Colors.white,
+                          child: CircularProgressIndicator(
+                            color: AppColors.contrastingProgress(
+                              AppColors.primaryForest,
+                            ),
                             strokeWidth: 2.5,
                           ),
                         )
