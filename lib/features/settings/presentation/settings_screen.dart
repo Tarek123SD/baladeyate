@@ -27,7 +27,7 @@ class SettingsScreen extends StatelessWidget {
     if (authState is! AuthSuccess) return;
 
     await context.push(
-      '/reset-password?email=${Uri.encodeComponent(authState.user.email)}&fromSettings=1',
+      '/forgot-password?email=${Uri.encodeComponent(authState.user.email)}&fromSettings=1',
     );
   }
 

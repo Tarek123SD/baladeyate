@@ -16,7 +16,14 @@ import 'package:go_router/go_router.dart';
 import 'package:responsive_x_toolkit/responsive_x.dart';
 
 class ForgotPasswordScreen extends StatefulWidget {
-  const ForgotPasswordScreen({super.key});
+  const ForgotPasswordScreen({
+    super.key,
+    this.initialEmail,
+    this.fromSettings = false,
+  });
+
+  final String? initialEmail;
+  final bool fromSettings;
 
   @override
   State<ForgotPasswordScreen> createState() => _ForgotPasswordScreenState();
@@ -24,7 +31,13 @@ class ForgotPasswordScreen extends StatefulWidget {
 
 class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _emailController = TextEditingController();
+  late final TextEditingController _emailController;
+
+  @override
+  void initState() {
+    super.initState();
+    _emailController = TextEditingController(text: widget.initialEmail ?? '');
+  }
 
   @override
   void dispose() {
@@ -48,7 +61,10 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       MaterialPageRoute(
         builder: (_) => BlocProvider.value(
           value: cubit,
-          child: VerifyOtpScreen(email: email),
+          child: VerifyOtpScreen(
+            email: email,
+            fromSettings: widget.fromSettings,
+          ),
         ),
       ),
     );
@@ -118,12 +134,14 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                       );
                     },
                   ),
-                  SizedBox(height: 24.h(context)),
-                  AuthSwitchLink(
-                    prompt: 'تذكرت كلمة المرور؟ ',
-                    actionLabel: 'تسجيل الدخول',
-                    onTap: () => context.go('/login'),
-                  ),
+                  if (!widget.fromSettings) ...[
+                    SizedBox(height: 24.h(context)),
+                    AuthSwitchLink(
+                      prompt: 'تذكرت كلمة المرور؟ ',
+                      actionLabel: 'تسجيل الدخول',
+                      onTap: () => context.go('/login'),
+                    ),
+                  ],
                   SizedBox(height: 40.h(context)),
                 ],
               ),

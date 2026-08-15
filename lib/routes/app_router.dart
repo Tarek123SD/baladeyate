@@ -181,13 +181,21 @@ GoRouter _createAppRouter() {
 
         path: '/forgot-password',
 
-        builder: (context, state) => BlocProvider(
+        builder: (context, state) {
+          final email = state.uri.queryParameters['email'];
+          final fromSettings = state.uri.queryParameters['fromSettings'] == '1';
 
-          create: (_) => sl<PasswordResetCubit>(),
+          return BlocProvider(
 
-          child: const ForgotPasswordScreen(),
+            create: (_) => sl<PasswordResetCubit>(),
 
-        ),
+            child: ForgotPasswordScreen(
+              initialEmail: email,
+              fromSettings: fromSettings,
+            ),
+
+          );
+        },
 
       ),
 

@@ -87,7 +87,7 @@ class TransactionsHeaderCard extends StatelessWidget {
                   ),
                   SizedBox(width: 4.w(context)),
                   Text(
-                    'المحفظة',
+                    'الارشيف',
                     style: TextStyle(
                       color: const Color(0xFFFFE082),
                       fontSize: 12.f(context),

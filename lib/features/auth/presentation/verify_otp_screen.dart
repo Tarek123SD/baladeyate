@@ -22,9 +22,14 @@ import 'package:responsive_x_toolkit/responsive_x.dart';
 /// Displays a 6-digit OTP field. On success the API returns a [reset_token]
 /// that is forwarded to [NewResetPasswordScreen] (Step 3).
 class VerifyOtpScreen extends StatefulWidget {
-  const VerifyOtpScreen({super.key, required this.email});
+  const VerifyOtpScreen({
+    super.key,
+    required this.email,
+    this.fromSettings = false,
+  });
 
   final String email;
+  final bool fromSettings;
 
   @override
   State<VerifyOtpScreen> createState() => _VerifyOtpScreenState();
@@ -107,6 +112,7 @@ class _VerifyOtpScreenState extends State<VerifyOtpScreen> {
           child: NewResetPasswordScreen(
             email: widget.email,
             resetToken: fetchedToken,
+            fromSettings: widget.fromSettings,
           ),
         ),
       ),

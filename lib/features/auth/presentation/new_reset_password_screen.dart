@@ -21,10 +21,12 @@ class NewResetPasswordScreen extends StatefulWidget {
     super.key,
     required this.email,
     required this.resetToken,
+    this.fromSettings = false,
   });
 
   final String email;
   final String resetToken;
+  final bool fromSettings;
 
   @override
   State<NewResetPasswordScreen> createState() => _NewResetPasswordScreenState();
@@ -64,6 +66,17 @@ class _NewResetPasswordScreenState extends State<NewResetPasswordScreen> {
           passwordConfirmation: _confirmPasswordController.text,
         );
     if (!mounted || !success) return;
+
+    if (widget.fromSettings) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('تم تغيير كلمة المرور بنجاح'),
+          backgroundColor: AppColors.secondaryForest,
+        ),
+      );
+      context.go('/settings');
+      return;
+    }
 
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
