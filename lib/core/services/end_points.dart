@@ -51,6 +51,7 @@ class EndPoints {
   static String shopById(int id) => 'v1/shops/$id';
   static const String graves = 'v1/graves';
   static String graveById(int id) => 'v1/graves/$id';
+  static String cemeteryMap(int id) => 'v1/cemeteries/$id/map';
 
   // Shared (auth:sanctum)
   static const String notifications = 'v1/notifications';

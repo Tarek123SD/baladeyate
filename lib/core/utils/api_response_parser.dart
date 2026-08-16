@@ -88,6 +88,17 @@ class ApiResponseParser {
     return expectMap(data, fallback: fallback)['data'];
   }
 
+  static Map<String, dynamic> expectDataMap(dynamic data, {String? fallback}) {
+    final payload = expectData(data, fallback: fallback);
+    if (payload is Map<String, dynamic>) {
+      return payload;
+    }
+    if (payload is Map) {
+      return Map<String, dynamic>.from(payload);
+    }
+    throw Exception(fallback ?? 'استجابة غير صالحة من الخادم');
+  }
+
   static String? extractMessage(Map<String, dynamic> data) {
     final fromErrors = _firstValidationError(data['errors']);
     final message = data['message'];

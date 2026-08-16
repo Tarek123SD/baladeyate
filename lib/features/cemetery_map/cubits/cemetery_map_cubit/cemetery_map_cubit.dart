@@ -24,12 +24,15 @@ class CemeteryMapCubit extends Cubit<CemeteryMapState> {
     );
 
     try {
-      final graves = await _cemeteryMapRepository.getGraves(
+      final result = await _cemeteryMapRepository.getMap(
         cemeteryId: cemeteryId,
       );
       emit(
         state.copyWith(
-          graves: List<GraveModel>.unmodifiable(graves),
+          graves: result.graves,
+          mapUrl: result.map.mapUrl,
+          mapWidth: result.map.mapWidth,
+          mapHeight: result.map.mapHeight,
           isLoading: false,
         ),
       );
@@ -37,6 +40,7 @@ class CemeteryMapCubit extends Cubit<CemeteryMapState> {
       emit(
         state.copyWith(
           isLoading: false,
+          mapUrl: state.mapUrl ?? CemeteryMapRepository.fallbackMapUrl,
           errorMessage: _messageFromError(error),
         ),
       );

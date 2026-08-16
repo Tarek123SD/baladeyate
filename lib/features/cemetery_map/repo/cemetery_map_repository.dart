@@ -1,6 +1,7 @@
 import 'package:baladeyate/core/services/api_services.dart';
 import 'package:baladeyate/core/services/end_points.dart';
 import 'package:baladeyate/core/utils/api_response_parser.dart';
+import 'package:baladeyate/features/cemetery_map/models/cemetery_map_model.dart';
 import 'package:baladeyate/features/cemetery_map/models/grave_model.dart';
 
 class CemeteryMapRepository {
@@ -9,27 +10,68 @@ class CemeteryMapRepository {
 
   final ApiService _apiService;
 
-  Future<List<GraveModel>> getGraves({
+  /// Fallback orthophoto when the API omits [map_url].
+  static const String fallbackMapUrl =
+      'https://baladeyate.me/cemeteries/map_v1.jpg';
+
+  Future<({CemeteryMapModel map, List<GraveModel> graves})> getMap({
     int cemeteryId = GraveModel.defaultCemeteryId,
   }) async {
     try {
       final response = await _apiService.get(
-        EndPoints.graves,
-        queryParams: {'cemetery_id': cemeteryId},
+        EndPoints.cemeteryMap(cemeteryId),
       );
 
-      final graves = ApiResponseParser.parseList(
+      final payload = ApiResponseParser.expectDataMap(
         response.data,
-        fromJson: GraveModel.fromJson,
-        fallback: 'فشل تحميل القبور',
+        fallback: 'فشل تحميل خريطة المقبرة',
       );
 
-      return graves
-          .where((grave) => grave.width > 0 && grave.height > 0)
-          .toList(growable: false);
+      final map = CemeteryMapModel.fromJson(payload);
+      final resolvedMap = map.mapUrl.isEmpty
+          ? CemeteryMapModel(
+              cemeteryId: map.cemeteryId,
+              mapUrl: fallbackMapUrl,
+              mapWidth: map.mapWidth,
+              mapHeight: map.mapHeight,
+              name: map.name,
+            )
+          : map;
+
+      final rawGraves = payload['graves'];
+      final graves = <GraveModel>[];
+      if (rawGraves is List) {
+        for (final item in rawGraves) {
+          if (item is Map<String, dynamic>) {
+            final grave = GraveModel.fromJson(item);
+            if (grave.width > 0 && grave.height > 0) {
+              graves.add(grave);
+            }
+          } else if (item is Map) {
+            final grave = GraveModel.fromJson(
+              Map<String, dynamic>.from(item),
+            );
+            if (grave.width > 0 && grave.height > 0) {
+              graves.add(grave);
+            }
+          }
+        }
+      }
+
+      return (map: resolvedMap, graves: List<GraveModel>.unmodifiable(graves));
     } catch (error) {
-      throw ApiResponseParser.mapError(error, fallback: 'فشل تحميل القبور');
+      throw ApiResponseParser.mapError(
+        error,
+        fallback: 'فشل تحميل خريطة المقبرة',
+      );
     }
+  }
+
+  Future<List<GraveModel>> getGraves({
+    int cemeteryId = GraveModel.defaultCemeteryId,
+  }) async {
+    final result = await getMap(cemeteryId: cemeteryId);
+    return result.graves;
   }
 
   Future<GraveModel> createGrave({
@@ -69,8 +111,6 @@ class CemeteryMapRepository {
 
       if (data is Map<String, dynamic>) {
         final parsed = GraveModel.fromJson(data);
-        // Keep the exact tap-centered map coordinates the delegate chose.
-        // Server payloads may omit/alias them and would otherwise move markers.
         return parsed.copyWith(
           x: x,
           y: y,

@@ -4,6 +4,9 @@ import 'package:equatable/equatable.dart';
 class CemeteryMapState extends Equatable {
   const CemeteryMapState({
     this.graves = const [],
+    this.mapUrl,
+    this.mapWidth = 2000,
+    this.mapHeight = 1500,
     this.isAddingMode = false,
     this.isLoading = false,
     this.isSubmitting = false,
@@ -12,6 +15,9 @@ class CemeteryMapState extends Equatable {
   });
 
   final List<GraveModel> graves;
+  final String? mapUrl;
+  final double mapWidth;
+  final double mapHeight;
   final bool isAddingMode;
   final bool isLoading;
   final bool isSubmitting;
@@ -20,6 +26,9 @@ class CemeteryMapState extends Equatable {
 
   CemeteryMapState copyWith({
     List<GraveModel>? graves,
+    String? mapUrl,
+    double? mapWidth,
+    double? mapHeight,
     bool? isAddingMode,
     bool? isLoading,
     bool? isSubmitting,
@@ -30,6 +39,9 @@ class CemeteryMapState extends Equatable {
   }) {
     return CemeteryMapState(
       graves: graves ?? this.graves,
+      mapUrl: mapUrl ?? this.mapUrl,
+      mapWidth: mapWidth ?? this.mapWidth,
+      mapHeight: mapHeight ?? this.mapHeight,
       isAddingMode: isAddingMode ?? this.isAddingMode,
       isLoading: isLoading ?? this.isLoading,
       isSubmitting: isSubmitting ?? this.isSubmitting,
@@ -42,6 +54,9 @@ class CemeteryMapState extends Equatable {
   @override
   List<Object?> get props => [
         graves,
+        mapUrl,
+        mapWidth,
+        mapHeight,
         isAddingMode,
         isLoading,
         isSubmitting,
