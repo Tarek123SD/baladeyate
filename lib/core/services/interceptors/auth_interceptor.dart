@@ -9,7 +9,7 @@ class AuthInterceptor extends Interceptor {
   final CacheService _cacheService;
 
   AuthInterceptor({required CacheService cacheService})
-    : _cacheService = cacheService;
+      : _cacheService = cacheService;
 
   @override
   void onRequest(RequestOptions options, RequestInterceptorHandler handler) {
