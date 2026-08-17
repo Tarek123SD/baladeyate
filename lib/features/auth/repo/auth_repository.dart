@@ -188,6 +188,9 @@ class AuthRepository {
     return token != null && token.isNotEmpty;
   }
 
+  /// Cached user from the last persisted session, if any.
+  User? get cachedUser => _readCachedUser();
+
   /// Restores the session from SharedPreferences and refreshes the profile when possible.
   Future<User?> restoreSession() async {
     if (!hasStoredSession) return null;

@@ -21,6 +21,13 @@ final class DonationsLoaded extends DonationsState {
 
   final List<DonationCase> cases;
 
+  DonationCase? get featuredCase {
+    for (final donationCase in cases) {
+      if (donationCase.isFeatured) return donationCase;
+    }
+    return null;
+  }
+
   @override
   List<Object?> get props => [cases];
 }

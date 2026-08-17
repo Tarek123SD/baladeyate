@@ -11,6 +11,7 @@ import 'package:baladeyate/core/widgets/custom_receipt_upload_box.dart';
 import 'package:baladeyate/features/donations/cubits/donate_cubit/donate_cubit.dart';
 import 'package:baladeyate/features/donations/cubits/donate_cubit/donate_state.dart';
 import 'package:baladeyate/features/donations/models/donation_case.dart';
+import 'package:baladeyate/features/donations/presentation/components/donation_payment_destination_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:responsive_x_toolkit/responsive_x.dart';
@@ -151,6 +152,16 @@ class _DonationPaymentScreenState extends State<DonationPaymentScreen> {
                           onChanged: _onCustomAmountChanged,
                         ),
                         SizedBox(height: 24.h(context)),
+
+                        if (widget.donationCase?.hasPaymentDestination ==
+                            true) ...[
+                          _buildSectionTitle(context, 'أين أرسل التبرع؟'),
+                          SizedBox(height: 14.h(context)),
+                          DonationPaymentDestinationCard(
+                            donation: widget.donationCase!,
+                          ),
+                          SizedBox(height: 24.h(context)),
+                        ],
 
                         // Receipt Image Attachment Box
                         CustomReceiptUploadBox(

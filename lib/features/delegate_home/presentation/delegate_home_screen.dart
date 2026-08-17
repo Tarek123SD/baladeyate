@@ -1,3 +1,4 @@
+import 'package:baladeyate/config/theme/app_colors.dart';
 import 'package:baladeyate/core/navigation/delegate_shell_indices.dart';
 import 'package:baladeyate/core/responsive/dimensions.dart';
 import 'package:baladeyate/core/widgets/app_background.dart';
@@ -62,40 +63,47 @@ class _DelegateHomeScreenState extends State<DelegateHomeScreen> {
                   final bottomClearance =
                       DelegateBottomNavigationBar.clearance(context) +
                           16.h(context);
-                  return CustomScrollView(
-                    slivers: [
-                      SliverPadding(
-                        padding: EdgeInsets.fromLTRB(
-                          horizontalPadding,
-                          horizontalPadding,
-                          horizontalPadding,
-                          bottomClearance,
+                  return RefreshIndicator(
+                    color: AppColors.primaryForest,
+                    onRefresh: () =>
+                        context.read<DailyTasksCubit>().refreshDashboard(),
+                    child: CustomScrollView(
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      slivers: [
+                        SliverPadding(
+                          padding: EdgeInsets.fromLTRB(
+                            horizontalPadding,
+                            horizontalPadding,
+                            horizontalPadding,
+                            bottomClearance,
+                          ),
+                          sliver: SliverList(
+                            delegate: SliverChildListDelegate([
+                              const DelegateHomeGreeting(),
+                              SizedBox(height: 24.h(context)),
+                              DelegateHomeProgressRow(state: tasksState),
+                              SizedBox(height: 28.h(context)),
+                              const SectionHeader(title: 'الوصول السريع'),
+                              SizedBox(height: 16.h(context)),
+                              const DelegateHomeQuickActions(),
+                              SizedBox(height: 28.h(context)),
+                              SectionHeader(
+                                title: 'مهام ذات أولوية',
+                                actionText: 'عرض الكل',
+                                onActionTap: () =>
+                                    context.go('/delegate/tasks'),
+                              ),
+                              SizedBox(height: 16.h(context)),
+                              DelegateHomePriorityTasks(state: tasksState),
+                              SizedBox(height: 28.h(context)),
+                              const SectionHeader(title: 'آخر النشاط'),
+                              SizedBox(height: 16.h(context)),
+                              DelegateHomeRecentActivity(state: tasksState),
+                            ]),
+                          ),
                         ),
-                        sliver: SliverList(
-                          delegate: SliverChildListDelegate([
-                            const DelegateHomeGreeting(),
-                            SizedBox(height: 24.h(context)),
-                            DelegateHomeProgressRow(state: tasksState),
-                            SizedBox(height: 28.h(context)),
-                            const SectionHeader(title: 'الوصول السريع'),
-                            SizedBox(height: 16.h(context)),
-                            const DelegateHomeQuickActions(),
-                            SizedBox(height: 28.h(context)),
-                            SectionHeader(
-                              title: 'مهام ذات أولوية',
-                              actionText: 'عرض الكل',
-                              onActionTap: () => context.go('/delegate/tasks'),
-                            ),
-                            SizedBox(height: 16.h(context)),
-                            DelegateHomePriorityTasks(state: tasksState),
-                            SizedBox(height: 28.h(context)),
-                            const SectionHeader(title: 'آخر النشاط'),
-                            SizedBox(height: 16.h(context)),
-                            DelegateHomeRecentActivity(state: tasksState),
-                          ]),
-                        ),
-                      ),
-                    ],
+                      ],
+                    ),
                   );
                 },
               ),

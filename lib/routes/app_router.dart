@@ -78,6 +78,7 @@ import 'package:baladeyate/features/transactions/presentation/transactions_scree
 import 'package:baladeyate/features/digital_documents/cubits/digital_documents_cubit/digital_documents_cubit.dart';
 import 'package:baladeyate/features/digital_documents/presentation/digital_documents_screen.dart';
 
+import 'package:baladeyate/features/settings/presentation/privacy_policy_screen.dart';
 import 'package:baladeyate/features/settings/presentation/settings_screen.dart';
 
 import 'package:baladeyate/features/daily_tasks/presentation/delegate_map_screen.dart';
@@ -147,6 +148,11 @@ GoRouter _createAppRouter() {
 
         ),
 
+      ),
+
+      GoRoute(
+        path: '/privacy-policy',
+        builder: (context, state) => const PrivacyPolicyScreen(),
       ),
 
       GoRoute(

@@ -1,8 +1,10 @@
 import 'package:baladeyate/config/theme/app_colors.dart';
 import 'package:baladeyate/core/constants/app_assets.dart';
+import 'package:baladeyate/core/services/fcm/fcm_service.dart';
 import 'package:baladeyate/core/services/service_locator.dart';
 import 'package:baladeyate/features/auth/cubits/auth_cubit/auth_cubit.dart';
 import 'package:baladeyate/features/auth/cubits/auth_cubit/auth_state.dart';
+import 'package:baladeyate/features/notifications/presentation/notification_display.dart';
 import 'package:baladeyate/routes/auth_navigation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -32,8 +34,13 @@ class _SplashScreenState extends State<SplashScreen> {
     if (!mounted) return;
 
     final state = sl<AuthCubit>().state;
+    final pending = sl<FcmService>().takePendingLaunchNotification();
     if (state is AuthSuccess) {
-      context.go(homeRouteFor(state.user));
+      final route = pending == null
+          ? homeRouteFor(state.user)
+          : routeForNotification(pending, user: state.user) ??
+              homeRouteFor(state.user);
+      openNotificationRoute(GoRouter.of(context), route);
     } else {
       context.go('/login');
     }

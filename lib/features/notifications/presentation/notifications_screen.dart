@@ -252,15 +252,11 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       }
       if (!mounted) return;
 
-      final route = routeForNotification(notification, user: _currentUser);
-      if (route == null) return;
-
-      // Shell tabs must use go — push duplicates the StatefulShellRoute page key.
-      if (isIndexedShellTabRoute(route)) {
-        context.go(route);
-      } else {
-        context.push(route);
-      }
+      openNotificationFromContext(
+        context,
+        notification,
+        user: _currentUser,
+      );
     } finally {
       _isHandlingTap = false;
     }

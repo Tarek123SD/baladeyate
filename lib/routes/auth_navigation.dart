@@ -65,9 +65,11 @@ const publicRoutes = {
 const sharedAuthenticatedRoutes = {
   '/notifications',
   '/settings',
+  '/privacy-policy',
   '/graves',
   '/reset-password',
   '/forgot-password',
+  '/verify-identity',
 };
 
 bool isCitizenRoute(String path) =>

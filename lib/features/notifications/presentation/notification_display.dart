@@ -3,7 +3,9 @@ import 'package:baladeyate/config/theme/app_icons.dart';
 import 'package:baladeyate/core/auth/app_role.dart';
 import 'package:baladeyate/features/auth/models/user.dart';
 import 'package:baladeyate/features/notifications/models/app_notification.dart';
+import 'package:baladeyate/routes/auth_navigation.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 /// High-level buckets used by notification type filters.
 enum NotificationCategory {
@@ -54,7 +56,7 @@ String formatNotificationTime(String? createdAt) {
 }
 
 IconData iconForNotificationType(String type) {
-  switch (type) {
+  switch (canonicalNotificationType(type)) {
     case 'ComplaintStatusUpdatedNotification':
       return AppIcons.notifComplaint;
     case 'NewTaskAssignedNotification':
@@ -73,7 +75,7 @@ IconData iconForNotificationType(String type) {
 }
 
 Color iconColorForNotificationType(String type) {
-  switch (type) {
+  switch (canonicalNotificationType(type)) {
     case 'ComplaintStatusUpdatedNotification':
       return AppColors.primaryGoldenWheat;
     case 'NewTaskAssignedNotification':
@@ -100,7 +102,7 @@ String notificationDescription(AppNotification notification) {
 }
 
 String typeLabelForNotificationType(String type) {
-  switch (type) {
+  switch (canonicalNotificationType(type)) {
     case 'ComplaintStatusUpdatedNotification':
       return 'تحديث شكوى';
     case 'NewTaskAssignedNotification':
@@ -119,7 +121,7 @@ String typeLabelForNotificationType(String type) {
 }
 
 NotificationCategory categoryForNotificationType(String type) {
-  switch (type) {
+  switch (canonicalNotificationType(type)) {
     case 'NewTaskAssignedNotification':
       return NotificationCategory.tasks;
     case 'ComplaintStatusUpdatedNotification':
@@ -165,41 +167,96 @@ bool shouldShowTypeLabel({
   return true;
 }
 
-/// Deep-link target for a notification based on type and user role.
+/// Deep-link target for a notification based on type, payload, and user role.
 String? routeForNotification(
   AppNotification notification, {
   User? user,
 }) {
   final isDelegate = user?.isDelegateLike ?? false;
 
-  switch (notification.type) {
+  switch (canonicalNotificationType(notification.type)) {
     case 'NewTaskAssignedNotification':
-      if (!isDelegate) return null;
-      final txId = notification.data['transaction_id'];
-      if (txId != null && txId.toString().isNotEmpty) {
-        return '/delegate/transactions';
-      }
+      if (!isDelegate) return homeRouteFor(user);
+      final txId = _relatedNumericId(notification.data, const [
+        'transaction_id',
+        'transactionId',
+      ]);
+      if (txId != null) return '/delegate/transactions';
       return '/delegate/tasks';
     case 'ComplaintStatusUpdatedNotification':
-      return '/track';
+      return isDelegate ? '/delegate/tasks' : '/track';
     case 'TransactionStatusUpdatedNotification':
-      final id = notification.data['transaction_id'] ?? notification.data['id'];
-      if (id != null && id.toString().isNotEmpty) {
-        return '/transactions/$id';
-      }
+      if (isDelegate) return '/delegate/transactions';
+      final id = _relatedNumericId(notification.data, const [
+        'transaction_id',
+        'transactionId',
+        'id',
+      ]);
+      if (id != null) return '/transactions/$id';
       return '/transactions';
     case 'IdentityVerificationNotification':
+      if (isDelegate) return homeRouteFor(user);
+      final status = (notification.data['status'] ??
+              notification.data['verification_status'] ??
+              user?.verificationStatus)
+          ?.toString()
+          .toLowerCase();
+      if (status == 'rejected' ||
+          status == 'unverified' ||
+          (user?.canSubmitVerification ?? false)) {
+        return '/verify-identity';
+      }
       return '/profile';
     case 'CitizenGeneralNotification':
     case 'BulkNotification':
-      return null;
+      return _explicitRoute(notification.data) ?? homeRouteFor(user);
     default:
-      final explicit = notification.data['route'] ??
-          notification.data['url'] ??
-          notification.data['path'];
-      if (explicit is String && explicit.startsWith('/')) {
-        return explicit;
-      }
-      return null;
+      return _explicitRoute(notification.data) ?? homeRouteFor(user);
   }
+}
+
+/// Opens [route] with `go` for shell tabs (and splash) and `push` otherwise.
+void openNotificationRoute(GoRouter router, String route) {
+  if (route.isEmpty) return;
+  final path = Uri.tryParse(route)?.path ?? route;
+  final current = router.routerDelegate.currentConfiguration.uri.path;
+  final replaceStack =
+      current.isEmpty || current == '/splash' || current == '/login';
+  if (replaceStack || isIndexedShellTabRoute(path)) {
+    router.go(route);
+  } else {
+    router.push(route);
+  }
+}
+
+/// Resolves and opens the destination for [notification] from a widget.
+void openNotificationFromContext(
+  BuildContext context,
+  AppNotification notification, {
+  User? user,
+}) {
+  final route = routeForNotification(notification, user: user);
+  if (route == null) return;
+  openNotificationRoute(GoRouter.of(context), route);
+}
+
+String? _explicitRoute(Map<String, dynamic> data) {
+  for (final key in const ['route', 'url', 'path', 'click_action']) {
+    final value = data[key];
+    if (value is String && value.startsWith('/')) {
+      return value;
+    }
+  }
+  return null;
+}
+
+String? _relatedNumericId(Map<String, dynamic> data, List<String> keys) {
+  for (final key in keys) {
+    final raw = data[key];
+    if (raw == null) continue;
+    final text = raw.toString().trim();
+    if (text.isEmpty || text == 'null') continue;
+    if (int.tryParse(text) != null) return text;
+  }
+  return null;
 }

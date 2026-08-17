@@ -133,8 +133,14 @@ class BuildingHubScreen extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     Expanded(
-                      child: CustomScrollView(
-                        slivers: [
+                      child: RefreshIndicator(
+                        color: AppColors.primaryForest,
+                        onRefresh: () => context
+                            .read<BuildingSurveyCubit>()
+                            .loadSurvey(pinId),
+                        child: CustomScrollView(
+                          physics: const AlwaysScrollableScrollPhysics(),
+                          slivers: [
                           SliverPadding(
                             padding: EdgeInsets.fromLTRB(
                               horizontalPadding,
@@ -228,6 +234,7 @@ class BuildingHubScreen extends StatelessWidget {
                               ),
                             ),
                         ],
+                        ),
                       ),
                     ),
                     if (survey.floors.isNotEmpty)

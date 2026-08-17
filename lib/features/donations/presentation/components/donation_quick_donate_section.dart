@@ -10,6 +10,7 @@ import 'package:baladeyate/core/widgets/custom_receipt_upload_box.dart';
 import 'package:baladeyate/features/donations/cubits/donate_cubit/donate_cubit.dart';
 import 'package:baladeyate/features/donations/cubits/donate_cubit/donate_state.dart';
 import 'package:baladeyate/features/donations/models/donation_model.dart';
+import 'package:baladeyate/features/donations/presentation/components/donation_payment_destination_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:responsive_x_toolkit/responsive_x.dart';
@@ -151,6 +152,10 @@ class DonationQuickDonateSection extends StatelessWidget {
                 controller: customController,
                 onChanged: onCustomChanged,
               ),
+              if (selectedCase?.hasPaymentDestination == true) ...[
+                SizedBox(height: 20.h(context)),
+                DonationPaymentDestinationCard(donation: selectedCase!),
+              ],
               SizedBox(height: 20.h(context)),
               CustomReceiptUploadBox(
                 selectedImage: receiptImage,

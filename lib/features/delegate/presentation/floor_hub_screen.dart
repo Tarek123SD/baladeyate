@@ -99,100 +99,109 @@ class FloorHubScreen extends StatelessWidget {
             body: SafeArea(
               child: Directionality(
                 textDirection: TextDirection.rtl,
-                child: CustomScrollView(
-                  slivers: [
-                    SliverPadding(
-                      padding: EdgeInsets.fromLTRB(
-                        horizontalPadding,
-                        8.h(context),
-                        horizontalPadding,
-                        0,
-                      ),
-                      sliver: SliverList(
-                        delegate: SliverChildListDelegate([
-                          FloorHubHeaderCard(
-                            survey: survey,
-                            floor: floor,
-                          )
-                              .animate()
-                              .fadeIn(duration: 350.ms)
-                              .slideY(begin: -0.08, end: 0),
-                          SizedBox(height: 20.h(context)),
-                          FloorHubSectionHeader(
-                            title: 'الشقق',
-                            count: floor.apartments.length,
-                            action: TextButton.icon(
-                              onPressed: () => _openAddApartment(
-                                context,
-                                int.tryParse(floor.expectedApartmentCount) ?? 0,
-                              ),
-                              style: TextButton.styleFrom(
-                                foregroundColor: AppColors.green,
-                              ),
-                              icon: Icon(
-                                Icons.add_circle_outline_rounded,
-                                size: 20.ic(context),
-                              ),
-                              label: Text(
-                                'إضافة شقة',
-                                style: TextStyle(
-                                  fontWeight: FontWeight.w700,
-                                  fontSize: 13.f(context),
-                                ),
-                              ),
-                            ),
-                          ),
-                          SizedBox(height: 12.h(context)),
-                        ]),
-                      ),
-                    ),
-                    if (floor.apartments.isEmpty)
-                      SliverToBoxAdapter(
-                        child: Padding(
-                          padding: EdgeInsets.symmetric(
-                            horizontal: horizontalPadding,
-                          ),
-                          child: FloorHubEmptyApartmentsState(
-                            onAddApartment: () => _openAddApartment(
-                              context,
-                              int.tryParse(floor.expectedApartmentCount) ?? 0,
-                            ),
-                          ),
-                        ),
-                      )
-                    else
+                child: RefreshIndicator(
+                  color: AppColors.primaryForest,
+                  onRefresh: () =>
+                      context.read<BuildingSurveyCubit>().loadSurvey(pinId),
+                  child: CustomScrollView(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    slivers: [
                       SliverPadding(
                         padding: EdgeInsets.fromLTRB(
                           horizontalPadding,
-                          0,
+                          8.h(context),
                           horizontalPadding,
-                          24.h(context),
+                          0,
                         ),
-                        sliver: SliverList.separated(
-                          itemCount: floor.apartments.length,
-                          separatorBuilder: (_, __) =>
-                              SizedBox(height: 12.h(context)),
-                          itemBuilder: (context, index) {
-                            final apt = floor.apartments[index];
-                            return FloorHubApartmentCard(
-                              index: index + 1,
-                              unit: apt,
-                              onTap: () => _openEditApartment(
-                                context,
-                                apt.localId,
-                                int.tryParse(floor.expectedApartmentCount) ?? 0,
-                              ),
+                        sliver: SliverList(
+                          delegate: SliverChildListDelegate([
+                            FloorHubHeaderCard(
+                              survey: survey,
+                              floor: floor,
                             )
                                 .animate()
-                                .fadeIn(
-                                  duration: 300.ms,
-                                  delay: (40 * index).ms,
-                                )
-                                .slideY(begin: 0.06, end: 0);
-                          },
+                                .fadeIn(duration: 350.ms)
+                                .slideY(begin: -0.08, end: 0),
+                            SizedBox(height: 20.h(context)),
+                            FloorHubSectionHeader(
+                              title: 'الشقق',
+                              count: floor.apartments.length,
+                              action: TextButton.icon(
+                                onPressed: () => _openAddApartment(
+                                  context,
+                                  int.tryParse(floor.expectedApartmentCount) ??
+                                      0,
+                                ),
+                                style: TextButton.styleFrom(
+                                  foregroundColor: AppColors.green,
+                                ),
+                                icon: Icon(
+                                  Icons.add_circle_outline_rounded,
+                                  size: 20.ic(context),
+                                ),
+                                label: Text(
+                                  'إضافة شقة',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.w700,
+                                    fontSize: 13.f(context),
+                                  ),
+                                ),
+                              ),
+                            ),
+                            SizedBox(height: 12.h(context)),
+                          ]),
                         ),
                       ),
-                  ],
+                      if (floor.apartments.isEmpty)
+                        SliverToBoxAdapter(
+                          child: Padding(
+                            padding: EdgeInsets.symmetric(
+                              horizontal: horizontalPadding,
+                            ),
+                            child: FloorHubEmptyApartmentsState(
+                              onAddApartment: () => _openAddApartment(
+                                context,
+                                int.tryParse(floor.expectedApartmentCount) ??
+                                    0,
+                              ),
+                            ),
+                          ),
+                        )
+                      else
+                        SliverPadding(
+                          padding: EdgeInsets.fromLTRB(
+                            horizontalPadding,
+                            0,
+                            horizontalPadding,
+                            24.h(context),
+                          ),
+                          sliver: SliverList.separated(
+                            itemCount: floor.apartments.length,
+                            separatorBuilder: (_, __) =>
+                                SizedBox(height: 12.h(context)),
+                            itemBuilder: (context, index) {
+                              final apt = floor.apartments[index];
+                              return FloorHubApartmentCard(
+                                index: index + 1,
+                                unit: apt,
+                                onTap: () => _openEditApartment(
+                                  context,
+                                  apt.localId,
+                                  int.tryParse(floor.expectedApartmentCount) ??
+                                      0,
+                                ),
+                              )
+                                  .animate()
+                                  .fadeIn(
+                                    duration: 300.ms,
+                                    delay: (40 * index).ms,
+                                  )
+                                  .slideY(begin: 0.06, end: 0);
+                            },
+                          ),
+                        ),
+                    ],
+                  ),
                 ),
               ),
             ),

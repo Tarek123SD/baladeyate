@@ -1,10 +1,14 @@
+import 'package:baladeyate/config/theme/app_colors.dart';
 import 'package:baladeyate/config/theme/app_icons.dart';
 import 'package:baladeyate/core/responsive/dimensions.dart';
+import 'package:baladeyate/core/services/service_locator.dart';
 import 'package:baladeyate/core/widgets/app_background.dart';
 import 'package:baladeyate/core/widgets/custom_app_bar.dart';
+import 'package:baladeyate/features/auth/cubits/auth_cubit/auth_cubit.dart';
+import 'package:baladeyate/features/auth/cubits/auth_cubit/auth_state.dart';
+import 'package:baladeyate/features/auth/models/user.dart';
 import 'package:baladeyate/features/auth/presentation/components/signup_success_dialog.dart';
 import 'package:baladeyate/features/home/presentation/components/home_filter_chips.dart';
-import 'package:baladeyate/features/home/presentation/components/home_heritage_section.dart';
 import 'package:baladeyate/features/home/presentation/components/home_notification_update_card.dart';
 import 'package:baladeyate/features/home/presentation/components/home_service_card.dart';
 import 'package:baladeyate/features/home/presentation/components/home_top_section.dart';
@@ -15,6 +19,7 @@ import 'package:baladeyate/features/home/presentation/components/section_header.
 import 'package:baladeyate/features/notifications/cubits/notifications_cubit/notifications_cubit.dart';
 import 'package:baladeyate/features/notifications/cubits/notifications_cubit/notifications_state.dart';
 import 'package:baladeyate/features/notifications/models/app_notification.dart';
+import 'package:baladeyate/features/notifications/presentation/notification_display.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -36,6 +41,11 @@ class _HomeScreenState extends State<HomeScreen> {
     'complaint': 'الشكاوى',
     'alert': 'تنبيهات',
   };
+
+  User? get _currentUser {
+    final auth = sl<AuthCubit>().state;
+    return auth is AuthSuccess ? auth.user : null;
+  }
 
   @override
   void initState() {
@@ -82,136 +92,152 @@ class _HomeScreenState extends State<HomeScreen> {
               constraints: BoxConstraints(
                 maxWidth: Dimensions.contentMaxWidth.w(context),
               ),
-              child: CustomScrollView(
-                slivers: [
-                  SliverPadding(
-                    padding: EdgeInsets.fromLTRB(
-                      paddingVal,
-                      paddingVal,
-                      paddingVal,
-                      0,
-                    ),
-                    sliver: const SliverToBoxAdapter(
-                      child: HomeTopSection(),
-                    ),
-                  ),
-                  SliverPadding(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: paddingVal,
-                    ),
-                    sliver: SliverGrid(
-                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: 2,
-                        mainAxisSpacing: 12.s(context),
-                        crossAxisSpacing: 12.s(context),
-                        childAspectRatio: 1.45,
+              child: RefreshIndicator(
+                color: AppColors.primaryForest,
+                onRefresh: () =>
+                    context.read<NotificationsCubit>().fetchNotifications(),
+                child: CustomScrollView(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  slivers: [
+                    SliverPadding(
+                      padding: EdgeInsets.fromLTRB(
+                        paddingVal,
+                        paddingVal,
+                        paddingVal,
+                        0,
                       ),
-                      delegate: SliverChildListDelegate(
-                        [
-                          HomeServiceCard(
-                            title: 'المعاملات والرخص',
-                            icon: AppIcons.transactions,
-                            onTap: () => context.go('/transactions'),
-                          ),
-                          HomeServiceCard(
-                            title: 'الوثائق الرقمية',
-                            icon: AppIcons.digitalDocs,
-                            onTap: () => context.push('/digital-documents'),
-                          ),
-                          HomeServiceCard(
-                            title: 'تقديم شكوى',
-                            icon: AppIcons.complaint,
-                            onTap: () => context.push('/complains'),
-                          ),
-                        ],
+                      sliver: const SliverToBoxAdapter(
+                        child: HomeTopSection(),
                       ),
                     ),
-                  ),
-                  SliverPadding(
-                    padding: EdgeInsets.fromLTRB(
-                      paddingVal,
-                      32.h(context),
-                      paddingVal,
-                      0,
+                    SliverPadding(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: paddingVal,
+                      ),
+                      sliver: SliverGrid(
+                        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 2,
+                          mainAxisSpacing: 12.s(context),
+                          crossAxisSpacing: 12.s(context),
+                          childAspectRatio: 1.45,
+                        ),
+                        delegate: SliverChildListDelegate(
+                          [
+                            HomeServiceCard(
+                              title: 'المعاملات والرخص',
+                              icon: AppIcons.transactions,
+                              onTap: () => context.go('/transactions'),
+                            ),
+                            HomeServiceCard(
+                              title: 'الوثائق الرقمية',
+                              icon: AppIcons.digitalDocs,
+                              onTap: () => context.push('/digital-documents'),
+                            ),
+                            HomeServiceCard(
+                              title: 'تقديم شكوى',
+                              icon: AppIcons.complaint,
+                              onTap: () => context.push('/complains'),
+                            ),
+                          ],
+                        ),
+                      ),
                     ),
-                    sliver: SliverToBoxAdapter(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          SectionHeader(
-                            title: 'آخر التحديثات',
-                            actionText: 'عرض الكل',
-                            onActionTap: () => context.push('/notifications'),
-                          ),
-                          SizedBox(height: 12.h(context)),
-                          HomeFilterChips(
-                            options: _filterOptions,
-                            selectedFilter: _selectedFilter,
-                            onFilterSelected: (value) {
-                              setState(() => _selectedFilter = value);
+                    SliverPadding(
+                      padding: EdgeInsets.fromLTRB(
+                        paddingVal,
+                        32.h(context),
+                        paddingVal,
+                        0,
+                      ),
+                      sliver: SliverToBoxAdapter(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            SectionHeader(
+                              title: 'آخر التحديثات',
+                              actionText: 'عرض الكل',
+                              onActionTap: () =>
+                                  context.push('/notifications'),
+                            ),
+                            SizedBox(height: 12.h(context)),
+                            HomeFilterChips(
+                              options: _filterOptions,
+                              selectedFilter: _selectedFilter,
+                              onFilterSelected: (value) {
+                                setState(() => _selectedFilter = value);
+                              },
+                            ),
+                            SizedBox(height: 16.h(context)),
+                          ],
+                        ),
+                      ),
+                    ),
+                    BlocBuilder<NotificationsCubit, NotificationsState>(
+                      builder: (context, state) {
+                        if (state is NotificationsLoading) {
+                          return SliverPadding(
+                            padding:
+                                EdgeInsets.symmetric(horizontal: paddingVal),
+                            sliver: const SliverToBoxAdapter(
+                              child: HomeUpdatesLoadingState(),
+                            ),
+                          );
+                        }
+
+                        if (state is NotificationsError) {
+                          return SliverPadding(
+                            padding:
+                                EdgeInsets.symmetric(horizontal: paddingVal),
+                            sliver: SliverToBoxAdapter(
+                              child: HomeUpdatesErrorState(
+                                message: state.message,
+                                onRetry: () => context
+                                    .read<NotificationsCubit>()
+                                    .fetchNotifications(),
+                              ),
+                            ),
+                          );
+                        }
+
+                        final notifications = state is NotificationsLoaded
+                            ? state.notifications
+                            : <AppNotification>[];
+
+                        final filteredUpdates =
+                            _filterNotifications(notifications);
+
+                        if (filteredUpdates.isEmpty) {
+                          return SliverPadding(
+                            padding:
+                                EdgeInsets.symmetric(horizontal: paddingVal),
+                            sliver: const SliverToBoxAdapter(
+                              child: HomeUpdatesEmptyState(),
+                            ),
+                          );
+                        }
+
+                        return SliverPadding(
+                          padding:
+                              EdgeInsets.symmetric(horizontal: paddingVal),
+                          sliver: SliverList.builder(
+                            itemCount: filteredUpdates.length,
+                            itemBuilder: (context, index) {
+                              return HomeNotificationUpdateCard(
+                                notification: filteredUpdates[index],
+                                onActionTap: () =>
+                                    openNotificationFromContext(
+                                  context,
+                                  filteredUpdates[index],
+                                  user: _currentUser,
+                                ),
+                              );
                             },
                           ),
-                          SizedBox(height: 16.h(context)),
-                        ],
-                      ),
+                        );
+                      },
                     ),
-                  ),
-                  BlocBuilder<NotificationsCubit, NotificationsState>(
-                    builder: (context, state) {
-                      if (state is NotificationsLoading) {
-                        return SliverPadding(
-                          padding: EdgeInsets.symmetric(horizontal: paddingVal),
-                          sliver: const SliverToBoxAdapter(
-                            child: HomeUpdatesLoadingState(),
-                          ),
-                        );
-                      }
-
-                      if (state is NotificationsError) {
-                        return SliverPadding(
-                          padding: EdgeInsets.symmetric(horizontal: paddingVal),
-                          sliver: SliverToBoxAdapter(
-                            child: HomeUpdatesErrorState(
-                              message: state.message,
-                              onRetry: () => context
-                                  .read<NotificationsCubit>()
-                                  .fetchNotifications(),
-                            ),
-                          ),
-                        );
-                      }
-
-                      final notifications = state is NotificationsLoaded
-                          ? state.notifications
-                          : <AppNotification>[];
-
-                      final filteredUpdates =
-                          _filterNotifications(notifications);
-
-                      if (filteredUpdates.isEmpty) {
-                        return SliverPadding(
-                          padding: EdgeInsets.symmetric(horizontal: paddingVal),
-                          sliver: const SliverToBoxAdapter(
-                            child: HomeUpdatesEmptyState(),
-                          ),
-                        );
-                      }
-
-                      return SliverPadding(
-                        padding: EdgeInsets.symmetric(horizontal: paddingVal),
-                        sliver: SliverList.builder(
-                          itemCount: filteredUpdates.length,
-                          itemBuilder: (context, index) {
-                            return HomeNotificationUpdateCard(
-                              notification: filteredUpdates[index],
-                              onActionTap: () => context.push('/notifications'),
-                            );
-                          },
-                        ),
-                      );
-                    },
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ),

@@ -1,3 +1,4 @@
+import 'package:baladeyate/config/theme/app_colors.dart';
 import 'package:baladeyate/core/utils/app_snackbar.dart';
 import 'package:baladeyate/features/complaints/cubits/complaint_detail_cubit/complaint_detail_cubit.dart';
 import 'package:baladeyate/features/complaints/cubits/complaint_detail_cubit/complaint_detail_state.dart';
@@ -48,6 +49,7 @@ class ComplaintDetailsScreen extends StatelessWidget {
   Widget _buildScreen(BuildContext context, Complaint targetComplaint) {
     final parts = parseComplaintDescription(targetComplaint.description);
     final locationDisplay = targetComplaint.cardLocationDisplay;
+    final detailCubit = _tryRead<ComplaintDetailCubit>(context);
 
     // Strict Business Rule: Only pending or in_progress complaints can be deleted
     final bool canDelete = targetComplaint.status == 'pending' ||
@@ -58,6 +60,41 @@ class ComplaintDetailsScreen extends StatelessWidget {
         : (parts.subject.isNotEmpty
             ? parts.subject
             : targetComplaint.description);
+
+    final content = SingleChildScrollView(
+      physics: const AlwaysScrollableScrollPhysics(),
+      padding: EdgeInsets.all(16.s(context)),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          ComplaintDetailsInfoCard(
+            children: [
+              ComplaintDetailsHeaderContent(complaint: targetComplaint),
+            ],
+          ),
+          ComplaintDetailsInfoCard(
+            children: [
+              ComplaintDetailsSectionCard(
+                icon: Icons.description_outlined,
+                title: 'نص الشكوى',
+                body: descriptionBody,
+              ),
+            ],
+          ),
+          if (locationDisplay != null && locationDisplay.isNotEmpty)
+            ComplaintDetailsInfoCard(
+              children: [
+                ComplaintDetailsSectionCard(
+                  icon: Icons.location_on_outlined,
+                  title: 'الموقع',
+                  body: locationDisplay,
+                  bodyHeight: 1.4,
+                ),
+              ],
+            ),
+        ],
+      ),
+    );
 
     return Directionality(
       textDirection: TextDirection.rtl,
@@ -78,39 +115,13 @@ class ComplaintDetailsScreen extends StatelessWidget {
           ),
           centerTitle: true,
         ),
-        body: SingleChildScrollView(
-          padding: EdgeInsets.all(16.s(context)),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              ComplaintDetailsInfoCard(
-                children: [
-                  ComplaintDetailsHeaderContent(complaint: targetComplaint),
-                ],
-              ),
-              ComplaintDetailsInfoCard(
-                children: [
-                  ComplaintDetailsSectionCard(
-                    icon: Icons.description_outlined,
-                    title: 'نص الشكوى',
-                    body: descriptionBody,
-                  ),
-                ],
-              ),
-              if (locationDisplay != null && locationDisplay.isNotEmpty)
-                ComplaintDetailsInfoCard(
-                  children: [
-                    ComplaintDetailsSectionCard(
-                      icon: Icons.location_on_outlined,
-                      title: 'الموقع',
-                      body: locationDisplay,
-                      bodyHeight: 1.4,
-                    ),
-                  ],
-                ),
-            ],
-          ),
-        ),
+        body: detailCubit != null
+            ? RefreshIndicator(
+                color: AppColors.primaryForest,
+                onRefresh: detailCubit.loadDetail,
+                child: content,
+              )
+            : content,
         bottomNavigationBar: canDelete
             ? ComplaintDetailsDeleteBar(
                 onDelete: () => _confirmDelete(context, targetComplaint),

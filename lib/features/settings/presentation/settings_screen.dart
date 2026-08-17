@@ -1,3 +1,4 @@
+import 'package:baladeyate/config/theme/app_colors.dart';
 import 'package:baladeyate/config/theme/app_icons.dart';
 import 'package:baladeyate/core/constants/app_assets.dart';
 import 'package:baladeyate/core/responsive/dimensions.dart';
@@ -80,54 +81,57 @@ class SettingsScreen extends StatelessWidget {
                   constraints: BoxConstraints(
                     maxWidth: Dimensions.contentMaxWidth.w(context),
                   ),
-                  child: SingleChildScrollView(
-                    padding: EdgeInsets.fromLTRB(
-                      horizontalPadding,
-                      16.h(context),
-                      horizontalPadding,
-                      24.h(context),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        const SettingsHeader(),
-                        SizedBox(height: 20.h(context)),
-                        const SettingsProfileCard(),
-                        SizedBox(height: 12.h(context)),
-                        const SettingsAccountActions(),
-                        SizedBox(height: 24.h(context)),
-                        const SettingsSectionTitle(title: 'الإعدادات العامة'),
-                        SizedBox(height: 12.h(context)),
-                        const CustomSettingsOptionCard(
-                          title: 'تغيير اللغة',
-                          subtitle: 'العربية',
-                          leadingIcon: AppIcons.language,
-                        ),
-                        SizedBox(height: 10.h(context)),
-                        CustomSettingsOptionCard(
-                          title: 'تغيير كلمة المرور',
-                          leadingIcon: AppIcons.lock,
-                          onTap: () => _openResetPassword(context),
-                        ),
-                        SizedBox(height: 24.h(context)),
-                        const SettingsSectionTitle(
-                          title: 'القانونية والمعلومات',
-                        ),
-                        SizedBox(height: 12.h(context)),
-                        const CustomSettingsOptionCard(
-                          title: 'سياسة الخصوصية',
-                          leadingIcon: AppIcons.privacy,
-                        ),
-                        SizedBox(height: 10.h(context)),
-                        const CustomSettingsOptionCard(
-                          title: 'الشروط والأحكام العامة',
-                          leadingIcon: AppIcons.terms,
-                        ),
-                        SizedBox(height: 24.h(context)),
-                        const SettingsLogoutButton(),
-                        SizedBox(height: 16.h(context)),
-                        const SettingsFooter(),
-                      ],
+                  child: RefreshIndicator(
+                    color: AppColors.primaryForest,
+                    onRefresh: () =>
+                        context.read<ProfileCubit>().loadProfile(),
+                    child: SingleChildScrollView(
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      padding: EdgeInsets.fromLTRB(
+                        horizontalPadding,
+                        16.h(context),
+                        horizontalPadding,
+                        24.h(context),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          const SettingsHeader(),
+                          SizedBox(height: 20.h(context)),
+                          const SettingsProfileCard(),
+                          SizedBox(height: 12.h(context)),
+                          const SettingsAccountActions(),
+                          SizedBox(height: 24.h(context)),
+                          const SettingsSectionTitle(
+                            title: 'الإعدادات العامة',
+                          ),
+                          SizedBox(height: 12.h(context)),
+                          CustomSettingsOptionCard(
+                            title: 'تغيير كلمة المرور',
+                            leadingIcon: AppIcons.lock,
+                            onTap: () => _openResetPassword(context),
+                          ),
+                          SizedBox(height: 24.h(context)),
+                          const SettingsSectionTitle(
+                            title: 'القانونية والمعلومات',
+                          ),
+                          SizedBox(height: 12.h(context)),
+                          CustomSettingsOptionCard(
+                            title: 'سياسة الخصوصية',
+                            leadingIcon: AppIcons.privacy,
+                            onTap: () => context.push('/privacy-policy'),
+                          ),
+                          SizedBox(height: 10.h(context)),
+                          const CustomSettingsOptionCard(
+                            title: 'الشروط والأحكام العامة',
+                            leadingIcon: AppIcons.terms,
+                          ),
+                          SizedBox(height: 24.h(context)),
+                          const SettingsLogoutButton(),
+                          SizedBox(height: 16.h(context)),
+                          const SettingsFooter(),
+                        ],
+                      ),
                     ),
                   ),
                 ),
