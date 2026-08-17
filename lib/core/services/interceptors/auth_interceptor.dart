@@ -18,6 +18,12 @@ class AuthInterceptor extends Interceptor {
       options.headers['Authorization'] = 'Bearer $token';
     }
 
+    // Dio must attach the multipart boundary. A bare Content-Type breaks uploads.
+    if (options.data is FormData) {
+      options.headers.remove(Headers.contentTypeHeader);
+      options.contentType = null;
+    }
+
     super.onRequest(options, handler);
   }
 }

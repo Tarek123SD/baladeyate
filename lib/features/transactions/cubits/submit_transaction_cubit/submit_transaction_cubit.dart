@@ -46,7 +46,7 @@ class SubmitTransactionCubit extends Cubit<SubmitTransactionState> {
       final result = await FilePicker.platform.pickFiles(
         allowMultiple: true,
         type: FileType.custom,
-        allowedExtensions: ['pdf', 'jpg', 'png'],
+        allowedExtensions: ['pdf', 'jpg', 'jpeg', 'png'],
       );
 
       if (result != null && result.files.isNotEmpty) {

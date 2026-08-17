@@ -13,6 +13,8 @@ Future<String?> showSettingsPhoneUpdateDialog(
       content: TextField(
         controller: controller,
         keyboardType: TextInputType.phone,
+        textDirection: TextDirection.ltr,
+        textAlign: TextAlign.left,
         decoration: const InputDecoration(labelText: 'رقم الهاتف'),
       ),
       actions: [

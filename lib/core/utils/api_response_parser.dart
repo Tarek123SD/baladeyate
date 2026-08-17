@@ -186,7 +186,14 @@ class ApiResponseParser {
       case DioExceptionType.badCertificate:
         return 'تعذر التحقق من أمان الاتصال بالخادم';
       case DioExceptionType.badResponse:
+        break;
       case DioExceptionType.unknown:
+        final inner = (error.error?.toString() ?? error.message ?? '')
+            .toLowerCase();
+        if (inner.contains('connection reset by peer') ||
+            inner.contains('socketexception')) {
+          return 'انقطع الاتصال أثناء رفع الملفات. يرجى تصغير حجم الصور والمحاولة مرة أخرى';
+        }
         break;
     }
 

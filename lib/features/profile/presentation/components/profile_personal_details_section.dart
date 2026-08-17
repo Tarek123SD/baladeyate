@@ -53,6 +53,7 @@ class ProfilePersonalDetailsSection extends StatelessWidget {
             icon: AppIcons.phone,
             label: 'رقم الهاتف',
             value: phoneNumber,
+            valueTextDirection: TextDirection.ltr,
           ),
           const Divider(height: 24, thickness: 0.8),
           ProfileDetailItem(
@@ -72,11 +73,13 @@ class ProfileDetailItem extends StatelessWidget {
     required this.icon,
     required this.label,
     required this.value,
+    this.valueTextDirection = TextDirection.rtl,
   });
 
   final IconData icon;
   final String label;
   final String value;
+  final TextDirection valueTextDirection;
 
   @override
   Widget build(BuildContext context) {
@@ -117,7 +120,7 @@ class ProfileDetailItem extends StatelessWidget {
                   color: AppColors.primaryForest,
                   fontWeight: FontWeight.bold,
                 ),
-                textDirection: TextDirection.rtl,
+                textDirection: valueTextDirection,
               ),
             ],
           ),

@@ -1,8 +1,11 @@
+import 'dart:convert';
+
 import 'package:dio/dio.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:baladeyate/core/services/api_services.dart';
 import 'package:baladeyate/core/services/end_points.dart';
 import 'package:baladeyate/core/utils/api_response_parser.dart';
+import 'package:baladeyate/core/utils/attachment_compressor.dart';
 import 'package:baladeyate/features/transactions/models/transaction_model.dart';
 
 class TransactionsRepository {
@@ -65,26 +68,21 @@ class TransactionsRepository {
     required List<PlatformFile> attachments,
   }) async {
     try {
-      final Map<String, dynamic> requestData = {
-        'type': type,
-      };
-
+      final formPayload = FormData();
+      formPayload.fields.add(MapEntry('type', type));
       if (buildingId != null) {
-        requestData['building_id'] = buildingId;
+        formPayload.fields.add(MapEntry('building_id', buildingId.toString()));
       }
-
-      formData.forEach((key, value) {
-        requestData['form_data[$key]'] = value;
-      });
+      formPayload.fields.add(MapEntry('form_data', jsonEncode(formData)));
 
       final multipartFiles = await _toMultipartFiles(attachments);
-      if (multipartFiles.isNotEmpty) {
-        requestData['attachments[]'] = multipartFiles;
+      for (var i = 0; i < multipartFiles.length; i++) {
+        formPayload.files.add(MapEntry('attachments[$i]', multipartFiles[i]));
       }
 
       final response = await _apiService.post(
         EndPoints.transactions,
-        data: FormData.fromMap(requestData),
+        data: formPayload,
       );
 
       final payload = ApiResponseParser.expectData(response.data);
@@ -109,11 +107,14 @@ class TransactionsRepository {
         throw Exception('يرجى إرفاق ملف واحد على الأقل');
       }
 
+      final payload = FormData();
+      for (var i = 0; i < multipartFiles.length; i++) {
+        payload.files.add(MapEntry('attachments[$i]', multipartFiles[i]));
+      }
+
       final response = await _apiService.post(
         EndPoints.transactionDocuments(transactionId),
-        data: FormData.fromMap({
-          'attachments[]': multipartFiles,
-        }),
+        data: payload,
       );
 
       return ApiResponseParser.parseItem<TransactionModel>(
@@ -200,8 +201,9 @@ class TransactionsRepository {
   Future<List<MultipartFile>> _toMultipartFiles(
     List<PlatformFile> attachments,
   ) async {
+    final prepared = await AttachmentCompressor.prepare(attachments);
     final multipartFiles = <MultipartFile>[];
-    for (final file in attachments) {
+    for (final file in prepared) {
       if (file.size > 5 * 1024 * 1024) {
         throw Exception('حجم الملف ${file.name} يتجاوز 5 ميغابايت');
       }

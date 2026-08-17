@@ -107,136 +107,139 @@ class _SignupScreenState extends State<SignupScreen> {
                         children: [
                           const AuthSectionHeader(
                             title: 'بيانات الحساب',
-                            subtitle:
-                                'أدخل بياناتك الشخصية لإتمام التسجيل',
+                            subtitle: 'أدخل بياناتك الشخصية لإتمام التسجيل',
                           ),
                           SizedBox(height: 28.h(context)),
-                        const CustomFormFieldLabel(label: 'الاسم الأول'),
-                        SizedBox(height: 8.h(context)),
-                        CustomTextfield(
-                          controller: _firstNameController,
-                          hint: 'مثال: يوسف',
-                          suffixIcon: null,
-                        ),
-                        SizedBox(height: 20.h(context)),
-                        const CustomFormFieldLabel(label: 'الكنية'),
-                        SizedBox(height: 8.h(context)),
-                        CustomTextfield(
-                          controller: _authorityController,
-                          hint: 'مثال: الخطيب',
-                          suffixIcon: null,
-                        ),
-                        SizedBox(height: 20.h(context)),
-                        const CustomFormFieldLabel(label: 'الرقم الوطني'),
-                        SizedBox(height: 8.h(context)),
-                        CustomTextfield(
-                          controller: _jobNumberController,
-                          hint: '00000000000',
-                          suffixIcon: Icons.badge,
-                          keyboardType: TextInputType.number,
-                          validator: Validator.nationalNumber,
-                        ),
-                        SizedBox(height: 20.h(context)),
-                        const CustomFormFieldLabel(label: 'رقم الهاتف'),
-                        SizedBox(height: 8.h(context)),
-                        CustomTextfield(
-                          controller: _phoneController,
-                          hint: '+963 900 000 000',
-                          suffixIcon: Icons.phone,
-                          keyboardType: TextInputType.phone,
-                          validator: Validator.phoneNumber,
-                        ),
-                        SizedBox(height: 20.h(context)),
-                        const CustomFormFieldLabel(label: 'البريد الإلكتروني'),
-                        SizedBox(height: 8.h(context)),
-                        CustomTextfield(
-                          controller: _emailController,
-                          hint: 'example@email.com',
-                          suffixIcon: Icons.email,
-                          keyboardType: TextInputType.emailAddress,
-                          validator: Validator.email,
-                        ),
-                        SizedBox(height: 20.h(context)),
-                        const CustomFormFieldLabel(label: 'صورة الهوية الشخصية'),
-                        SizedBox(height: 8.h(context)),
-                        BlocBuilder<AuthFormCubit, AuthFormState>(
-                          buildWhen: (previous, current) =>
-                              previous.identityImage != current.identityImage,
-                          builder: (context, formState) =>
-                              SignupIdentityUploadField(
-                            identityImage: formState.identityImage,
-                            onTap: _pickImage,
+                          const CustomFormFieldLabel(label: 'الاسم الأول'),
+                          SizedBox(height: 8.h(context)),
+                          CustomTextfield(
+                            controller: _firstNameController,
+                            hint: 'مثال: يوسف',
+                            suffixIcon: null,
                           ),
-                        ),
-                        SizedBox(height: 20.h(context)),
-                        const CustomFormFieldLabel(label: 'كلمة السر'),
-                        SizedBox(height: 8.h(context)),
-                        BlocBuilder<AuthFormCubit, AuthFormState>(
-                          buildWhen: (previous, current) =>
-                              previous.showPassword != current.showPassword,
-                          builder: (context, formState) => PasswordInputField(
-                            controller: _passwordController,
-                            isVisible: formState.showPassword,
-                            onToggle: () => context
-                                .read<AuthFormCubit>()
-                                .toggleShowPassword(),
-                            validator: Validator.signupPassword,
+                          SizedBox(height: 20.h(context)),
+                          const CustomFormFieldLabel(label: 'الكنية'),
+                          SizedBox(height: 8.h(context)),
+                          CustomTextfield(
+                            controller: _authorityController,
+                            hint: 'مثال: الخطيب',
+                            suffixIcon: null,
                           ),
-                        ),
-                        SizedBox(height: 20.h(context)),
-                        const CustomFormFieldLabel(label: 'تأكيد كلمة السر'),
-                        SizedBox(height: 8.h(context)),
-                        BlocBuilder<AuthFormCubit, AuthFormState>(
-                          buildWhen: (previous, current) =>
-                              previous.showConfirmPassword !=
-                              current.showConfirmPassword,
-                          builder: (context, formState) => PasswordInputField(
-                            controller: _confirmPasswordController,
-                            isVisible: formState.showConfirmPassword,
-                            onToggle: () => context
-                                .read<AuthFormCubit>()
-                                .toggleShowConfirmPassword(),
-                            validator: (value) => Validator.confirmPassword(
-                              value,
-                              _passwordController.text,
+                          SizedBox(height: 20.h(context)),
+                          const CustomFormFieldLabel(label: 'الرقم الوطني'),
+                          SizedBox(height: 8.h(context)),
+                          CustomTextfield(
+                            controller: _jobNumberController,
+                            hint: '00000000000',
+                            suffixIcon: Icons.badge,
+                            keyboardType: TextInputType.number,
+                            validator: Validator.nationalNumber,
+                          ),
+                          SizedBox(height: 20.h(context)),
+                          const CustomFormFieldLabel(label: 'رقم الهاتف'),
+                          SizedBox(height: 8.h(context)),
+                          CustomTextfield(
+                            controller: _phoneController,
+                            hint: '+963 900 000 000',
+                            suffixIcon: Icons.phone,
+                            keyboardType: TextInputType.phone,
+                            validator: Validator.phoneNumber,
+                            textDirection: TextDirection.ltr,
+                            textAlign: TextAlign.right,
+                          ),
+                          SizedBox(height: 20.h(context)),
+                          const CustomFormFieldLabel(
+                              label: 'البريد الإلكتروني'),
+                          SizedBox(height: 8.h(context)),
+                          CustomTextfield(
+                            controller: _emailController,
+                            hint: 'example@email.com',
+                            suffixIcon: Icons.email,
+                            keyboardType: TextInputType.emailAddress,
+                            validator: Validator.email,
+                          ),
+                          SizedBox(height: 20.h(context)),
+                          const CustomFormFieldLabel(
+                              label: 'صورة الهوية الشخصية'),
+                          SizedBox(height: 8.h(context)),
+                          BlocBuilder<AuthFormCubit, AuthFormState>(
+                            buildWhen: (previous, current) =>
+                                previous.identityImage != current.identityImage,
+                            builder: (context, formState) =>
+                                SignupIdentityUploadField(
+                              identityImage: formState.identityImage,
+                              onTap: _pickImage,
                             ),
                           ),
-                        ),
-                        SizedBox(height: 20.h(context)),
-                        BlocBuilder<AuthFormCubit, AuthFormState>(
-                          buildWhen: (previous, current) =>
-                              previous.agreeToTerms != current.agreeToTerms,
-                          builder: (context, formState) => SignupTermsSection(
-                            agreeToTerms: formState.agreeToTerms,
-                            onToggle: () => context
-                                .read<AuthFormCubit>()
-                                .setAgreeToTerms(!formState.agreeToTerms),
+                          SizedBox(height: 20.h(context)),
+                          const CustomFormFieldLabel(label: 'كلمة السر'),
+                          SizedBox(height: 8.h(context)),
+                          BlocBuilder<AuthFormCubit, AuthFormState>(
+                            buildWhen: (previous, current) =>
+                                previous.showPassword != current.showPassword,
+                            builder: (context, formState) => PasswordInputField(
+                              controller: _passwordController,
+                              isVisible: formState.showPassword,
+                              onToggle: () => context
+                                  .read<AuthFormCubit>()
+                                  .toggleShowPassword(),
+                              validator: Validator.signupPassword,
+                            ),
                           ),
-                        ),
-                        SizedBox(height: 28.h(context)),
-                        BlocBuilder<AuthFormCubit, AuthFormState>(
-                          buildWhen: (previous, current) =>
-                              previous.agreeToTerms != current.agreeToTerms,
-                          builder: (context, formState) {
-                            return BlocBuilder<AuthCubit, AuthState>(
-                              buildWhen: (previous, current) =>
-                                  (previous is AuthLoading) !=
-                                  (current is AuthLoading),
-                              builder: (context, state) {
-                                final isLoading = state is AuthLoading;
-                                return AuthPrimaryButton(
-                                  label: 'إنشاء الحساب',
-                                  trailingIcon: Icons.arrow_forward,
-                                  backgroundColor: AppColors.green,
-                                  isLoading: isLoading,
-                                  enabled: formState.agreeToTerms,
-                                  onPressed: _handleCreateAccount,
-                                );
-                              },
-                            );
-                          },
-                        ),
-                        SizedBox(height: 20.h(context)),
+                          SizedBox(height: 20.h(context)),
+                          const CustomFormFieldLabel(label: 'تأكيد كلمة السر'),
+                          SizedBox(height: 8.h(context)),
+                          BlocBuilder<AuthFormCubit, AuthFormState>(
+                            buildWhen: (previous, current) =>
+                                previous.showConfirmPassword !=
+                                current.showConfirmPassword,
+                            builder: (context, formState) => PasswordInputField(
+                              controller: _confirmPasswordController,
+                              isVisible: formState.showConfirmPassword,
+                              onToggle: () => context
+                                  .read<AuthFormCubit>()
+                                  .toggleShowConfirmPassword(),
+                              validator: (value) => Validator.confirmPassword(
+                                value,
+                                _passwordController.text,
+                              ),
+                            ),
+                          ),
+                          SizedBox(height: 20.h(context)),
+                          BlocBuilder<AuthFormCubit, AuthFormState>(
+                            buildWhen: (previous, current) =>
+                                previous.agreeToTerms != current.agreeToTerms,
+                            builder: (context, formState) => SignupTermsSection(
+                              agreeToTerms: formState.agreeToTerms,
+                              onToggle: () => context
+                                  .read<AuthFormCubit>()
+                                  .setAgreeToTerms(!formState.agreeToTerms),
+                            ),
+                          ),
+                          SizedBox(height: 28.h(context)),
+                          BlocBuilder<AuthFormCubit, AuthFormState>(
+                            buildWhen: (previous, current) =>
+                                previous.agreeToTerms != current.agreeToTerms,
+                            builder: (context, formState) {
+                              return BlocBuilder<AuthCubit, AuthState>(
+                                buildWhen: (previous, current) =>
+                                    (previous is AuthLoading) !=
+                                    (current is AuthLoading),
+                                builder: (context, state) {
+                                  final isLoading = state is AuthLoading;
+                                  return AuthPrimaryButton(
+                                    label: 'إنشاء الحساب',
+                                    trailingIcon: Icons.arrow_forward,
+                                    backgroundColor: AppColors.green,
+                                    isLoading: isLoading,
+                                    enabled: formState.agreeToTerms,
+                                    onPressed: _handleCreateAccount,
+                                  );
+                                },
+                              );
+                            },
+                          ),
+                          SizedBox(height: 20.h(context)),
                           AuthSwitchLink(
                             prompt: 'لديك حساب بالفعل؟ ',
                             actionLabel: 'تسجيل الدخول',

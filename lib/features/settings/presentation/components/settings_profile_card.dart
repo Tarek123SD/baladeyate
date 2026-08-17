@@ -69,7 +69,7 @@ class SettingsProfileCard extends StatelessWidget {
                     if (user?.phoneNumber != null) ...[
                       SizedBox(height: 4.h(context)),
                       Text(
-                        'الهاتف: ${user!.phoneNumber}',
+                        'الهاتف: \u200E${user!.phoneNumber}',
                         textDirection: TextDirection.rtl,
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                               color: AppColors.secondaryCharcoal

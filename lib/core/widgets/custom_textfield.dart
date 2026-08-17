@@ -11,12 +11,16 @@ class CustomTextfield extends StatelessWidget {
     required this.suffixIcon,
     this.validator,
     this.keyboardType,
+    this.textDirection = TextDirection.rtl,
+    this.textAlign,
   });
   final TextEditingController controller;
   final String hint;
   final IconData? suffixIcon;
   final String? Function(String?)? validator;
   final TextInputType? keyboardType;
+  final TextDirection textDirection;
+  final TextAlign? textAlign;
 
   @override
   Widget build(BuildContext context) {
@@ -38,7 +42,8 @@ class CustomTextfield extends StatelessWidget {
       ),
       child: TextFormField(
         controller: controller,
-        textDirection: TextDirection.rtl,
+        textDirection: textDirection,
+        textAlign: textAlign ?? TextAlign.start,
         keyboardType: keyboardType,
         cursorColor: AppColors.secondaryForest,
         style: TextStyle(
@@ -50,7 +55,7 @@ class CustomTextfield extends StatelessWidget {
         decoration: InputDecoration(
           hintText: hint,
           hintStyle: TextStyle(color: Colors.grey[700]),
-          hintTextDirection: TextDirection.rtl,
+          hintTextDirection: textDirection,
           filled: true,
           fillColor: AppColors.inputFill,
           border: outline(AppColors.inputBorder, 1.4),
