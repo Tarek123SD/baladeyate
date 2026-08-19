@@ -12,14 +12,70 @@ import 'package:baladeyate/features/complaints/presentation/components/track_com
 import 'package:baladeyate/features/complaints/presentation/components/track_complaints_header_card.dart';
 import 'package:baladeyate/features/complaints/presentation/components/track_complaints_list_header.dart';
 import 'package:baladeyate/features/complaints/presentation/components/track_complaints_stats.dart';
+import 'package:baladeyate/routes/app_route_observer.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:responsive_x_toolkit/responsive_x.dart';
 
-class TrackComplaintsScreen extends StatelessWidget {
+class TrackComplaintsScreen extends StatefulWidget {
   const TrackComplaintsScreen({super.key});
+
+  @override
+  State<TrackComplaintsScreen> createState() => _TrackComplaintsScreenState();
+}
+
+class _TrackComplaintsScreenState extends State<TrackComplaintsScreen>
+    with RouteAware {
+  static const _trackShellIndex = 2;
+
+  bool _routeSubscribed = false;
+  int? _lastShellIndex;
+
+  @override
+  void initState() {
+    super.initState();
+    ComplaintsCubit.listVersion.addListener(_reloadComplaints);
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+
+    final shell = StatefulNavigationShell.maybeOf(context);
+    if (shell != null) {
+      final index = shell.currentIndex;
+      if (index == _trackShellIndex &&
+          _lastShellIndex != null &&
+          _lastShellIndex != _trackShellIndex) {
+        _reloadComplaints();
+      }
+      _lastShellIndex = index;
+    }
+
+    if (_routeSubscribed) return;
+    final route = ModalRoute.of(context);
+    if (route is PageRoute<void>) {
+      appRouteObserver.subscribe(this, route);
+      _routeSubscribed = true;
+    }
+  }
+
+  @override
+  void didPopNext() => _reloadComplaints();
+
+  void _reloadComplaints() {
+    if (!mounted) return;
+    context.read<ComplaintsCubit>().loadComplaints();
+  }
+
+  @override
+  void dispose() {
+    ComplaintsCubit.listVersion.removeListener(_reloadComplaints);
+    appRouteObserver.unsubscribe(this);
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {

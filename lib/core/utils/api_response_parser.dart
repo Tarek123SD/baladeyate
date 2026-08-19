@@ -178,6 +178,7 @@ class ApiResponseParser {
       case DioExceptionType.connectionTimeout:
       case DioExceptionType.sendTimeout:
       case DioExceptionType.receiveTimeout:
+      case DioExceptionType.transformTimeout:
         return 'انتهت مهلة الاتصال، تحقق من الإنترنت وحاول مرة أخرى';
       case DioExceptionType.connectionError:
         return 'تعذر الاتصال بالخادم، تحقق من الإنترنت';

@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:baladeyate/config/theme/app_colors.dart';
 import 'package:baladeyate/core/widgets/custom_complaint_input_field.dart';
 import 'package:flutter/material.dart';
@@ -8,16 +6,16 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:responsive_x_toolkit/responsive_x.dart';
 import 'package:go_router/go_router.dart';
 
-const LatLng _kFallbackLocation = LatLng(30.0444, 31.2357); // Cairo
+const LatLng _kFallbackLocation = LatLng(33.5138, 36.2765); // Damascus
 
-/// Resolves the device position, returning `null` and surfacing a localized
-/// message through [onError] when it can't be determined.
-Future<Position?> _resolveCurrentPosition(
-  void Function(String message) onError,
-) async {
+/// Resolves the device position, returning `null` and optionally surfacing a
+/// localized message through [onError] when it can't be determined.
+Future<Position?> _resolveCurrentPosition({
+  void Function(String message)? onError,
+}) async {
   final serviceEnabled = await Geolocator.isLocationServiceEnabled();
   if (!serviceEnabled) {
-    onError('يرجى تفعيل خدمة الموقع (GPS)');
+    onError?.call('يرجى تفعيل خدمة الموقع (GPS)');
     return null;
   }
 
@@ -26,21 +24,42 @@ Future<Position?> _resolveCurrentPosition(
     permission = await Geolocator.requestPermission();
   }
   if (permission == LocationPermission.deniedForever) {
-    onError('تم رفض إذن الموقع بشكل دائم. يرجى تفعيله من إعدادات التطبيق.');
-    await Geolocator.openAppSettings();
+    onError?.call(
+      'تم رفض إذن الموقع بشكل دائم. يرجى تفعيله من إعدادات التطبيق.',
+    );
+    if (onError != null) {
+      await Geolocator.openAppSettings();
+    }
     return null;
   }
   if (permission == LocationPermission.denied) {
-    onError('تم رفض إذن الوصول إلى الموقع');
+    onError?.call('تم رفض إذن الوصول إلى الموقع');
     return null;
   }
 
   try {
+    final lastKnown = await Geolocator.getLastKnownPosition();
+    if (lastKnown != null) return lastKnown;
+  } catch (_) {}
+
+  try {
     return await Geolocator.getCurrentPosition(
-      locationSettings: const LocationSettings(accuracy: LocationAccuracy.high),
+      locationSettings: const LocationSettings(
+        accuracy: LocationAccuracy.medium,
+        timeLimit: Duration(seconds: 6),
+      ),
+    );
+  } catch (_) {}
+
+  try {
+    return await Geolocator.getCurrentPosition(
+      locationSettings: const LocationSettings(
+        accuracy: LocationAccuracy.low,
+        timeLimit: Duration(seconds: 6),
+      ),
     );
   } catch (_) {
-    onError('تعذر تحديد موقعك الحالي');
+    onError?.call('تعذر تحديد موقعك الحالي. يمكنك تحريك الخريطة يدوياً.');
     return null;
   }
 }
@@ -59,7 +78,7 @@ class CustomComplaintMapBox extends StatefulWidget {
   /// Called whenever the manual address text changes.
   final ValueChanged<String>? onAddressChanged;
 
-  /// Optional starting location. Defaults to Cairo when not provided.
+  /// Optional starting location. Defaults to Damascus when not provided.
   final LatLng? initialLocation;
 
   @override
@@ -67,7 +86,6 @@ class CustomComplaintMapBox extends StatefulWidget {
 }
 
 class _CustomComplaintMapBoxState extends State<CustomComplaintMapBox> {
-  final Completer<GoogleMapController> _previewController = Completer();
   final TextEditingController _addressController = TextEditingController();
   LatLng? _selected;
 
@@ -84,6 +102,10 @@ class _CustomComplaintMapBoxState extends State<CustomComplaintMapBox> {
   }
 
   Future<void> _openMapPicker() async {
+    FocusManager.instance.primaryFocus?.unfocus();
+    await Future<void>.delayed(const Duration(milliseconds: 280));
+    if (!mounted) return;
+
     final result = await context.push<LatLng>(
       '/complains/map-picker',
       extra: _selected ?? widget.initialLocation,
@@ -93,23 +115,14 @@ class _CustomComplaintMapBoxState extends State<CustomComplaintMapBox> {
 
     setState(() => _selected = result);
     widget.onLocationSelected?.call(result);
-
-    if (_previewController.isCompleted) {
-      final controller = await _previewController.future;
-      await controller.animateCamera(
-        CameraUpdate.newLatLngZoom(result, 16),
-      );
-    }
   }
 
   @override
   Widget build(BuildContext context) {
-    final target = _selected ?? widget.initialLocation ?? _kFallbackLocation;
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        _buildPreview(context, target),
+        _buildPreview(context),
         SizedBox(height: 10.s(context)),
         _buildSelectedInfo(context),
         SizedBox(height: 12.s(context)),
@@ -135,82 +148,64 @@ class _CustomComplaintMapBoxState extends State<CustomComplaintMapBox> {
     );
   }
 
-  Widget _buildPreview(BuildContext context, LatLng target) {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(14.r(context)),
-      child: SizedBox(
-        height: 180.h(context),
-        child: Stack(
-          children: [
-            // Non-interactive preview; interaction happens in the picker.
-            IgnorePointer(
-              child: GoogleMap(
-                initialCameraPosition: CameraPosition(target: target, zoom: 15),
-                onMapCreated: (controller) {
-                  if (!_previewController.isCompleted) {
-                    _previewController.complete(controller);
-                  }
-                },
-                markers: {
-                  if (_selected != null)
-                    Marker(
-                      markerId: const MarkerId('selected'),
-                      position: _selected!,
-                    ),
-                },
-                myLocationButtonEnabled: false,
-                myLocationEnabled: false,
-                zoomControlsEnabled: false,
-                zoomGesturesEnabled: false,
-                scrollGesturesEnabled: false,
-                rotateGesturesEnabled: false,
-                tiltGesturesEnabled: false,
-                mapToolbarEnabled: false,
-                liteModeEnabled: false,
-              ),
+  Widget _buildPreview(BuildContext context) {
+    final selected = _selected;
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: _openMapPicker,
+        borderRadius: BorderRadius.circular(14.r(context)),
+        child: Ink(
+          height: 180.h(context),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(14.r(context)),
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                AppColors.thirdForest.withValues(alpha: 0.18),
+                AppColors.primaryForest.withValues(alpha: 0.12),
+              ],
             ),
-            Positioned.fill(
-              child: Material(
-                color: Colors.transparent,
-                child: InkWell(
-                  onTap: _openMapPicker,
-                  child: Center(
-                    child: Container(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: 16.s(context),
-                        vertical: 10.s(context),
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.black.withValues(alpha: 0.6),
-                        borderRadius: BorderRadius.circular(24.r(context)),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            Icons.map_rounded,
-                            size: 18.ic(context),
-                            color: Colors.white,
-                          ),
-                          SizedBox(width: 8.s(context)),
-                          Text(
-                            _selected == null
-                                ? 'اضغط لفتح الخريطة وتحديد الموقع'
-                                : 'اضغط لتعديل الموقع',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 12.f(context),
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ],
-                      ),
+            border: Border.all(
+              color: AppColors.primaryForest.withValues(alpha: 0.16),
+            ),
+          ),
+          child: Center(
+            child: Container(
+              padding: EdgeInsets.symmetric(
+                horizontal: 16.s(context),
+                vertical: 10.s(context),
+              ),
+              decoration: BoxDecoration(
+                color: Colors.black.withValues(alpha: 0.6),
+                borderRadius: BorderRadius.circular(24.r(context)),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    selected == null
+                        ? Icons.map_rounded
+                        : Icons.edit_location_alt_rounded,
+                    size: 18.ic(context),
+                    color: Colors.white,
+                  ),
+                  SizedBox(width: 8.s(context)),
+                  Text(
+                    selected == null
+                        ? 'اضغط لفتح الخريطة وتحديد الموقع'
+                        : 'اضغط لتعديل الموقع',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 12.f(context),
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
-                ),
+                ],
               ),
             ),
-          ],
+          ),
         ),
       ),
     );
@@ -277,19 +272,42 @@ class MapPickerScreen extends StatefulWidget {
 }
 
 class _MapPickerScreenState extends State<MapPickerScreen> {
-  final Completer<GoogleMapController> _controller = Completer();
-  LatLng? _selected;
+  GoogleMapController? _mapController;
+  late LatLng _center;
+  LatLng? _pendingCameraTarget;
   bool _locating = false;
+  bool _mapReady = false;
 
   @override
   void initState() {
     super.initState();
-    _selected = widget.initialLocation;
-    if (_selected == null) {
-      WidgetsBinding.instance.addPostFrameCallback(
-        (_) => _goToMyLocation(animate: false),
-      );
+    _center = widget.initialLocation ?? _kFallbackLocation;
+    WidgetsBinding.instance.addPostFrameCallback((_) => _attachMapWhenStable());
+    Future<void>.delayed(const Duration(milliseconds: 450), () {
+      if (!mounted || _mapReady) return;
+      setState(() => _mapReady = true);
+      if (widget.initialLocation == null) {
+        _goToMyLocation(animate: false, showErrors: false);
+      }
+    });
+  }
+
+  void _attachMapWhenStable() {
+    if (!mounted || _mapReady) return;
+    if (MediaQuery.viewInsetsOf(context).bottom > 0) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _attachMapWhenStable());
+      return;
     }
+    setState(() => _mapReady = true);
+    if (widget.initialLocation == null) {
+      _goToMyLocation(animate: false, showErrors: false);
+    }
+  }
+
+  @override
+  void dispose() {
+    _mapController = null;
+    super.dispose();
   }
 
   void _showMessage(String message) {
@@ -299,29 +317,56 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
     );
   }
 
-  Future<void> _goToMyLocation({bool animate = true}) async {
+  Future<void> _moveCamera(LatLng target, {required bool animate}) async {
+    final controller = _mapController;
+    if (controller == null) {
+      _pendingCameraTarget = target;
+      return;
+    }
+
+    final update = CameraUpdate.newLatLngZoom(target, 16);
+    try {
+      if (animate) {
+        await controller.animateCamera(update);
+      } else {
+        await controller.moveCamera(update);
+      }
+    } catch (_) {
+      // Controller can be disposed while the camera animation is in flight.
+    }
+  }
+
+  Future<void> _goToMyLocation({
+    bool animate = true,
+    bool showErrors = true,
+  }) async {
     if (_locating) return;
     setState(() => _locating = true);
-    final position = await _resolveCurrentPosition(_showMessage);
+    final position = await _resolveCurrentPosition(
+      onError: showErrors ? _showMessage : null,
+    );
     if (!mounted) return;
     if (position != null) {
       final latLng = LatLng(position.latitude, position.longitude);
-      setState(() => _selected = latLng);
-      if (animate && _controller.isCompleted) {
-        final controller = await _controller.future;
-        await controller.animateCamera(
-          CameraUpdate.newLatLngZoom(latLng, 16),
-        );
-      }
+      _center = latLng;
+      await _moveCamera(latLng, animate: animate);
     }
     if (mounted) setState(() => _locating = false);
   }
 
+  void _onMapCreated(GoogleMapController controller) {
+    _mapController = controller;
+    final pending = _pendingCameraTarget;
+    if (pending != null) {
+      _pendingCameraTarget = null;
+      controller.moveCamera(CameraUpdate.newLatLngZoom(pending, 16));
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    final target = _selected ?? widget.initialLocation ?? _kFallbackLocation;
-
     return Scaffold(
+      resizeToAvoidBottomInset: false,
       appBar: AppBar(
         backgroundColor: AppColors.primaryForest,
         foregroundColor: Colors.white,
@@ -336,27 +381,37 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
       ),
       body: Stack(
         children: [
-          GoogleMap(
-            initialCameraPosition: CameraPosition(target: target, zoom: 15),
-            onMapCreated: (controller) {
-              if (!_controller.isCompleted) {
-                _controller.complete(controller);
-              }
-            },
-            onTap: (latLng) => setState(() => _selected = latLng),
-            markers: {
-              if (_selected != null)
-                Marker(
-                  markerId: const MarkerId('selected'),
-                  position: _selected!,
-                  draggable: true,
-                  onDragEnd: (latLng) => setState(() => _selected = latLng),
+          if (_mapReady)
+            MediaQuery.removeViewInsets(
+              context: context,
+              removeBottom: true,
+              child: GoogleMap(
+                initialCameraPosition: CameraPosition(target: _center, zoom: 15),
+                onMapCreated: _onMapCreated,
+                onCameraMove: (position) => _center = position.target,
+                myLocationButtonEnabled: false,
+                myLocationEnabled: false,
+                zoomControlsEnabled: false,
+                mapToolbarEnabled: false,
+                compassEnabled: false,
+                liteModeEnabled: false,
+                markers: const <Marker>{},
+                padding: const EdgeInsets.only(bottom: 80),
+              ),
+            )
+          else
+            const Center(child: CircularProgressIndicator()),
+          IgnorePointer(
+            child: Center(
+              child: Transform.translate(
+                offset: Offset(0, -22.s(context)),
+                child: Icon(
+                  Icons.location_on,
+                  size: 48.ic(context),
+                  color: AppColors.alertRed,
                 ),
-            },
-            myLocationButtonEnabled: false,
-            myLocationEnabled: false,
-            zoomControlsEnabled: false,
-            mapToolbarEnabled: false,
+              ),
+            ),
           ),
           Positioned(
             top: 12.s(context),
@@ -373,7 +428,7 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
                   borderRadius: BorderRadius.circular(20.r(context)),
                 ),
                 child: Text(
-                  'اضغط على الخريطة أو اسحب العلامة لتحديد الموقع',
+                  'حرّك الخريطة لوضع الدبوس على الموقع المطلوب',
                   style: TextStyle(
                     color: Colors.white,
                     fontSize: 12.f(context),
@@ -421,13 +476,10 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
             child: SizedBox(
               height: 52.h(context),
               child: ElevatedButton.icon(
-                onPressed:
-                    _selected == null ? null : () => context.pop(_selected),
+                onPressed: () => context.pop(_center),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.green,
                   foregroundColor: Colors.white,
-                  disabledBackgroundColor:
-                      AppColors.secondaryCharcoal.withValues(alpha: 0.4),
                   elevation: 0,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(14.r(context)),

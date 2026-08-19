@@ -164,7 +164,7 @@ class FcmService {
 
   Future<void> _initLocalNotifications() async {
     const androidSettings =
-        AndroidInitializationSettings('@mipmap/ic_launcher');
+        AndroidInitializationSettings('ic_stat_notify');
     const iosSettings = DarwinInitializationSettings(
       requestAlertPermission: false,
       requestBadgePermission: false,
@@ -231,7 +231,9 @@ class FcmService {
       channelDescription: channelDescription,
       importance: Importance.high,
       priority: Priority.high,
-      icon: '@mipmap/ic_launcher',
+      icon: 'ic_stat_notify',
+      largeIcon: DrawableResourceAndroidBitmap('ic_launcher_foreground'),
+      color: Color(0xFF223F3A),
       playSound: true,
       enableVibration: true,
     );

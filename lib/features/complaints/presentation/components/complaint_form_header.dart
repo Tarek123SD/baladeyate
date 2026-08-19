@@ -26,6 +26,15 @@ class ComplaintFormHeader extends StatelessWidget {
             color: AppColors.secondaryCharcoal.withValues(alpha: 0.75),
           ),
         ),
+        SizedBox(height: 8.s(context)),
+        Text(
+          'سيتم تحليل شكواك وتوجيهها إلى القسم المختص بعد المراجعة.',
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            fontSize: 12.f(context),
+            color: AppColors.secondaryCharcoal.withValues(alpha: 0.65),
+          ),
+        ),
       ],
     );
   }

@@ -17,36 +17,21 @@ class SignupTermsSection extends StatelessWidget {
     return GestureDetector(
       onTap: onToggle,
       behavior: HitTestBehavior.opaque,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        textDirection: TextDirection.rtl,
         children: [
-          Text(
-            'أوافق على شروط الاستخدام وسياسة الخصوصية الخاصة بالخدمات',
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: Colors.grey.shade700,
-                  height: 1.4,
-                ),
-            textDirection: TextDirection.rtl,
-            textAlign: TextAlign.right,
-          ),
-          SizedBox(height: 8.h(context)),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            textDirection: TextDirection.rtl,
-            children: [
-              SignupTermsCheckbox(checked: agreeToTerms),
-              Expanded(
-                child: Text(
-                  'الرقمية السيادية.',
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Colors.grey.shade700,
-                        height: 1.4,
-                      ),
-                  textDirection: TextDirection.rtl,
-                  textAlign: TextAlign.right,
-                ),
-              ),
-            ],
+          SignupTermsCheckbox(checked: agreeToTerms),
+          SizedBox(width: 10.w(context)),
+          Expanded(
+            child: Text(
+              'أوافق على شروط الاستخدام وسياسة الخصوصية',
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: Colors.grey.shade700,
+                    height: 1.4,
+                  ),
+              textDirection: TextDirection.rtl,
+            ),
           ),
         ],
       ),
@@ -69,7 +54,8 @@ class SignupTermsCheckbox extends StatelessWidget {
     return Container(
       width: boxSize,
       height: boxSize,
-      margin: EdgeInsets.only(left: 10.s(context)),
+      margin: EdgeInsets.only(top: 2.s(context)),
+      alignment: Alignment.center,
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(4.r(context)),
@@ -79,12 +65,10 @@ class SignupTermsCheckbox extends StatelessWidget {
         ),
       ),
       child: checked
-          ? Center(
-              child: Icon(
-                Icons.check,
-                size: 16.s(context),
-                color: AppColors.green,
-              ),
+          ? Icon(
+              Icons.check,
+              size: 16.s(context),
+              color: AppColors.green,
             )
           : null,
     );

@@ -92,6 +92,46 @@ class ComplaintDetailsScreen extends StatelessWidget {
                 ),
               ],
             ),
+          if (targetComplaint.attachments.isNotEmpty)
+            ComplaintDetailsInfoCard(
+              children: [
+                ComplaintDetailsSectionCard(
+                  icon: Icons.photo_library_outlined,
+                  title: 'المرفقات',
+                  body: '${targetComplaint.attachments.length} مرفق',
+                  bodyHeight: 1.4,
+                ),
+                SizedBox(height: 12.s(context)),
+                Wrap(
+                  spacing: 10.s(context),
+                  runSpacing: 10.s(context),
+                  children: [
+                    for (final url in targetComplaint.attachments)
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(12.r(context)),
+                        child: Image.network(
+                          url,
+                          width: 96.s(context),
+                          height: 96.s(context),
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) {
+                            return Container(
+                              width: 96.s(context),
+                              height: 96.s(context),
+                              color: Colors.grey.shade200,
+                              alignment: Alignment.center,
+                              child: Icon(
+                                Icons.broken_image_outlined,
+                                color: Colors.grey.shade600,
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                  ],
+                ),
+              ],
+            ),
         ],
       ),
     );

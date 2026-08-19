@@ -334,7 +334,8 @@ GoRouter _createAppRouter() {
           GoRoute(
             path: 'map-picker',
             builder: (context, state) {
-              final initialLocation = state.extra as LatLng?;
+              final extra = state.extra;
+              final initialLocation = extra is LatLng ? extra : null;
               return MapPickerScreen(initialLocation: initialLocation);
             },
           ),

@@ -44,7 +44,7 @@ class Validator {
       return 'الرقم الوطني مطلوب';
     }
     if (!RegExp(r'^\d{10,11}$').hasMatch(value)) {
-      return 'يجب أن يتكون الرقم الوطني من 10 أو 11 رقم';
+      return 'يجب أن يتكون الرقم الوطني من 11 رقم';
     }
     return null;
   }

@@ -115,7 +115,7 @@ class _SignupScreenState extends State<SignupScreen> {
                           CustomTextfield(
                             controller: _firstNameController,
                             hint: 'مثال: يوسف',
-                            suffixIcon: null,
+                            suffixIcon: Icons.person,
                           ),
                           SizedBox(height: 20.h(context)),
                           const CustomFormFieldLabel(label: 'الكنية'),
@@ -123,7 +123,7 @@ class _SignupScreenState extends State<SignupScreen> {
                           CustomTextfield(
                             controller: _authorityController,
                             hint: 'مثال: الخطيب',
-                            suffixIcon: null,
+                            suffixIcon: Icons.person_outline,
                           ),
                           SizedBox(height: 20.h(context)),
                           const CustomFormFieldLabel(label: 'الرقم الوطني'),

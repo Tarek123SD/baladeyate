@@ -1,7 +1,10 @@
+import 'dart:io';
+
 import 'package:baladeyate/core/utils/api_response_parser.dart';
 import 'package:baladeyate/features/complaints/cubits/complaints_cubit/complaints_state.dart';
 import 'package:baladeyate/features/complaints/models/complaint.dart';
 import 'package:baladeyate/features/complaints/repo/complaints_repository.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 class ComplaintsCubit extends Cubit<ComplaintsState> {
@@ -11,17 +14,30 @@ class ComplaintsCubit extends Cubit<ComplaintsState> {
 
   final ComplaintsRepository _complaintsRepository;
 
+  /// Bumped after a complaint is created so other cubit instances (track tab)
+  /// can reload even though each screen owns its own factory cubit.
+  static final ValueNotifier<int> listVersion = ValueNotifier(0);
+
+  static void markListStale() => listVersion.value++;
+
   Future<void> loadComplaints() async {
     final previousFilter = switch (state) {
       ComplaintsLoaded(:final selectedFilterIndex) => selectedFilterIndex,
       _ => 0,
     };
-    emit(const ComplaintsLoading());
+    final previousUrgent = switch (state) {
+      ComplaintsLoaded(:final isUrgent) => isUrgent,
+      _ => false,
+    };
+    if (state is! ComplaintsLoaded) {
+      emit(const ComplaintsLoading());
+    }
     try {
       final complaints = await _complaintsRepository.getComplaints();
       emit(ComplaintsLoaded(
         complaints: complaints,
         selectedFilterIndex: previousFilter,
+        isUrgent: previousUrgent,
       ));
     } catch (error) {
       emit(ComplaintsFailure(message: _messageFromError(error)));
@@ -62,6 +78,7 @@ class ComplaintsCubit extends Cubit<ComplaintsState> {
   Future<void> createComplaint({
     required String description,
     required bool isUrgent,
+    List<File> attachments = const [],
   }) async {
     emit(const ComplaintsLoading());
 
@@ -69,7 +86,9 @@ class ComplaintsCubit extends Cubit<ComplaintsState> {
       final complaint = await _complaintsRepository.createComplaint(
         description: description,
         priority: isUrgent ? 'urgent' : 'medium',
+        attachments: attachments,
       );
+      markListStale();
       emit(ComplaintCreated(complaint: complaint));
     } catch (error) {
       emit(ComplaintsFailure(message: _messageFromError(error)));

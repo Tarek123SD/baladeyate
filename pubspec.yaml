@@ -59,11 +59,17 @@ flutter_launcher_icons:
   android: true
   ios: true
   image_path: assets/images/app_logo.png
+  remove_alpha_ios: true
+  background_color_ios: "#223F3A"
+  adaptive_icon_background: "#223F3A"
+  adaptive_icon_foreground: assets/images/app_logo.png
+  adaptive_icon_monochrome: assets/launcher/ic_notification_monochrome.png
+  min_sdk_android: 21
   web:
     generate: true
     image_path: assets/images/app_logo.png
-    background_color: "#1B4332"
-    theme_color: "#1B4332"
+    background_color: "#223F3A"
+    theme_color: "#223F3A"
   windows:
     generate: true
     image_path: assets/images/app_logo.png

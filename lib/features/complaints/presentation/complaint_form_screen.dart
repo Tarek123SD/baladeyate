@@ -46,7 +46,10 @@ class _ComplaintFormScreenState extends State<ComplaintFormScreen> {
     return BlocConsumer<ComplaintsCubit, ComplaintsState>(
       listener: (context, state) {
         if (state is ComplaintCreated) {
-          AppSnackBar.showSuccess(context, 'تم إرسال الشكوى بنجاح');
+          AppSnackBar.showSuccess(
+            context,
+            'تم إرسال شكواك وسيتم توجيهها إلى القسم المختص.',
+          );
           context.go('/track');
         } else if (state is ComplaintsFailure) {
           // Shown inline in the form.
@@ -223,8 +226,7 @@ class _ComplaintFormScreenState extends State<ComplaintFormScreen> {
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.green,
                 foregroundColor: Colors.white,
-                disabledBackgroundColor:
-                    AppColors.green.withValues(alpha: 0.7),
+                disabledBackgroundColor: AppColors.green.withValues(alpha: 0.7),
                 disabledForegroundColor: Colors.white,
                 elevation: 0,
                 padding: EdgeInsets.symmetric(vertical: 13.h(context)),
@@ -293,13 +295,10 @@ class _ComplaintFormScreenState extends State<ComplaintFormScreen> {
         ..write(_selectedLocation!.longitude.toStringAsFixed(5));
     }
 
-    if (_attachments.isNotEmpty) {
-      buffer.write('\nعدد المرفقات: ${_attachments.length}');
-    }
-
     context.read<ComplaintsCubit>().createComplaint(
           description: buffer.toString(),
           isUrgent: context.read<ComplaintsCubit>().isUrgent,
-        );
+          attachments: List<File>.from(_attachments),
+        );  
   }
 }

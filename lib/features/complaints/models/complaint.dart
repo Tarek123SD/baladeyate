@@ -11,6 +11,7 @@ class Complaint {
     this.statusLabel,
     this.aiCategory,
     this.createdAt,
+    this.attachments = const [],
   });
 
   final int id;
@@ -20,8 +21,19 @@ class Complaint {
   final String? statusLabel;
   final String? aiCategory;
   final String? createdAt;
+  final List<String> attachments;
 
   factory Complaint.fromJson(Map<String, dynamic> json) {
+    final rawAttachments = json['attachments'];
+    final attachments = <String>[];
+    if (rawAttachments is List) {
+      for (final item in rawAttachments) {
+        if (item is String && item.isNotEmpty) {
+          attachments.add(item);
+        }
+      }
+    }
+
     return Complaint(
       id: json['id'] as int? ?? 0,
       description: json['description'] as String? ?? '',
@@ -30,6 +42,7 @@ class Complaint {
       statusLabel: json['status_label'] as String?,
       aiCategory: json['ai_category'] as String?,
       createdAt: json['created_at'] as String?,
+      attachments: attachments,
     );
   }
 
