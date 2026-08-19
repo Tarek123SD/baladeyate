@@ -58,6 +58,8 @@ class PeopleFormBody extends StatelessWidget {
     required this.familyMembersCountController,
     required this.residentsCountController,
     required this.compositionController,
+    required this.headNationalIdController,
+    required this.headFullNameController,
     required this.onSyncText,
     required this.onPickAidDate,
   });
@@ -73,6 +75,8 @@ class PeopleFormBody extends StatelessWidget {
   final TextEditingController familyMembersCountController;
   final TextEditingController residentsCountController;
   final TextEditingController compositionController;
+  final TextEditingController headNationalIdController;
+  final TextEditingController headFullNameController;
   final VoidCallback onSyncText;
   final VoidCallback onPickAidDate;
 
@@ -115,6 +119,23 @@ class PeopleFormBody extends StatelessWidget {
                   hint: 'أدخل رقم دفتر العائلة',
                   controller: familyBookController,
                   prefixIcon: Icons.menu_book_outlined,
+                  onChanged: (_) => onSyncText(),
+                ),
+                SizedBox(height: 18.h(context)),
+                FormInputField(
+                  label: 'رقم هوية رب الأسرة',
+                  hint: '11 رقمًا لربط السجل بحساب المواطن',
+                  controller: headNationalIdController,
+                  prefixIcon: Icons.badge_outlined,
+                  keyboardType: TextInputType.number,
+                  onChanged: (_) => onSyncText(),
+                ),
+                SizedBox(height: 18.h(context)),
+                FormInputField(
+                  label: 'اسم رب الأسرة',
+                  hint: 'الاسم الكامل كما في الهوية',
+                  controller: headFullNameController,
+                  prefixIcon: Icons.person_outline,
                   onChanged: (_) => onSyncText(),
                 ),
                 SizedBox(height: 18.h(context)),

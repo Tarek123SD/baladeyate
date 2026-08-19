@@ -41,7 +41,13 @@ import 'package:baladeyate/core/widgets/custom_complaint_map_box.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 import 'package:baladeyate/features/cemetery_map/cubits/cemetery_map_cubit/cemetery_map_cubit.dart';
+import 'package:baladeyate/features/cemetery_map/models/grave_model.dart';
 import 'package:baladeyate/features/cemetery_map/presentation/cemetery_map_screen.dart';
+import 'package:baladeyate/features/cemetery_reservation/cubits/grave_reservations_cubit/grave_reservations_cubit.dart';
+import 'package:baladeyate/features/cemetery_reservation/cubits/reserve_grave_cubit/reserve_grave_cubit.dart';
+import 'package:baladeyate/features/cemetery_reservation/presentation/citizen_cemetery_map_screen.dart';
+import 'package:baladeyate/features/cemetery_reservation/presentation/grave_reservation_form_screen.dart';
+import 'package:baladeyate/features/cemetery_reservation/presentation/my_grave_reservations_screen.dart';
 import 'package:baladeyate/features/daily_tasks/cubits/daily_tasks_cubit/daily_tasks_cubit.dart';
 
 import 'package:baladeyate/features/digital_documents/presentation/document_scanner_screen.dart';
@@ -341,6 +347,37 @@ GoRouter _createAppRouter() {
           ),
         ],
 
+      ),
+
+      GoRoute(
+        path: '/cemetery/map',
+        builder: (context, state) => BlocProvider(
+          create: (_) => sl<CemeteryMapCubit>(),
+          child: const CitizenCemeteryMapScreen(),
+        ),
+      ),
+      GoRoute(
+        path: '/cemetery/reservations',
+        builder: (context, state) => BlocProvider(
+          create: (_) => sl<GraveReservationsCubit>(),
+          child: const MyGraveReservationsScreen(),
+        ),
+      ),
+      GoRoute(
+        path: '/cemetery/reserve',
+        builder: (context, state) {
+          final extra = state.extra;
+          final grave = extra is GraveModel ? extra : null;
+          if (grave == null) {
+            return const Scaffold(
+              body: Center(child: Text('لم يتم تحديد قبر')),
+            );
+          }
+          return BlocProvider(
+            create: (_) => sl<ReserveGraveCubit>(),
+            child: GraveReservationFormScreen(grave: grave),
+          );
+        },
       ),
 
       GoRoute(

@@ -101,6 +101,8 @@ class ApartmentUnitDraft {
     this.familyMembersCount = '',
     this.residentsCount = '',
     this.composition = '',
+    this.headNationalId = '',
+    this.headFullName = '',
     // Local-only
     this.isDataVerified = false,
     this.apartmentId,
@@ -127,6 +129,8 @@ class ApartmentUnitDraft {
   final String familyMembersCount;
   final String residentsCount;
   final String composition;
+  final String headNationalId;
+  final String headFullName;
 
   final bool isDataVerified;
   final int? apartmentId;
@@ -151,6 +155,8 @@ class ApartmentUnitDraft {
     String? familyMembersCount,
     String? residentsCount,
     String? composition,
+    String? headNationalId,
+    String? headFullName,
     bool? isDataVerified,
     int? apartmentId,
     int? familyId,
@@ -174,6 +180,8 @@ class ApartmentUnitDraft {
       familyMembersCount: familyMembersCount ?? this.familyMembersCount,
       residentsCount: residentsCount ?? this.residentsCount,
       composition: composition ?? this.composition,
+      headNationalId: headNationalId ?? this.headNationalId,
+      headFullName: headFullName ?? this.headFullName,
       isDataVerified: isDataVerified ?? this.isDataVerified,
       apartmentId: apartmentId ?? this.apartmentId,
       familyId: familyId ?? this.familyId,
@@ -199,6 +207,8 @@ class ApartmentUnitDraft {
         'family_members_count': familyMembersCount,
         'residents_count': residentsCount,
         'composition': composition,
+        'head_national_id': headNationalId,
+        'head_full_name': headFullName,
         'is_data_verified': isDataVerified,
         if (apartmentId != null) 'apartment_id': apartmentId,
         if (familyId != null) 'family_id': familyId,
@@ -224,6 +234,8 @@ class ApartmentUnitDraft {
       familyMembersCount: json['family_members_count']?.toString() ?? '',
       residentsCount: json['residents_count']?.toString() ?? '',
       composition: json['composition'] as String? ?? '',
+      headNationalId: json['head_national_id'] as String? ?? '',
+      headFullName: json['head_full_name'] as String? ?? '',
       isDataVerified: json['is_data_verified'] as bool? ?? false,
       apartmentId: json['apartment_id'] as int?,
       familyId: json['family_id'] as int?,

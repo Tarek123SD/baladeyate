@@ -15,6 +15,14 @@ class CemeteryMapCubit extends Cubit<CemeteryMapState> {
   final int cemeteryId;
 
   Future<void> loadGraves() async {
+    await _loadMap(availableOnly: false);
+  }
+
+  Future<void> loadAvailableGraves() async {
+    await _loadMap(availableOnly: true);
+  }
+
+  Future<void> _loadMap({required bool availableOnly}) async {
     emit(
       state.copyWith(
         isLoading: true,
@@ -26,6 +34,7 @@ class CemeteryMapCubit extends Cubit<CemeteryMapState> {
     try {
       final result = await _cemeteryMapRepository.getMap(
         cemeteryId: cemeteryId,
+        availableOnly: availableOnly,
       );
       emit(
         state.copyWith(

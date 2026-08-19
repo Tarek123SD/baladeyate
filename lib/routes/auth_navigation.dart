@@ -77,7 +77,8 @@ bool isCitizenRoute(String path) =>
     path.startsWith('/complains') ||
     path.startsWith('/track') ||
     path.startsWith('/transactions') ||
-    path.startsWith('/digital-documents');
+    path.startsWith('/digital-documents') ||
+    path.startsWith('/cemetery/');
 
 bool isDelegateRoute(String path) =>
     delegateRoutes.contains(path) ||

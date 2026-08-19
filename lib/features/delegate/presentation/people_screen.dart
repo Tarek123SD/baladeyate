@@ -27,6 +27,8 @@ class PeopleScreenState extends State<PeopleScreen> {
   late TextEditingController _familyMembersCountController;
   late TextEditingController _residentsCountController;
   late TextEditingController _compositionController;
+  late TextEditingController _headNationalIdController;
+  late TextEditingController _headFullNameController;
 
   bool get _isStandalone => widget.navigationContext != null;
 
@@ -45,6 +47,10 @@ class PeopleScreenState extends State<PeopleScreen> {
         TextEditingController(text: unit?.residentsCount ?? '');
     _compositionController =
         TextEditingController(text: unit?.composition ?? '');
+    _headNationalIdController =
+        TextEditingController(text: unit?.headNationalId ?? '');
+    _headFullNameController =
+        TextEditingController(text: unit?.headFullName ?? '');
   }
 
   ApartmentUnitDraft? _readCurrentUnit() {
@@ -79,6 +85,8 @@ class PeopleScreenState extends State<PeopleScreen> {
           familyMembersCount: _familyMembersCountController.text.trim(),
           residentsCount: _residentsCountController.text.trim(),
           composition: _compositionController.text.trim(),
+          headNationalId: _headNationalIdController.text.trim(),
+          headFullName: _headFullNameController.text.trim(),
         );
   }
 
@@ -148,6 +156,8 @@ class PeopleScreenState extends State<PeopleScreen> {
     _familyMembersCountController.dispose();
     _residentsCountController.dispose();
     _compositionController.dispose();
+    _headNationalIdController.dispose();
+    _headFullNameController.dispose();
     super.dispose();
   }
 
@@ -171,6 +181,8 @@ class PeopleScreenState extends State<PeopleScreen> {
       familyMembersCountController: _familyMembersCountController,
       residentsCountController: _residentsCountController,
       compositionController: _compositionController,
+      headNationalIdController: _headNationalIdController,
+      headFullNameController: _headFullNameController,
       onSyncText: _syncText,
       onPickAidDate: _pickAidDate,
     );

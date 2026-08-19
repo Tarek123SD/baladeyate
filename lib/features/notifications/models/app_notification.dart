@@ -139,6 +139,7 @@ String canonicalNotificationType(String type) {
     case 'IdentityVerificationNotification':
     case 'TransactionStatusUpdatedNotification':
     case 'BulkNotification':
+    case 'GraveReservationStatusUpdatedNotification':
       return shortName;
   }
 
@@ -159,6 +160,10 @@ String canonicalNotificationType(String type) {
   }
   if (compact.contains('bulk')) {
     return 'BulkNotification';
+  }
+  if (compact.contains('gravereservation') ||
+      compact.contains('grave') && compact.contains('reservation')) {
+    return 'GraveReservationStatusUpdatedNotification';
   }
   if (compact.contains('general') || compact.contains('announcement')) {
     return 'CitizenGeneralNotification';

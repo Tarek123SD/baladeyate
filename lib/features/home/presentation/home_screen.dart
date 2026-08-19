@@ -138,6 +138,11 @@ class _HomeScreenState extends State<HomeScreen> {
                               icon: AppIcons.complaint,
                               onTap: () => context.push('/complains'),
                             ),
+                            HomeServiceCard(
+                              title: 'حجز قبر',
+                              icon: AppIcons.plotAvailable,
+                              onTap: () => context.push('/cemetery/map'),
+                            ),
                           ],
                         ),
                       ),

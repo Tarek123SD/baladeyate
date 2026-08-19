@@ -69,6 +69,8 @@ IconData iconForNotificationType(String type) {
       return AppIcons.notifTransaction;
     case 'BulkNotification':
       return AppIcons.notifBulk;
+    case 'GraveReservationStatusUpdatedNotification':
+      return AppIcons.plotBooked;
     default:
       return AppIcons.notifInfo;
   }
@@ -88,6 +90,8 @@ Color iconColorForNotificationType(String type) {
       return AppColors.thirdForest;
     case 'BulkNotification':
       return AppColors.primaryForest;
+    case 'GraveReservationStatusUpdatedNotification':
+      return AppColors.primaryGoldenWheat;
     default:
       return AppColors.secondaryCharcoal;
   }
@@ -115,6 +119,8 @@ String typeLabelForNotificationType(String type) {
       return 'معاملة';
     case 'BulkNotification':
       return 'إشعار جماعي';
+    case 'GraveReservationStatusUpdatedNotification':
+      return 'حجز قبر';
     default:
       return 'تنبيه';
   }
@@ -128,6 +134,8 @@ NotificationCategory categoryForNotificationType(String type) {
       return NotificationCategory.complaints;
     case 'TransactionStatusUpdatedNotification':
       return NotificationCategory.transactions;
+    case 'GraveReservationStatusUpdatedNotification':
+      return NotificationCategory.general;
     default:
       return NotificationCategory.general;
   }
@@ -210,6 +218,9 @@ String? routeForNotification(
     case 'CitizenGeneralNotification':
     case 'BulkNotification':
       return _explicitRoute(notification.data) ?? homeRouteFor(user);
+    case 'GraveReservationStatusUpdatedNotification':
+      if (isDelegate) return homeRouteFor(user);
+      return '/cemetery/reservations';
     default:
       return _explicitRoute(notification.data) ?? homeRouteFor(user);
   }

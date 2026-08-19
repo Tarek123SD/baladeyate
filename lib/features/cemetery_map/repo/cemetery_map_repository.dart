@@ -16,11 +16,14 @@ class CemeteryMapRepository {
 
   Future<({CemeteryMapModel map, List<GraveModel> graves})> getMap({
     int cemeteryId = GraveModel.defaultCemeteryId,
+    bool availableOnly = false,
   }) async {
     try {
-      final response = await _apiService.get(
-        EndPoints.cemeteryMap(cemeteryId),
-      );
+      final path = availableOnly
+          ? '${EndPoints.cemeteryMap(cemeteryId)}?scope=available'
+          : EndPoints.cemeteryMap(cemeteryId);
+
+      final response = await _apiService.get(path);
 
       final payload = ApiResponseParser.expectDataMap(
         response.data,

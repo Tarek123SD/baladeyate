@@ -26,7 +26,8 @@ class GraveModel {
 
   bool get isAvailable => status == 'available';
   bool get isOccupied => status == 'occupied';
-  bool get isBooked => status == 'booked';
+  bool get isBooked => status == 'booked' || status == 'reserved';
+  bool get isReserved => status == 'reserved' || status == 'booked';
 
   GraveModel copyWith({
     String? id,

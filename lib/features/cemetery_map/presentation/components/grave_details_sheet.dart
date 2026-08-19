@@ -8,6 +8,7 @@ String graveStatusLabel(String status) {
     'available' => 'متاح',
     'occupied' => 'مشغول',
     'booked' => 'محجوز',
+    'reserved' => 'محجوز',
     _ => status,
   };
 }
@@ -29,7 +30,8 @@ class GraveDetailsSheet extends StatelessWidget {
     return switch (grave.status) {
       'available' => AppColors.primaryForest,
       'occupied' => const Color(0xFF8B1A1A),
-      'booked' => const Color(0xFF8B1A1A),
+      'booked' => const Color(0xFF8B6914),
+      'reserved' => const Color(0xFF8B6914),
       _ => AppColors.secondaryCharcoal,
     };
   }
@@ -39,6 +41,7 @@ class GraveDetailsSheet extends StatelessWidget {
       'available' => AppIcons.plotAvailable,
       'occupied' => AppIcons.plotOccupied,
       'booked' => AppIcons.plotBooked,
+      'reserved' => AppIcons.plotBooked,
       _ => AppIcons.plotInfo,
     };
   }

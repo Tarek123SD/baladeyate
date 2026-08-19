@@ -281,6 +281,8 @@ class BuildingSurveyCubit extends Cubit<BuildingSurveyState> {
     String? familyMembersCount,
     String? residentsCount,
     String? composition,
+    String? headNationalId,
+    String? headFullName,
   }) async {
     final current = _survey;
     if (current == null || current.currentApartment == null) return;
@@ -299,6 +301,8 @@ class BuildingSurveyCubit extends Cubit<BuildingSurveyState> {
           familyMembersCount: familyMembersCount,
           residentsCount: residentsCount,
           composition: composition,
+          headNationalId: headNationalId,
+          headFullName: headFullName,
         ),
       ),
     );

@@ -16,7 +16,8 @@ class GraveMarker extends StatelessWidget {
     return switch (grave.status) {
       'available' => Colors.green.withValues(alpha: 0.4),
       'occupied' => const Color(0xFF8B1A1A).withValues(alpha: 0.55),
-      'booked' => const Color(0xFF8B1A1A).withValues(alpha: 0.7),
+      'booked' => const Color(0xFF8B6914).withValues(alpha: 0.7),
+      'reserved' => const Color(0xFF8B6914).withValues(alpha: 0.7),
       _ => Colors.grey.withValues(alpha: 0.4),
     };
   }

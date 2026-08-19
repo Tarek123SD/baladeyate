@@ -26,6 +26,11 @@ class EndPoints {
   static String transactionCancel(int id) =>
       'v1/citizen/transactions/$id/cancel';
   static const String digitalDocuments = 'v1/citizen/digital-documents';
+  static const String graveReservations = 'v1/citizen/grave-reservations';
+  static String graveReservationById(int id) =>
+      'v1/citizen/grave-reservations/$id';
+  static String graveReservationCancel(int id) =>
+      'v1/citizen/grave-reservations/$id/cancel';
 
   // Delegate
   static const String buildings = 'v1/buildings';
