@@ -143,6 +143,11 @@ class _HomeScreenState extends State<HomeScreen> {
                               icon: AppIcons.plotAvailable,
                               onTap: () => context.push('/cemetery/map'),
                             ),
+                            HomeServiceCard(
+                              title: 'التبرعات',
+                              icon: AppIcons.donate,
+                              onTap: () => context.go('/donations'),
+                            ),
                           ],
                         ),
                       ),
