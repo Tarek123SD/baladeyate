@@ -59,6 +59,7 @@ String actionLabelForPin(SurveyPin pin) {
 void showPinInfoSheet(BuildContext context, SurveyPin pin) {
   showModalBottomSheet<void>(
     context: context,
+    useRootNavigator: true,
     showDragHandle: true,
     backgroundColor: Colors.white,
     builder: (sheetContext) {

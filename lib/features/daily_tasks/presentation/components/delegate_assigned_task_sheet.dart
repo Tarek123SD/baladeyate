@@ -10,13 +10,18 @@ Future<void> showDelegateAssignedTaskSheet(
   BuildContext context,
   DelegateTask task,
 ) {
+  final cubit = context.read<DailyTasksCubit>();
   return showModalBottomSheet<void>(
     context: context,
+    useRootNavigator: true,
     showDragHandle: true,
     backgroundColor: Colors.white,
     isScrollControlled: true,
     builder: (sheetContext) {
-      return _DelegateAssignedTaskSheet(task: task);
+      return BlocProvider.value(
+        value: cubit,
+        child: _DelegateAssignedTaskSheet(task: task),
+      );
     },
   );
 }

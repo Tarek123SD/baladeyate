@@ -9,6 +9,7 @@ Future<bool?> showStartSurveySheet(
 }) {
   return showModalBottomSheet<bool>(
     context: context,
+    useRootNavigator: true,
     isScrollControlled: true,
     backgroundColor: Colors.white,
     showDragHandle: true,

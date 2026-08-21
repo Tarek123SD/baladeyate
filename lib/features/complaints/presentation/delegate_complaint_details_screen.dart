@@ -266,6 +266,7 @@ class _ComplaintBody extends StatelessWidget {
     final cubit = context.read<DelegateComplaintDetailCubit>();
     final result = await showModalBottomSheet<DelegateFieldReportDraft>(
       context: context,
+      useRootNavigator: true,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (sheetContext) => DelegateFieldReportSheet(complaint: complaint),
