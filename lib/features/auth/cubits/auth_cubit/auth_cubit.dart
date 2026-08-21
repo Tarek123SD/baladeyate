@@ -6,6 +6,7 @@ import 'package:baladeyate/features/auth/models/user.dart';
 import 'package:baladeyate/features/auth/cubits/auth_cubit/auth_state.dart';
 import 'package:baladeyate/features/auth/repo/auth_repository.dart';
 import 'package:baladeyate/features/daily_tasks/cubits/daily_tasks_cubit/daily_tasks_cubit.dart';
+import 'package:baladeyate/features/notifications/cubits/notifications_cubit/notifications_cubit.dart';
 import 'package:baladeyate/features/profile/repo/citizen_repository.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -163,6 +164,10 @@ class AuthCubit extends Cubit<AuthState> {
     emit(const AuthLoading());
     try {
       await _authRepository.logout();
+      await _fcmService.clearForLogout();
+      if (sl.isRegistered<NotificationsCubit>()) {
+        sl<NotificationsCubit>().clear();
+      }
       if (sl.isRegistered<DailyTasksCubit>()) {
         sl<DailyTasksCubit>().clearSession();
       }

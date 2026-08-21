@@ -51,6 +51,14 @@ class _ComplaintsGuardScreenState extends State<ComplaintsGuardScreen> {
         }
       },
       child: BlocBuilder<AuthCubit, AuthState>(
+        buildWhen: (previous, current) {
+          if (previous.runtimeType != current.runtimeType) return true;
+          if (previous is AuthSuccess && current is AuthSuccess) {
+            return previous.user.verificationStatus !=
+                current.user.verificationStatus;
+          }
+          return true;
+        },
         builder: (context, state) {
           if (state is AuthLoading || state is AuthInitial) {
             return const _GuardLoadingView();

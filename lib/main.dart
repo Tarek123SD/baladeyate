@@ -30,6 +30,11 @@ Future<void> _configureGoogleMaps() async {
   if (kIsWeb || !Platform.isAndroid) return;
   final mapsImplementation = GoogleMapsFlutterPlatform.instance;
   if (mapsImplementation is! GoogleMapsFlutterAndroid) return;
+
+  // Hybrid Composition avoids SurfaceView crashes when the keyboard, overlays,
+  // or another route resizes the activity under an open Google Map.
+  mapsImplementation.useAndroidViewSurface = true;
+
   try {
     await mapsImplementation.initializeWithRenderer(AndroidMapRenderer.latest);
   } catch (_) {

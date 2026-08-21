@@ -1,12 +1,31 @@
 import 'package:baladeyate/config/theme/app_colors.dart';
 import 'package:baladeyate/core/widgets/custom_complaint_input_field.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:responsive_x_toolkit/responsive_x.dart';
 import 'package:go_router/go_router.dart';
 
 const LatLng _kFallbackLocation = LatLng(33.5138, 36.2765); // Damascus
+
+Future<void> _dismissKeyboard() async {
+  FocusManager.instance.primaryFocus?.unfocus();
+  try {
+    await SystemChannels.textInput.invokeMethod<void>('TextInput.hide');
+  } catch (_) {}
+}
+
+Future<void> _waitForKeyboardDismissed(BuildContext context) async {
+  await _dismissKeyboard();
+  const maxWait = Duration(milliseconds: 900);
+  final started = DateTime.now();
+  while (context.mounted && MediaQuery.viewInsetsOf(context).bottom > 0) {
+    if (DateTime.now().difference(started) >= maxWait) break;
+    await Future<void>.delayed(const Duration(milliseconds: 40));
+  }
+  await Future<void>.delayed(const Duration(milliseconds: 160));
+}
 
 /// Resolves the device position, returning `null` and optionally surfacing a
 /// localized message through [onError] when it can't be determined.
@@ -27,9 +46,6 @@ Future<Position?> _resolveCurrentPosition({
     onError?.call(
       'تم رفض إذن الموقع بشكل دائم. يرجى تفعيله من إعدادات التطبيق.',
     );
-    if (onError != null) {
-      await Geolocator.openAppSettings();
-    }
     return null;
   }
   if (permission == LocationPermission.denied) {
@@ -102,8 +118,7 @@ class _CustomComplaintMapBoxState extends State<CustomComplaintMapBox> {
   }
 
   Future<void> _openMapPicker() async {
-    FocusManager.instance.primaryFocus?.unfocus();
-    await Future<void>.delayed(const Duration(milliseconds: 280));
+    await _waitForKeyboardDismissed(context);
     if (!mounted) return;
 
     final result = await context.push<LatLng>(
@@ -277,31 +292,34 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
   LatLng? _pendingCameraTarget;
   bool _locating = false;
   bool _mapReady = false;
+  bool _closing = false;
 
   @override
   void initState() {
     super.initState();
     _center = widget.initialLocation ?? _kFallbackLocation;
-    WidgetsBinding.instance.addPostFrameCallback((_) => _attachMapWhenStable());
-    Future<void>.delayed(const Duration(milliseconds: 450), () {
-      if (!mounted || _mapReady) return;
-      setState(() => _mapReady = true);
-      if (widget.initialLocation == null) {
-        _goToMyLocation(animate: false, showErrors: false);
-      }
-    });
+    WidgetsBinding.instance.addPostFrameCallback((_) => _prepareMap());
   }
 
-  void _attachMapWhenStable() {
+  Future<void> _prepareMap() async {
     if (!mounted || _mapReady) return;
-    if (MediaQuery.viewInsetsOf(context).bottom > 0) {
-      WidgetsBinding.instance.addPostFrameCallback((_) => _attachMapWhenStable());
-      return;
-    }
-    setState(() => _mapReady = true);
+    await _waitForKeyboardDismissed(context);
+    if (!mounted || _mapReady) return;
+
+    var start = widget.initialLocation ?? _kFallbackLocation;
     if (widget.initialLocation == null) {
-      _goToMyLocation(animate: false, showErrors: false);
+      final position = await _resolveCurrentPosition();
+      if (!mounted || _mapReady) return;
+      if (position != null) {
+        start = LatLng(position.latitude, position.longitude);
+      }
     }
+
+    if (!mounted || _mapReady) return;
+    setState(() {
+      _center = start;
+      _mapReady = true;
+    });
   }
 
   @override
@@ -340,7 +358,7 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
     bool animate = true,
     bool showErrors = true,
   }) async {
-    if (_locating) return;
+    if (_locating || _closing) return;
     setState(() => _locating = true);
     final position = await _resolveCurrentPosition(
       onError: showErrors ? _showMessage : null,
@@ -355,6 +373,7 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
   }
 
   void _onMapCreated(GoogleMapController controller) {
+    if (_closing) return;
     _mapController = controller;
     final pending = _pendingCameraTarget;
     if (pending != null) {
@@ -363,140 +382,171 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
     }
   }
 
+  Future<void> _popWithResult([LatLng? result]) async {
+    if (_closing) return;
+    _closing = true;
+    _mapController = null;
+    if (mounted && _mapReady) {
+      setState(() => _mapReady = false);
+      await WidgetsBinding.instance.endOfFrame;
+      await Future<void>.delayed(const Duration(milliseconds: 50));
+    }
+    if (!mounted) return;
+    context.pop(result);
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      resizeToAvoidBottomInset: false,
-      appBar: AppBar(
-        backgroundColor: AppColors.primaryForest,
-        foregroundColor: Colors.white,
-        title: Text(
-          'تحديد الموقع',
-          style: TextStyle(
-            fontSize: 18.f(context),
-            fontWeight: FontWeight.bold,
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) return;
+        _popWithResult();
+      },
+      child: Scaffold(
+        resizeToAvoidBottomInset: false,
+        appBar: AppBar(
+          backgroundColor: AppColors.primaryForest,
+          foregroundColor: Colors.white,
+          automaticallyImplyLeading: false,
+          leading: IconButton(
+            onPressed: () => _popWithResult(),
+            icon: const BackButtonIcon(),
           ),
+          title: Text(
+            'تحديد الموقع',
+            style: TextStyle(
+              fontSize: 18.f(context),
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          centerTitle: true,
         ),
-        centerTitle: true,
-      ),
-      body: Stack(
-        children: [
-          if (_mapReady)
-            MediaQuery.removeViewInsets(
-              context: context,
-              removeBottom: true,
-              child: GoogleMap(
-                initialCameraPosition: CameraPosition(target: _center, zoom: 15),
-                onMapCreated: _onMapCreated,
-                onCameraMove: (position) => _center = position.target,
-                myLocationButtonEnabled: false,
-                myLocationEnabled: false,
-                zoomControlsEnabled: false,
-                mapToolbarEnabled: false,
-                compassEnabled: false,
-                liteModeEnabled: false,
-                markers: const <Marker>{},
-                padding: const EdgeInsets.only(bottom: 80),
-              ),
-            )
-          else
-            const Center(child: CircularProgressIndicator()),
-          IgnorePointer(
-            child: Center(
-              child: Transform.translate(
-                offset: Offset(0, -22.s(context)),
-                child: Icon(
-                  Icons.location_on,
-                  size: 48.ic(context),
-                  color: AppColors.alertRed,
+        body: Stack(
+          fit: StackFit.expand,
+          children: [
+            if (_mapReady)
+              RepaintBoundary(
+                child: GoogleMap(
+                  initialCameraPosition: CameraPosition(
+                    target: _center,
+                    zoom: 15,
+                  ),
+                  onMapCreated: _onMapCreated,
+                  onCameraMove: (position) => _center = position.target,
+                  myLocationButtonEnabled: false,
+                  myLocationEnabled: false,
+                  zoomControlsEnabled: false,
+                  mapToolbarEnabled: false,
+                  compassEnabled: false,
+                  liteModeEnabled: false,
+                  buildingsEnabled: false,
+                  indoorViewEnabled: false,
+                  trafficEnabled: false,
                 ),
-              ),
-            ),
-          ),
-          Positioned(
-            top: 12.s(context),
-            left: 0,
-            right: 0,
-            child: Center(
-              child: Container(
-                padding: EdgeInsets.symmetric(
-                  horizontal: 16.s(context),
-                  vertical: 8.s(context),
-                ),
-                decoration: BoxDecoration(
-                  color: Colors.black.withValues(alpha: 0.6),
-                  borderRadius: BorderRadius.circular(20.r(context)),
-                ),
-                child: Text(
-                  'حرّك الخريطة لوضع الدبوس على الموقع المطلوب',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 12.f(context),
-                    fontWeight: FontWeight.w600,
+              )
+            else
+              const Center(child: CircularProgressIndicator()),
+            IgnorePointer(
+              child: Center(
+                child: Transform.translate(
+                  offset: Offset(0, -22.s(context)),
+                  child: Icon(
+                    Icons.location_on,
+                    size: 48.ic(context),
+                    color: AppColors.alertRed,
                   ),
                 ),
               ),
             ),
-          ),
-          Positioned(
-            bottom: 96.s(context),
-            left: 16.s(context),
-            child: Material(
-              color: Colors.white,
-              shape: const CircleBorder(),
-              elevation: 3,
-              child: InkWell(
-                customBorder: const CircleBorder(),
-                onTap: _locating ? null : () => _goToMyLocation(),
-                child: Padding(
-                  padding: EdgeInsets.all(12.s(context)),
-                  child: _locating
-                      ? SizedBox(
-                          width: 22.s(context),
-                          height: 22.s(context),
-                          child: const CircularProgressIndicator(
-                            strokeWidth: 2,
-                            valueColor:
-                                AlwaysStoppedAnimation(AppColors.primaryForest),
+            Positioned(
+              top: 12.s(context),
+              left: 0,
+              right: 0,
+              child: Center(
+                child: Container(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: 16.s(context),
+                    vertical: 8.s(context),
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.black.withValues(alpha: 0.6),
+                    borderRadius: BorderRadius.circular(20.r(context)),
+                  ),
+                  child: Text(
+                    'حرّك الخريطة لوضع الدبوس على الموقع المطلوب',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 12.f(context),
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            Positioned(
+              bottom: 96.s(context),
+              left: 16.s(context),
+              child: Material(
+                color: Colors.white,
+                shape: const CircleBorder(),
+                elevation: 3,
+                child: InkWell(
+                  customBorder: const CircleBorder(),
+                  onTap: (_locating || _closing)
+                      ? null
+                      : () => _goToMyLocation(),
+                  child: Padding(
+                    padding: EdgeInsets.all(12.s(context)),
+                    child: _locating
+                        ? SizedBox(
+                            width: 22.s(context),
+                            height: 22.s(context),
+                            child: const CircularProgressIndicator(
+                              strokeWidth: 2,
+                              valueColor: AlwaysStoppedAnimation(
+                                AppColors.primaryForest,
+                              ),
+                            ),
+                          )
+                        : Icon(
+                            Icons.my_location_rounded,
+                            size: 24.ic(context),
+                            color: AppColors.primaryForest,
                           ),
-                        )
-                      : Icon(
-                          Icons.my_location_rounded,
-                          size: 24.ic(context),
-                          color: AppColors.primaryForest,
-                        ),
-                ),
-              ),
-            ),
-          ),
-          Positioned(
-            bottom: 16.s(context),
-            left: 16.s(context),
-            right: 16.s(context),
-            child: SizedBox(
-              height: 52.h(context),
-              child: ElevatedButton.icon(
-                onPressed: () => context.pop(_center),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.green,
-                  foregroundColor: Colors.white,
-                  elevation: 0,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(14.r(context)),
-                  ),
-                ),
-                icon: Icon(Icons.check_circle_rounded, size: 20.s(context)),
-                label: Text(
-                  'تأكيد الموقع',
-                  style: TextStyle(
-                    fontSize: 15.f(context),
-                    fontWeight: FontWeight.w700,
                   ),
                 ),
               ),
             ),
-          ),
-        ],
+            Positioned(
+              bottom: 16.s(context),
+              left: 16.s(context),
+              right: 16.s(context),
+              child: SizedBox(
+                height: 52.h(context),
+                child: ElevatedButton.icon(
+                  onPressed: _closing ? null : () => _popWithResult(_center),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.green,
+                    foregroundColor: Colors.white,
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14.r(context)),
+                    ),
+                  ),
+                  icon: Icon(Icons.check_circle_rounded, size: 20.s(context)),
+                  label: Text(
+                    'تأكيد الموقع',
+                    style: TextStyle(
+                      fontSize: 15.f(context),
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

@@ -33,6 +33,7 @@ class _ComplaintFormScreenState extends State<ComplaintFormScreen> {
   List<File> _attachments = [];
   LatLng? _selectedLocation;
   String _addressText = '';
+  bool _isUrgent = false;
 
   @override
   void dispose() {
@@ -44,6 +45,8 @@ class _ComplaintFormScreenState extends State<ComplaintFormScreen> {
   @override
   Widget build(BuildContext context) {
     return BlocConsumer<ComplaintsCubit, ComplaintsState>(
+      listenWhen: (previous, current) =>
+          current is ComplaintCreated || current is ComplaintsFailure,
       listener: (context, state) {
         if (state is ComplaintCreated) {
           AppSnackBar.showSuccess(
@@ -51,14 +54,17 @@ class _ComplaintFormScreenState extends State<ComplaintFormScreen> {
             'تم إرسال شكواك وسيتم توجيهها إلى القسم المختص.',
           );
           context.go('/track');
-        } else if (state is ComplaintsFailure) {
-          // Shown inline in the form.
         }
       },
+      buildWhen: (previous, current) =>
+          previous is ComplaintsLoading != current is ComplaintsLoading ||
+          previous is ComplaintsFailure != current is ComplaintsFailure ||
+          (previous is ComplaintsFailure &&
+              current is ComplaintsFailure &&
+              previous.message != current.message),
       builder: (context, state) {
         final isSubmitting = state is ComplaintsLoading;
         final errorMessage = state is ComplaintsFailure ? state.message : null;
-        final isUrgent = state is ComplaintsLoaded ? state.isUrgent : false;
 
         return Container(
           decoration: const BoxDecoration(
@@ -76,6 +82,8 @@ class _ComplaintFormScreenState extends State<ComplaintFormScreen> {
                   Expanded(
                     child: SingleChildScrollView(
                       padding: EdgeInsets.all(16.s(context)),
+                      keyboardDismissBehavior:
+                          ScrollViewKeyboardDismissBehavior.onDrag,
                       child: Center(
                         child: ConstrainedBox(
                           constraints: BoxConstraints(
@@ -85,7 +93,6 @@ class _ComplaintFormScreenState extends State<ComplaintFormScreen> {
                             context,
                             isSubmitting,
                             errorMessage,
-                            isUrgent,
                           ),
                         ),
                       ),
@@ -110,6 +117,7 @@ class _ComplaintFormScreenState extends State<ComplaintFormScreen> {
         children: [
           IconButton(
             onPressed: () {
+              FocusManager.instance.primaryFocus?.unfocus();
               if (context.canPop()) {
                 context.pop();
               } else {
@@ -144,7 +152,6 @@ class _ComplaintFormScreenState extends State<ComplaintFormScreen> {
     BuildContext context,
     bool isSubmitting,
     String? errorMessage,
-    bool isUrgent,
   ) {
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: 8.s(context)),
@@ -161,18 +168,20 @@ class _ComplaintFormScreenState extends State<ComplaintFormScreen> {
                 Expanded(
                   child: CustomComplaintPriorityButton(
                     text: 'طارئ / مستعجل',
-                    isActive: isUrgent,
-                    onTap: () =>
-                        context.read<ComplaintsCubit>().setIsUrgent(true),
+                    isActive: _isUrgent,
+                    onTap: isSubmitting
+                        ? null
+                        : () => setState(() => _isUrgent = true),
                   ),
                 ),
                 SizedBox(width: 10.s(context)),
                 Expanded(
                   child: CustomComplaintPriorityButton(
                     text: 'اعتيادي',
-                    isActive: !isUrgent,
-                    onTap: () =>
-                        context.read<ComplaintsCubit>().setIsUrgent(false),
+                    isActive: !_isUrgent,
+                    onTap: isSubmitting
+                        ? null
+                        : () => setState(() => _isUrgent = false),
                   ),
                 ),
               ],
@@ -200,15 +209,20 @@ class _ComplaintFormScreenState extends State<ComplaintFormScreen> {
           ComplaintFormSectionCard(
             title: 'المرفقات و الصور',
             child: CustomComplaintUploadBox(
-              onFilesChanged: (files) => _attachments = files,
+              onFilesChanged: (files) => _attachments = List<File>.from(files),
             ),
           ),
           SizedBox(height: 14.s(context)),
           ComplaintFormSectionCard(
             title: 'الموقع الجغرافي',
             child: CustomComplaintMapBox(
-              onLocationSelected: (location) => _selectedLocation = location,
-              onAddressChanged: (address) => _addressText = address.trim(),
+              key: const ValueKey('complaint-map-box'),
+              onLocationSelected: (location) {
+                _selectedLocation = location;
+              },
+              onAddressChanged: (address) {
+                _addressText = address.trim();
+              },
             ),
           ),
           SizedBox(height: 18.s(context)),
@@ -263,6 +277,7 @@ class _ComplaintFormScreenState extends State<ComplaintFormScreen> {
   }
 
   Future<void> _submitComplaint(BuildContext context) async {
+    FocusManager.instance.primaryFocus?.unfocus();
     final details = _detailsController.text.trim();
 
     if (details.isEmpty) {
@@ -287,18 +302,19 @@ class _ComplaintFormScreenState extends State<ComplaintFormScreen> {
       buffer.write('\nعنوان الموقع: $_addressText');
     }
 
-    if (_selectedLocation != null) {
+    final selectedLocation = _selectedLocation;
+    if (selectedLocation != null) {
       buffer
         ..write('\nالموقع: ')
-        ..write(_selectedLocation!.latitude.toStringAsFixed(5))
+        ..write(selectedLocation.latitude.toStringAsFixed(5))
         ..write(', ')
-        ..write(_selectedLocation!.longitude.toStringAsFixed(5));
+        ..write(selectedLocation.longitude.toStringAsFixed(5));
     }
 
     context.read<ComplaintsCubit>().createComplaint(
           description: buffer.toString(),
-          isUrgent: context.read<ComplaintsCubit>().isUrgent,
+          isUrgent: _isUrgent,
           attachments: List<File>.from(_attachments),
-        );  
+        );
   }
 }

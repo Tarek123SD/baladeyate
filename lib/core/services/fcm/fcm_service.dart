@@ -61,7 +61,7 @@ class FcmService {
     FirebaseMessaging.onMessageOpenedApp.listen(_handleNotificationTap);
 
     final initialMessage = await _messaging.getInitialMessage();
-    if (initialMessage != null) {
+    if (initialMessage != null && _shouldDeliver(initialMessage)) {
       _queueLaunchNotification(_notificationFromMessage(initialMessage));
     }
 
@@ -72,6 +72,25 @@ class FcmService {
 
     await syncTokenWithBackend();
     _initialized = true;
+  }
+
+  /// Stops push delivery for this device after logout.
+  ///
+  /// Deletes the local FCM registration so queued messages for the previous
+  /// account are not shown, and cancels any already-displayed local alerts.
+  Future<void> clearForLogout() async {
+    try {
+      await _localNotifications.cancelAll();
+    } catch (error) {
+      debugPrint('FCM: failed to cancel local notifications: $error');
+    }
+
+    try {
+      await _messaging.deleteToken();
+      debugPrint('FCM token deleted on logout');
+    } catch (error) {
+      debugPrint('FCM deleteToken failed: $error');
+    }
   }
 
   /// Notification that launched the app from a terminated state, if any.
@@ -210,6 +229,10 @@ class FcmService {
   }
 
   Future<void> _showForegroundNotification(RemoteMessage message) async {
+    if (!_shouldDeliver(message)) {
+      return;
+    }
+
     debugPrint(
       'FCM foreground message: messageId=${message.messageId}, '
       'notification=${message.notification?.title}, data=${message.data}',
@@ -264,6 +287,10 @@ class FcmService {
   }
 
   void _handleNotificationTap(RemoteMessage message) {
+    if (!_shouldDeliver(message)) {
+      return;
+    }
+
     debugPrint(
       'FCM notification tap: messageId=${message.messageId}, '
       'data=${message.data}',
@@ -288,6 +315,10 @@ class FcmService {
   }
 
   void _openOrQueue(AppNotification notification) {
+    if (!_hasActiveSession) {
+      debugPrint('FCM: ignore tap — user not logged in');
+      return;
+    }
     if (_isColdStart) {
       _queueLaunchNotification(notification);
       return;
@@ -340,4 +371,33 @@ class FcmService {
   }
 
   User? get _cachedUser => _authRepository.cachedUser;
+
+  bool get _hasActiveSession {
+    final sessionToken = _cacheService.getData(key: StorageKeys.token);
+    return sessionToken != null && sessionToken.isNotEmpty;
+  }
+
+  /// Drops pushes that belong to a previous account on this device.
+  bool _shouldDeliver(RemoteMessage message) {
+    if (!_hasActiveSession) {
+      debugPrint('FCM: ignore message — user not logged in');
+      return false;
+    }
+
+    final recipientId = message.data['recipient_id']?.toString();
+    if (recipientId == null || recipientId.isEmpty) {
+      return true;
+    }
+
+    final currentUserId = _cachedUser?.id;
+    if (currentUserId == null || currentUserId.toString() != recipientId) {
+      debugPrint(
+        'FCM: ignore message for recipient $recipientId '
+        '(current user: $currentUserId)',
+      );
+      return false;
+    }
+
+    return true;
+  }
 }

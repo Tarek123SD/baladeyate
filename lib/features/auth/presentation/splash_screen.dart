@@ -34,12 +34,18 @@ class _SplashScreenState extends State<SplashScreen> {
     if (!mounted) return;
 
     final state = sl<AuthCubit>().state;
-    final pending = sl<FcmService>().takePendingLaunchNotification();
     if (state is AuthSuccess) {
-      final route = pending == null
-          ? homeRouteFor(state.user)
-          : routeForNotification(pending, user: state.user) ??
-              homeRouteFor(state.user);
+      final pending = sl<FcmService>().takePendingLaunchNotification();
+      var route = homeRouteFor(state.user);
+      if (pending != null) {
+        final recipientId = pending.data['recipient_id']?.toString();
+        final forCurrentUser = recipientId == null ||
+            recipientId.isEmpty ||
+            recipientId == state.user.id.toString();
+        if (forCurrentUser) {
+          route = routeForNotification(pending, user: state.user) ?? route;
+        }
+      }
       openNotificationRoute(GoRouter.of(context), route);
     } else {
       context.go('/login');
