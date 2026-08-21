@@ -1,9 +1,12 @@
 import 'package:baladeyate/config/theme/app_colors.dart';
+import 'package:baladeyate/core/auth/delegate_work_scope.dart';
 import 'package:baladeyate/core/navigation/delegate_shell_indices.dart';
 import 'package:baladeyate/core/responsive/dimensions.dart';
 import 'package:baladeyate/core/widgets/app_background.dart';
 import 'package:baladeyate/core/widgets/custom_app_bar.dart';
 import 'package:baladeyate/core/widgets/delegate_bottom_navigation_bar.dart';
+import 'package:baladeyate/features/auth/cubits/auth_cubit/auth_cubit.dart';
+import 'package:baladeyate/features/auth/cubits/auth_cubit/auth_state.dart';
 import 'package:baladeyate/features/daily_tasks/cubits/daily_tasks_cubit/daily_tasks_cubit.dart';
 import 'package:baladeyate/features/daily_tasks/cubits/daily_tasks_cubit/daily_tasks_state.dart';
 import 'package:baladeyate/features/delegate_home/presentation/components/delegate_home_greeting.dart';
@@ -60,6 +63,11 @@ class _DelegateHomeScreenState extends State<DelegateHomeScreen> {
               ),
               child: BlocBuilder<DailyTasksCubit, DailyTasksState>(
                 builder: (context, tasksState) {
+                  final authState = context.watch<AuthCubit>().state;
+                  final user =
+                      authState is AuthSuccess ? authState.user : null;
+                  final showSurveyDashboard =
+                      user == null || user.handlesSurveyWork;
                   final bottomClearance =
                       DelegateBottomNavigationBar.clearance(context) +
                           16.h(context);
@@ -80,25 +88,29 @@ class _DelegateHomeScreenState extends State<DelegateHomeScreen> {
                           sliver: SliverList(
                             delegate: SliverChildListDelegate([
                               const DelegateHomeGreeting(),
-                              SizedBox(height: 24.h(context)),
-                              DelegateHomeProgressRow(state: tasksState),
+                              if (showSurveyDashboard) ...[
+                                SizedBox(height: 24.h(context)),
+                                DelegateHomeProgressRow(state: tasksState),
+                              ],
                               SizedBox(height: 28.h(context)),
                               const SectionHeader(title: 'الوصول السريع'),
                               SizedBox(height: 16.h(context)),
                               const DelegateHomeQuickActions(),
-                              SizedBox(height: 28.h(context)),
-                              SectionHeader(
-                                title: 'مهام ذات أولوية',
-                                actionText: 'عرض الكل',
-                                onActionTap: () =>
-                                    context.go('/delegate/tasks'),
-                              ),
-                              SizedBox(height: 16.h(context)),
-                              DelegateHomePriorityTasks(state: tasksState),
-                              SizedBox(height: 28.h(context)),
-                              const SectionHeader(title: 'آخر النشاط'),
-                              SizedBox(height: 16.h(context)),
-                              DelegateHomeRecentActivity(state: tasksState),
+                              if (showSurveyDashboard) ...[
+                                SizedBox(height: 28.h(context)),
+                                SectionHeader(
+                                  title: 'مهام ذات أولوية',
+                                  actionText: 'عرض الكل',
+                                  onActionTap: () =>
+                                      context.go('/delegate/tasks'),
+                                ),
+                                SizedBox(height: 16.h(context)),
+                                DelegateHomePriorityTasks(state: tasksState),
+                                SizedBox(height: 28.h(context)),
+                                const SectionHeader(title: 'آخر النشاط'),
+                                SizedBox(height: 16.h(context)),
+                                DelegateHomeRecentActivity(state: tasksState),
+                              ],
                             ]),
                           ),
                         ),

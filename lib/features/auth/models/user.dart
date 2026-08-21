@@ -15,6 +15,7 @@ class User {
     this.verificationStatusLabel,
     this.rejectionReason,
     this.hasFcmToken,
+    this.fieldWorkTypes = const [],
   });
 
   final int id;
@@ -31,6 +32,7 @@ class User {
   final String? verificationStatusLabel;
   final String? rejectionReason;
   final bool? hasFcmToken;
+  final List<String> fieldWorkTypes;
 
   bool get isVerified => verificationStatus == 'approved';
   bool get canSubmitVerification =>
@@ -59,6 +61,7 @@ class User {
       verificationStatusLabel: json['verification_status_label'] as String?,
       rejectionReason: json['rejection_reason'] as String?,
       hasFcmToken: json['has_fcm_token'] as bool?,
+      fieldWorkTypes: _stringList(json['field_work_types']),
     );
   }
 
@@ -76,6 +79,7 @@ class User {
         'verification_status': verificationStatus,
         'verification_status_label': verificationStatusLabel,
         'has_fcm_token': hasFcmToken,
+        'field_work_types': fieldWorkTypes,
       };
 
   User copyWith({
@@ -93,6 +97,7 @@ class User {
     String? verificationStatusLabel,
     String? rejectionReason,
     bool? hasFcmToken,
+    List<String>? fieldWorkTypes,
   }) {
     return User(
       id: id ?? this.id,
@@ -110,10 +115,22 @@ class User {
           verificationStatusLabel ?? this.verificationStatusLabel,
       rejectionReason: rejectionReason ?? this.rejectionReason,
       hasFcmToken: hasFcmToken ?? this.hasFcmToken,
+      fieldWorkTypes: fieldWorkTypes ?? this.fieldWorkTypes,
     );
+  }
+
+  static List<String> _stringList(dynamic raw) {
+    if (raw is! List) {
+      return const [];
+    }
+    return raw
+        .whereType<String>()
+        .map((value) => value.trim())
+        .where((value) => value.isNotEmpty)
+        .toList(growable: false);
   }
 
   @override
   String toString() =>
-      'User(id: $id, name: $name, email: $email, role: $role, verificationStatus: $verificationStatus)';
+      'User(id: $id, name: $name, email: $email, role: $role, verificationStatus: $verificationStatus, fieldWorkTypes: $fieldWorkTypes)';
 }

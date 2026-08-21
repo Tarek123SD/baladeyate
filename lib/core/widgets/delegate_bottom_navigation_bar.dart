@@ -1,38 +1,19 @@
 import 'package:baladeyate/config/theme/app_colors.dart';
-import 'package:baladeyate/config/theme/app_icons.dart';
+import 'package:baladeyate/core/navigation/delegate_nav_destinations.dart';
 import 'package:flutter/material.dart';
 import 'package:responsive_x_toolkit/responsive_x.dart';
 
 class DelegateBottomNavigationBar extends StatelessWidget {
-  final int currentIndex;
-  final ValueChanged<int> onTap;
-
   const DelegateBottomNavigationBar({
     super.key,
-    required this.currentIndex,
+    required this.destinations,
+    required this.selectedIndex,
     required this.onTap,
   });
 
-  static const _labels = [
-    'الرئيسية',
-    'المهام',
-    'الخريطة',
-    'المباني',
-  ];
-
-  static const _icons = [
-    AppIcons.navHome,
-    AppIcons.navTasks,
-    AppIcons.navMap,
-    AppIcons.navBuildings,
-  ];
-
-  static const _activeIcons = [
-    AppIcons.navHomeActive,
-    AppIcons.navTasksActive,
-    AppIcons.navMapActive,
-    AppIcons.navBuildingsActive,
-  ];
+  final List<DelegateNavDestination> destinations;
+  final int selectedIndex;
+  final ValueChanged<int> onTap;
 
   /// Vertical space occupied by the floating nav (bar + outer bottom margin).
   static double clearance(BuildContext context) {
@@ -51,6 +32,9 @@ class DelegateBottomNavigationBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final items = destinations.isEmpty
+        ? const [DelegateNavDestinations.home]
+        : destinations;
     final radius = 28.r(context);
     final barPaddingV = 8.h(context);
     final iconSize = 24.s(context);
@@ -59,6 +43,7 @@ class DelegateBottomNavigationBar extends StatelessWidget {
     final pillW = 44.w(context);
     final horizontalMargin = 16.w(context);
     final bottomMargin = 14.h(context);
+    final safeSelected = selectedIndex.clamp(0, items.length - 1);
 
     return Padding(
       padding: EdgeInsets.fromLTRB(
@@ -106,12 +91,13 @@ class DelegateBottomNavigationBar extends StatelessWidget {
                 vertical: barPaddingV,
               ),
               child: Row(
-                children: List.generate(_labels.length, (index) {
-                  final isSelected = index == currentIndex;
+                children: List.generate(items.length, (index) {
+                  final item = items[index];
+                  final isSelected = index == safeSelected;
                   return Expanded(
                     child: _NavItem(
-                      label: _labels[index],
-                      icon: isSelected ? _activeIcons[index] : _icons[index],
+                      label: item.label,
+                      icon: isSelected ? item.activeIcon : item.icon,
                       isSelected: isSelected,
                       onTap: () => onTap(index),
                       iconSize: iconSize,
@@ -131,15 +117,6 @@ class DelegateBottomNavigationBar extends StatelessWidget {
 }
 
 class _NavItem extends StatelessWidget {
-  final String label;
-  final IconData icon;
-  final bool isSelected;
-  final VoidCallback onTap;
-  final double iconSize;
-  final double labelSize;
-  final double pillH;
-  final double pillW;
-
   const _NavItem({
     required this.label,
     required this.icon,
@@ -150,6 +127,15 @@ class _NavItem extends StatelessWidget {
     required this.pillH,
     required this.pillW,
   });
+
+  final String label;
+  final IconData icon;
+  final bool isSelected;
+  final VoidCallback onTap;
+  final double iconSize;
+  final double labelSize;
+  final double pillH;
+  final double pillW;
 
   @override
   Widget build(BuildContext context) {

@@ -1,5 +1,5 @@
 import 'package:baladeyate/core/auth/app_role.dart';
-
+import 'package:baladeyate/core/auth/delegate_work_scope.dart';
 import 'package:baladeyate/core/navigation/delegate_navigation_screen.dart';
 import 'package:baladeyate/core/navigation/main_navigation_screen.dart';
 
@@ -868,6 +868,9 @@ String? _authRedirect(BuildContext context, GoRouterState state) {
 
   }
 
+  if (user.isDelegateLike && isDelegateRoute(path) && !user.canAccessDelegatePath(path)) {
+    return '/delegate/home';
+  }
 
 
   return null;

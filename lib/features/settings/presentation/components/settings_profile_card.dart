@@ -1,6 +1,7 @@
 import 'package:baladeyate/config/theme/app_colors.dart';
 import 'package:baladeyate/config/theme/app_icons.dart';
 import 'package:baladeyate/core/auth/app_role.dart';
+import 'package:baladeyate/core/auth/delegate_work_scope.dart';
 import 'package:baladeyate/features/auth/cubits/auth_cubit/auth_cubit.dart';
 import 'package:baladeyate/features/auth/cubits/auth_cubit/auth_state.dart';
 import 'package:flutter/material.dart';
@@ -20,7 +21,7 @@ class SettingsProfileCard extends StatelessWidget {
         final nationalId =
             user?.nationalId ?? user?.nationalNumber ?? 'غير متوفر';
         final statusLabel = isDelegate
-            ? 'مندوب ميداني'
+            ? (user?.fieldWorkStatusLabel ?? 'مندوب ميداني')
             : (user?.verificationStatusLabel ?? 'غير موثّق');
         final isApproved = isDelegate ? true : (user?.isVerified ?? false);
 

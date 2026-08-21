@@ -1,6 +1,7 @@
 import 'package:baladeyate/config/theme/app_colors.dart';
 import 'package:baladeyate/config/theme/app_icons.dart';
 import 'package:baladeyate/core/auth/app_role.dart';
+import 'package:baladeyate/core/auth/delegate_work_scope.dart';
 import 'package:baladeyate/features/auth/models/user.dart';
 import 'package:baladeyate/features/notifications/models/app_notification.dart';
 import 'package:baladeyate/routes/auth_navigation.dart';
@@ -189,17 +190,25 @@ String? routeForNotification(
         'transaction_id',
         'transactionId',
       ]);
-      if (txId != null) return '/delegate/transactions';
+      if (txId != null) {
+        return _delegateSafeRoute(user, '/delegate/transactions');
+      }
       final complaintId = _relatedNumericId(notification.data, const [
         'complaint_id',
         'complaintId',
       ]);
-      if (complaintId != null) return '/delegate/complaints';
-      return '/delegate/tasks';
+      if (complaintId != null) {
+        return _delegateSafeRoute(user, '/delegate/complaints');
+      }
+      return _delegateSafeRoute(user, '/delegate/tasks');
     case 'ComplaintStatusUpdatedNotification':
-      return isDelegate ? '/delegate/tasks' : '/track';
+      return isDelegate
+          ? _delegateSafeRoute(user, '/delegate/complaints')
+          : '/track';
     case 'TransactionStatusUpdatedNotification':
-      if (isDelegate) return '/delegate/transactions';
+      if (isDelegate) {
+        return _delegateSafeRoute(user, '/delegate/transactions');
+      }
       final id = _relatedNumericId(notification.data, const [
         'transaction_id',
         'transactionId',
@@ -275,4 +284,11 @@ String? _relatedNumericId(Map<String, dynamic> data, List<String> keys) {
     if (int.tryParse(text) != null) return text;
   }
   return null;
+}
+
+String _delegateSafeRoute(User? user, String route) {
+  if (user == null || user.canAccessDelegatePath(route)) {
+    return route;
+  }
+  return homeRouteFor(user);
 }
