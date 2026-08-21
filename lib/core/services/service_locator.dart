@@ -20,6 +20,7 @@ import 'package:baladeyate/features/daily_tasks/cubits/daily_tasks_cubit/daily_t
 import 'package:baladeyate/features/daily_tasks/repo/daily_tasks_repository.dart';
 import 'package:baladeyate/features/auth/repo/auth_repository.dart';
 import 'package:baladeyate/features/complaints/cubits/complaints_cubit/complaints_cubit.dart';
+import 'package:baladeyate/features/complaints/cubits/delegate_complaints_cubit/delegate_complaints_cubit.dart';
 import 'package:baladeyate/features/complaints/repo/complaints_repository.dart';
 import 'package:baladeyate/features/donations/cubits/donate_cubit/donate_cubit.dart';
 import 'package:baladeyate/features/donations/cubits/donations_cubit/donations_cubit.dart';
@@ -179,6 +180,10 @@ Future<void> setupServiceLocator() async {
 
   sl.registerFactory<DelegateTransactionsCubit>(
     () => DelegateTransactionsCubit(repository: sl<TransactionsRepository>()),
+  );
+
+  sl.registerFactory<DelegateComplaintsCubit>(
+    () => DelegateComplaintsCubit(repository: sl<ComplaintsRepository>()),
   );
 
   sl.registerFactory<DigitalDocumentsCubit>(

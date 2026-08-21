@@ -49,6 +49,10 @@ class EndPoints {
       'v1/delegate/transactions/$id';
   static String delegateTransactionInspect(int id) =>
       'v1/delegate/transactions/$id/inspect';
+  static const String delegateComplaints = 'v1/delegate/complaints';
+  static String delegateComplaintById(int id) => 'v1/delegate/complaints/$id';
+  static String delegateComplaintInspect(int id) =>
+      'v1/delegate/complaints/$id/inspect';
   static const String verifyDocument = 'v1/delegate/verify-document';
 
   // Admin

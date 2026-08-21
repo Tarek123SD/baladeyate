@@ -68,12 +68,19 @@ class DelegateHomeQuickActions extends StatelessWidget {
           children: [
             Expanded(
               child: tile(
+                'شكاوى ميدانية',
+                AppIcons.complaint,
+                () => context.push('/delegate/complaints'),
+              ),
+            ),
+            SizedBox(width: gap),
+            Expanded(
+              child: tile(
                 'خريطة المقبرة',
                 AppIcons.cemetery,
                 () => context.push('/delegate/cemetery-map'),
               ),
             ),
-            const Expanded(child: SizedBox.shrink()),
           ],
         ),
       ],

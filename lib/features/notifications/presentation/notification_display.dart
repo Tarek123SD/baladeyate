@@ -190,6 +190,11 @@ String? routeForNotification(
         'transactionId',
       ]);
       if (txId != null) return '/delegate/transactions';
+      final complaintId = _relatedNumericId(notification.data, const [
+        'complaint_id',
+        'complaintId',
+      ]);
+      if (complaintId != null) return '/delegate/complaints';
       return '/delegate/tasks';
     case 'ComplaintStatusUpdatedNotification':
       return isDelegate ? '/delegate/tasks' : '/track';

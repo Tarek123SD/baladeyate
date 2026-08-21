@@ -12,6 +12,16 @@ class Complaint {
     this.aiCategory,
     this.createdAt,
     this.attachments = const [],
+    this.department,
+    this.departmentLabel,
+    this.latitude,
+    this.longitude,
+    this.assignedToField = false,
+    this.fieldNotes,
+    this.fieldOutcome,
+    this.fieldOutcomeLabel,
+    this.fieldAttachments = const [],
+    this.fieldReportedAt,
   });
 
   final int id;
@@ -22,6 +32,16 @@ class Complaint {
   final String? aiCategory;
   final String? createdAt;
   final List<String> attachments;
+  final String? department;
+  final String? departmentLabel;
+  final double? latitude;
+  final double? longitude;
+  final bool assignedToField;
+  final String? fieldNotes;
+  final String? fieldOutcome;
+  final String? fieldOutcomeLabel;
+  final List<String> fieldAttachments;
+  final String? fieldReportedAt;
 
   factory Complaint.fromJson(Map<String, dynamic> json) {
     final rawAttachments = json['attachments'];
@@ -30,6 +50,16 @@ class Complaint {
       for (final item in rawAttachments) {
         if (item is String && item.isNotEmpty) {
           attachments.add(item);
+        }
+      }
+    }
+
+    final rawFieldAttachments = json['field_attachments'];
+    final fieldAttachments = <String>[];
+    if (rawFieldAttachments is List) {
+      for (final item in rawFieldAttachments) {
+        if (item is String && item.isNotEmpty) {
+          fieldAttachments.add(item);
         }
       }
     }
@@ -43,6 +73,16 @@ class Complaint {
       aiCategory: json['ai_category'] as String?,
       createdAt: json['created_at'] as String?,
       attachments: attachments,
+      department: json['department'] as String?,
+      departmentLabel: json['department_label'] as String?,
+      latitude: (json['latitude'] as num?)?.toDouble(),
+      longitude: (json['longitude'] as num?)?.toDouble(),
+      assignedToField: json['assigned_to_field'] == true,
+      fieldNotes: json['field_notes'] as String?,
+      fieldOutcome: json['field_outcome'] as String?,
+      fieldOutcomeLabel: json['field_outcome_label'] as String?,
+      fieldAttachments: fieldAttachments,
+      fieldReportedAt: json['field_reported_at'] as String?,
     );
   }
 

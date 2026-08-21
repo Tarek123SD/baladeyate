@@ -87,6 +87,63 @@ class ComplaintsRepository {
     }
   }
 
+  Future<List<Complaint>> getDelegateComplaints() async {
+    try {
+      final response = await _apiService.get(EndPoints.delegateComplaints);
+      return _parseComplaintsList(response.data);
+    } catch (error) {
+      throw ApiResponseParser.mapError(
+        error,
+        fallback: 'فشل جلب الشكاوى الميدانية',
+      );
+    }
+  }
+
+  Future<Complaint> getDelegateComplaintById(int id) async {
+    try {
+      final response =
+          await _apiService.get(EndPoints.delegateComplaintById(id));
+      return _parseComplaint(response.data);
+    } catch (error) {
+      throw ApiResponseParser.mapError(
+        error,
+        fallback: 'فشل جلب تفاصيل الشكوى',
+      );
+    }
+  }
+
+  Future<Complaint> submitFieldReport({
+    required int complaintId,
+    required String fieldNotes,
+    required String fieldOutcome,
+    List<File> attachments = const [],
+  }) async {
+    try {
+      final payload = FormData();
+      payload.fields.add(MapEntry('field_notes', fieldNotes));
+      payload.fields.add(MapEntry('field_outcome', fieldOutcome));
+
+      if (attachments.isNotEmpty) {
+        final multipartFiles = await _toMultipartFiles(attachments);
+        for (var i = 0; i < multipartFiles.length; i++) {
+          payload.files.add(MapEntry('attachments[$i]', multipartFiles[i]));
+        }
+      }
+
+      final response = await _apiService.post(
+        EndPoints.delegateComplaintInspect(complaintId),
+        data: payload,
+      );
+
+      return _parseComplaint(response.data);
+    } catch (error) {
+      throw ApiResponseParser.mapError(
+        error,
+        fallback: 'فشل تقديم التقرير الميداني',
+      );
+    }
+  }
+
   List<Complaint> _parseComplaintsList(dynamic data) {
     final map = ApiResponseParser.expectMap(data, fallback: 'فشل تحميل الشكاوى');
     final payload = map['data'];

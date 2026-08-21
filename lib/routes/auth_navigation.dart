@@ -45,6 +45,7 @@ const delegateRoutes = {
   '/delegate/buildings',
   '/delegate/cemetery-map',
   '/delegate/transactions',
+  '/delegate/complaints',
   '/tasks',
   '/info',
   '/floor',
