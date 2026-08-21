@@ -198,13 +198,23 @@ String? routeForNotification(
         'complaintId',
       ]);
       if (complaintId != null) {
-        return _delegateSafeRoute(user, '/delegate/complaints');
+        return _delegateSafeRoute(user, '/delegate/complaints/$complaintId');
       }
       return _delegateSafeRoute(user, '/delegate/tasks');
     case 'ComplaintStatusUpdatedNotification':
-      return isDelegate
-          ? _delegateSafeRoute(user, '/delegate/complaints')
-          : '/track';
+      if (!isDelegate) return '/track';
+      final complaintUpdateId = _relatedNumericId(notification.data, const [
+        'complaint_id',
+        'complaintId',
+        'id',
+      ]);
+      if (complaintUpdateId != null) {
+        return _delegateSafeRoute(
+          user,
+          '/delegate/complaints/$complaintUpdateId',
+        );
+      }
+      return _delegateSafeRoute(user, '/delegate/complaints');
     case 'TransactionStatusUpdatedNotification':
       if (isDelegate) {
         return _delegateSafeRoute(user, '/delegate/transactions');

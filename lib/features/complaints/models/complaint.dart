@@ -22,6 +22,8 @@ class Complaint {
     this.fieldOutcomeLabel,
     this.fieldAttachments = const [],
     this.fieldReportedAt,
+    this.citizenName,
+    this.citizenPhone,
   });
 
   final int id;
@@ -42,6 +44,8 @@ class Complaint {
   final String? fieldOutcomeLabel;
   final List<String> fieldAttachments;
   final String? fieldReportedAt;
+  final String? citizenName;
+  final String? citizenPhone;
 
   factory Complaint.fromJson(Map<String, dynamic> json) {
     final rawAttachments = json['attachments'];
@@ -64,6 +68,15 @@ class Complaint {
       }
     }
 
+    final userJson = json['user'];
+    String? citizenName;
+    String? citizenPhone;
+    if (userJson is Map<String, dynamic>) {
+      citizenName = userJson['name'] as String?;
+      citizenPhone = userJson['phone_number'] as String? ??
+          userJson['phone'] as String?;
+    }
+
     return Complaint(
       id: json['id'] as int? ?? 0,
       description: json['description'] as String? ?? '',
@@ -83,6 +96,8 @@ class Complaint {
       fieldOutcomeLabel: json['field_outcome_label'] as String?,
       fieldAttachments: fieldAttachments,
       fieldReportedAt: json['field_reported_at'] as String?,
+      citizenName: citizenName,
+      citizenPhone: citizenPhone,
     );
   }
 
@@ -91,6 +106,48 @@ class Complaint {
   bool get isResolved => status == 'resolved';
 
   ComplaintDescriptionParts get _parts => parseComplaintDescription(description);
+
+  String get citizenMessage {
+    final subject = _parts.subject.trim();
+    final details = _parts.details.trim();
+    if (subject.isEmpty) {
+      return details;
+    }
+    if (details.isEmpty) {
+      return subject;
+    }
+    return '$subject\n$details';
+  }
+
+  ({double latitude, double longitude})? get mapCoordinates {
+    if (latitude != null && longitude != null) {
+      return coordinatesFromLine(
+            'الموقع: ${latitude!.toStringAsFixed(5)}, ${longitude!.toStringAsFixed(5)}',
+          ) ??
+          (latitude: latitude!, longitude: longitude!);
+    }
+    return coordinatesFromLine(_parts.locationLine) ??
+        coordinatesFromLine(description);
+  }
+
+  List<String> get imageAttachments => attachments
+      .where(_looksLikeImage)
+      .toList(growable: false);
+
+  List<String> get fileAttachments => attachments
+      .where((url) => !_looksLikeImage(url))
+      .toList(growable: false);
+
+  static bool _looksLikeImage(String url) {
+    final path = url.split('?').first.toLowerCase();
+    return path.endsWith('.jpg') ||
+        path.endsWith('.jpeg') ||
+        path.endsWith('.png') ||
+        path.endsWith('.webp') ||
+        path.endsWith('.gif') ||
+        path.endsWith('.bmp') ||
+        !path.contains('.');
+  }
 
   String get displayTitle {
     final subject = _parts.subject.trim();

@@ -15,35 +15,61 @@ class ComplaintDescriptionParts {
   final String? locationLine;
 }
 
+final _attachmentCountPattern = RegExp(r'\s*عدد المرفقات:\s*(\d+)');
+final _addressPattern = RegExp(
+  r'(?:عنوان الموقع|العنوان):\s*(.+?)(?=\s*الموقع:|\s*عدد المرفقات:|$)',
+  unicode: true,
+);
+final _locationPattern = RegExp(
+  r'الموقع:\s*(-?\d+(?:\.\d+)?\s*,\s*-?\d+(?:\.\d+)?)',
+);
+
 ComplaintDescriptionParts parseComplaintDescription(String raw) {
-  final lines = raw.split('\n');
-  if (lines.isEmpty || raw.trim().isEmpty) {
+  if (raw.trim().isEmpty) {
     return const ComplaintDescriptionParts(subject: '', details: '');
   }
 
-  final subject = lines.first.trim();
-  final bodyLines = <String>[];
+  var text = raw;
+  var attachmentCount = 0;
   String? addressLine;
   String? locationLine;
-  var attachmentCount = 0;
 
-  for (var i = 1; i < lines.length; i++) {
-    final line = lines[i].trim();
-    if (line.startsWith('العنوان:') || line.startsWith('عنوان الموقع:')) {
-      addressLine = lines[i];
-    } else if (line.startsWith('الموقع:')) {
-      locationLine = lines[i];
-    } else if (line.startsWith('عدد المرفقات:')) {
-      final countRaw = line.replaceFirst('عدد المرفقات:', '').trim();
-      attachmentCount = int.tryParse(countRaw) ?? 0;
-    } else {
-      bodyLines.add(lines[i]);
-    }
+  final attachmentMatch = _attachmentCountPattern.firstMatch(text);
+  if (attachmentMatch != null) {
+    attachmentCount = int.tryParse(attachmentMatch.group(1) ?? '') ?? 0;
+    text = text.replaceRange(attachmentMatch.start, attachmentMatch.end, '');
   }
+
+  final addressMatch = _addressPattern.firstMatch(text);
+  if (addressMatch != null) {
+    final value = addressMatch.group(1)?.trim();
+    if (value != null && value.isNotEmpty) {
+      addressLine = 'عنوان الموقع: $value';
+    }
+    text = text.replaceRange(addressMatch.start, addressMatch.end, '');
+  }
+
+  final locationMatch = _locationPattern.firstMatch(text);
+  if (locationMatch != null) {
+    final value = locationMatch.group(1)?.trim();
+    if (value != null && value.isNotEmpty) {
+      locationLine = 'الموقع: $value';
+    }
+    text = text.replaceRange(locationMatch.start, locationMatch.end, '');
+  }
+
+  final remaining = text
+      .split('\n')
+      .map((line) => line.trim())
+      .where((line) => line.isNotEmpty)
+      .toList();
+
+  final subject = remaining.isEmpty ? '' : remaining.first;
+  final details = remaining.length <= 1 ? '' : remaining.sublist(1).join('\n');
 
   return ComplaintDescriptionParts(
     subject: subject,
-    details: bodyLines.join('\n').trim(),
+    details: details,
     attachmentCount: attachmentCount,
     addressLine: addressLine,
     locationLine: locationLine,
@@ -123,4 +149,47 @@ String? coordinatesDisplayFromLine(String? line) {
   if (raw.isEmpty) return null;
 
   return 'تم تحديد العنوان على الخريطة مباشرة';
+}
+
+/// Parses `lat, lng` from a stored location line, swapping Syria lng/lat if needed.
+({double latitude, double longitude})? coordinatesFromLine(String? line) {
+  if (line == null || line.trim().isEmpty) {
+    return null;
+  }
+
+  final match = _locationPattern.firstMatch(line);
+  if (match == null) {
+    return null;
+  }
+
+  final first = double.tryParse(match.group(1)!.split(',').first.trim());
+  final second = double.tryParse(match.group(1)!.split(',').last.trim());
+  if (first == null || second == null) {
+    return null;
+  }
+
+  return _normalizeLatLng(first, second);
+}
+
+({double latitude, double longitude})? _normalizeLatLng(
+  double first,
+  double second,
+) {
+  final looksLikeLngLat =
+      first >= 35.0 && first <= 42.5 && second >= 32.0 && second <= 37.7;
+  final looksLikeLatLng =
+      first >= 32.0 && first <= 37.7 && second >= 35.0 && second <= 42.5;
+
+  var latitude = first;
+  var longitude = second;
+  if (looksLikeLngLat && !looksLikeLatLng) {
+    latitude = second;
+    longitude = first;
+  }
+
+  if (latitude < -90 || latitude > 90 || longitude < -180 || longitude > 180) {
+    return null;
+  }
+
+  return (latitude: latitude, longitude: longitude);
 }

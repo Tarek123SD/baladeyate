@@ -32,7 +32,9 @@ import 'package:baladeyate/features/delegate/presentation/floor_hub_screen.dart'
 
 import 'package:baladeyate/features/complaints/cubits/complaints_cubit/complaints_cubit.dart';
 
+import 'package:baladeyate/features/complaints/models/complaint.dart';
 import 'package:baladeyate/features/complaints/presentation/complaints_guard_screen.dart';
+import 'package:baladeyate/features/complaints/presentation/delegate_complaint_details_screen.dart';
 import 'package:baladeyate/features/complaints/presentation/delegate_complaints_screen.dart';
 
 import 'package:baladeyate/features/complaints/presentation/identity_verification_screen.dart';
@@ -323,6 +325,19 @@ GoRouter _createAppRouter() {
       GoRoute(
         path: '/delegate/complaints',
         builder: (context, state) => const DelegateComplaintsScreen(),
+        routes: [
+          GoRoute(
+            path: ':id',
+            builder: (context, state) {
+              final id = int.tryParse(state.pathParameters['id'] ?? '') ?? 0;
+              final extra = state.extra;
+              return DelegateComplaintDetailsScreen(
+                complaintId: id,
+                initialComplaint: extra is Complaint ? extra : null,
+              );
+            },
+          ),
+        ],
       ),
 
       GoRoute(

@@ -8,9 +8,9 @@ import 'package:baladeyate/features/complaints/cubits/delegate_complaints_cubit/
 import 'package:baladeyate/features/complaints/cubits/delegate_complaints_cubit/delegate_complaints_state.dart';
 import 'package:baladeyate/features/complaints/models/complaint.dart';
 import 'package:baladeyate/features/complaints/presentation/components/delegate_complaint_tile.dart';
-import 'package:baladeyate/features/complaints/presentation/components/delegate_field_report_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import 'package:responsive_x_toolkit/responsive_x.dart';
 
 class DelegateComplaintsScreen extends StatelessWidget {
@@ -105,8 +105,7 @@ class _DelegateComplaintsView extends StatelessWidget {
                               final complaint = state.complaints[index];
                               return DelegateComplaintTile(
                                 complaint: complaint,
-                                onInspect: () =>
-                                    _showInspectSheet(context, complaint),
+                                onOpen: () => _openDetails(context, complaint),
                               );
                             },
                           )
@@ -127,33 +126,17 @@ class _DelegateComplaintsView extends StatelessWidget {
     );
   }
 
-  Future<void> _showInspectSheet(
+  Future<void> _openDetails(
     BuildContext context,
     Complaint complaint,
   ) async {
     final cubit = context.read<DelegateComplaintsCubit>();
-    final result = await showModalBottomSheet<DelegateFieldReportDraft>(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (sheetContext) => DelegateFieldReportSheet(complaint: complaint),
+    final reported = await context.push<bool>(
+      '/delegate/complaints/${complaint.id}',
+      extra: complaint,
     );
-
-    if (result == null || !context.mounted) {
-      return;
-    }
-
-    final ok = await cubit.submitFieldReport(
-      complaintId: complaint.id,
-      notes: result.notes,
-      outcome: result.outcome,
-      attachments: result.photos,
-    );
-    if (!context.mounted) {
-      return;
-    }
-    if (ok) {
-      AppSnackBar.showSuccess(context, 'تم إرسال التقرير الميداني');
+    if (reported == true && context.mounted) {
+      await cubit.fetch();
     }
   }
 }
