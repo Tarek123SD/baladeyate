@@ -18,6 +18,7 @@ class TransactionsLoaded extends TransactionsState {
   final int selectedStatusFilterIndex;
   final String? selectedTypeFilter;
   final String? selectedStatusFilter;
+  final List<({String label, String? typeKey})> typeOptions;
 
   const TransactionsLoaded({
     required this.transactions,
@@ -25,6 +26,7 @@ class TransactionsLoaded extends TransactionsState {
     this.selectedStatusFilterIndex = 0,
     this.selectedTypeFilter,
     this.selectedStatusFilter,
+    this.typeOptions = const [],
   });
 
   @override
@@ -34,6 +36,7 @@ class TransactionsLoaded extends TransactionsState {
         selectedStatusFilterIndex,
         selectedTypeFilter,
         selectedStatusFilter,
+        typeOptions,
       ];
 }
 

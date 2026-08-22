@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:baladeyate/core/utils/api_response_parser.dart';
 import 'package:baladeyate/features/transactions/cubits/submit_transaction_cubit/submit_transaction_state.dart';
 import 'package:baladeyate/features/transactions/models/transaction_document_catalog.dart';
+import 'package:baladeyate/features/transactions/models/transaction_type_config.dart';
 import 'package:baladeyate/features/transactions/repo/transactions_repository.dart';
 
 class SubmitTransactionCubit extends Cubit<SubmitTransactionState> {
@@ -16,12 +17,47 @@ class SubmitTransactionCubit extends Cubit<SubmitTransactionState> {
   /// Getter for attached files (for backward compatibility).
   List<PlatformFile> get attachments => state.attachedFiles;
 
+  Future<void> loadTransactionTypes() async {
+    emit(SubmitTransactionInitial(
+      selectedType: state.selectedType,
+      attachedFiles: state.attachedFiles,
+      formData: state.formData,
+      types: state.types,
+      isLoadingTypes: true,
+    ));
+
+    try {
+      final types = await _transactionsRepository.getTransactionTypes();
+      TransactionDocumentCatalog.replaceRemote(
+        types.map((type) => type.guide).toList(),
+      );
+      emit(SubmitTransactionInitial(
+        selectedType: state.selectedType,
+        attachedFiles: state.attachedFiles,
+        formData: state.formData,
+        types: types,
+      ));
+    } catch (error) {
+      emit(SubmitTransactionFailure(
+        error: ApiResponseParser.toUserMessage(
+          error,
+          fallback: 'تعذر تحميل أنواع المعاملات',
+        ),
+        selectedType: state.selectedType,
+        attachedFiles: state.attachedFiles,
+        formData: state.formData,
+        types: state.types,
+      ));
+    }
+  }
+
   /// Changes the selected transaction type and clears old form data.
   void changeTransactionType(String type) {
     emit(SubmitTransactionInitial(
       selectedType: type,
       attachedFiles: state.attachedFiles,
       formData: const {},
+      types: state.types,
     ));
   }
 
@@ -37,6 +73,7 @@ class SubmitTransactionCubit extends Cubit<SubmitTransactionState> {
       selectedType: state.selectedType,
       attachedFiles: state.attachedFiles,
       formData: updatedFormData,
+      types: state.types,
     ));
   }
 
@@ -50,11 +87,13 @@ class SubmitTransactionCubit extends Cubit<SubmitTransactionState> {
       );
 
       if (result != null && result.files.isNotEmpty) {
-        final updatedFiles = List<PlatformFile>.from(state.attachedFiles)..addAll(result.files);
+        final updatedFiles = List<PlatformFile>.from(state.attachedFiles)
+          ..addAll(result.files);
         emit(SubmitTransactionInitial(
           selectedType: state.selectedType,
           attachedFiles: updatedFiles,
           formData: state.formData,
+          types: state.types,
         ));
       }
     } catch (_) {
@@ -63,6 +102,7 @@ class SubmitTransactionCubit extends Cubit<SubmitTransactionState> {
         selectedType: state.selectedType,
         attachedFiles: state.attachedFiles,
         formData: state.formData,
+        types: state.types,
       ));
     }
   }
@@ -70,11 +110,13 @@ class SubmitTransactionCubit extends Cubit<SubmitTransactionState> {
   /// Removes a file from the attachment list at [index].
   void removeFile(int index) {
     if (index >= 0 && index < state.attachedFiles.length) {
-      final updatedFiles = List<PlatformFile>.from(state.attachedFiles)..removeAt(index);
+      final updatedFiles = List<PlatformFile>.from(state.attachedFiles)
+        ..removeAt(index);
       emit(SubmitTransactionInitial(
         selectedType: state.selectedType,
         attachedFiles: updatedFiles,
         formData: state.formData,
+        types: state.types,
       ));
     }
   }
@@ -94,11 +136,19 @@ class SubmitTransactionCubit extends Cubit<SubmitTransactionState> {
         selectedType: state.selectedType,
         attachedFiles: state.attachedFiles,
         formData: state.formData,
+        types: state.types,
       ));
       return;
     }
 
-    final minRequired =
+    TransactionTypeConfig? selected;
+    for (final item in state.types) {
+      if (item.type == targetType) {
+        selected = item;
+        break;
+      }
+    }
+    final minRequired = selected?.minimumRequiredAttachments ??
         TransactionDocumentCatalog.minimumRequiredAttachments(targetType);
     if (state.attachedFiles.length < minRequired) {
       emit(SubmitTransactionFailure(
@@ -107,6 +157,7 @@ class SubmitTransactionCubit extends Cubit<SubmitTransactionState> {
         selectedType: state.selectedType,
         attachedFiles: state.attachedFiles,
         formData: state.formData,
+        types: state.types,
       ));
       return;
     }
@@ -115,6 +166,7 @@ class SubmitTransactionCubit extends Cubit<SubmitTransactionState> {
       selectedType: state.selectedType,
       attachedFiles: state.attachedFiles,
       formData: state.formData,
+      types: state.types,
     ));
 
     try {
@@ -130,6 +182,7 @@ class SubmitTransactionCubit extends Cubit<SubmitTransactionState> {
         selectedType: state.selectedType,
         attachedFiles: state.attachedFiles,
         formData: state.formData,
+        types: state.types,
       ));
     } catch (error) {
       emit(SubmitTransactionFailure(
@@ -140,12 +193,13 @@ class SubmitTransactionCubit extends Cubit<SubmitTransactionState> {
         selectedType: state.selectedType,
         attachedFiles: state.attachedFiles,
         formData: state.formData,
+        types: state.types,
       ));
     }
   }
 
   /// Clears selected files and resets state.
   void reset() {
-    emit(const SubmitTransactionInitial());
+    emit(SubmitTransactionInitial(types: state.types));
   }
 }

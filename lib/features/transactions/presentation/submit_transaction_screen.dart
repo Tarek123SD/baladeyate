@@ -27,7 +27,7 @@ class SubmitTransactionScreen extends StatelessWidget {
       return SubmitTransactionForm(buildingId: buildingId);
     } catch (_) {
       return BlocProvider(
-        create: (context) => sl<SubmitTransactionCubit>(),
+        create: (context) => sl<SubmitTransactionCubit>()..loadTransactionTypes(),
         child: SubmitTransactionForm(buildingId: buildingId),
       );
     }
@@ -45,6 +45,18 @@ class SubmitTransactionForm extends StatefulWidget {
 
 class _SubmitTransactionFormState extends State<SubmitTransactionForm> {
   final _formKey = GlobalKey<FormState>();
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final cubit = context.read<SubmitTransactionCubit>();
+      if (cubit.state.types.isEmpty && !cubit.state.isLoadingTypes) {
+        cubit.loadTransactionTypes();
+      }
+    });
+  }
 
   InputDecoration _buildInputDecoration(
     BuildContext context, {
@@ -101,132 +113,50 @@ class _SubmitTransactionFormState extends State<SubmitTransactionForm> {
     bool isLoading,
   ) {
     final cubit = context.read<SubmitTransactionCubit>();
+    final fields = state.selectedTypeConfig?.formFields ?? const [];
 
-    if (state.selectedType == 'commercial_license') {
-      return Column(
-        key: const ValueKey('commercial_license_fields'),
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(height: 16.h(context)),
-          TextFormField(
-            initialValue: state.formData['commercial_name'] as String?,
-            enabled: !isLoading,
-            style: TextStyle(
-              color: Colors.black87,
-              fontSize: 15.s(context),
-              fontWeight: FontWeight.w500,
-            ),
-            textDirection: TextDirection.rtl,
-            decoration: _buildInputDecoration(
-              context,
-              labelText: 'الاسم التجاري',
-              hintText: 'مثال: متجر الأمل للمواد الغذائية',
-              prefixIcon: Icons.storefront_outlined,
-            ),
-            onChanged: (val) => cubit.updateFormField('commercial_name', val),
-            validator: (val) => (val == null || val.trim().isEmpty) ? 'يرجى إدخال الاسم التجاري' : null,
-          ),
-          SizedBox(height: 16.h(context)),
-          TextFormField(
-            initialValue: state.formData['shop_area'] as String?,
-            enabled: !isLoading,
-            style: TextStyle(
-              color: Colors.black87,
-              fontSize: 15.s(context),
-              fontWeight: FontWeight.w500,
-            ),
-            keyboardType: TextInputType.number,
-            textDirection: TextDirection.rtl,
-            decoration: _buildInputDecoration(
-              context,
-              labelText: 'مساحة المحل (بالمتر المربع)',
-              hintText: 'مثال: 45',
-              prefixIcon: Icons.square_foot_outlined,
-            ),
-            onChanged: (val) => cubit.updateFormField('shop_area', val),
-            validator: (val) => (val == null || val.trim().isEmpty) ? 'يرجى إدخال مساحة المحل' : null,
-          ),
-        ],
-      );
-    } else if (state.selectedType == 'building_permit') {
-      return Column(
-        key: const ValueKey('building_permit_fields'),
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(height: 16.h(context)),
-          TextFormField(
-            initialValue: state.formData['building_type'] as String?,
-            enabled: !isLoading,
-            style: TextStyle(
-              color: Colors.black87,
-              fontSize: 15.s(context),
-              fontWeight: FontWeight.w500,
-            ),
-            textDirection: TextDirection.rtl,
-            decoration: _buildInputDecoration(
-              context,
-              labelText: 'نوع البناء',
-              hintText: 'مثال: سكني، تجاري، فلة',
-              prefixIcon: Icons.domain_outlined,
-            ),
-            onChanged: (val) => cubit.updateFormField('building_type', val),
-            validator: (val) => (val == null || val.trim().isEmpty) ? 'يرجى إدخال نوع البناء' : null,
-          ),
-          SizedBox(height: 16.h(context)),
-          TextFormField(
-            initialValue: state.formData['building_area'] as String?,
-            enabled: !isLoading,
-            style: TextStyle(
-              color: Colors.black87,
-              fontSize: 15.s(context),
-              fontWeight: FontWeight.w500,
-            ),
-            keyboardType: TextInputType.number,
-            textDirection: TextDirection.rtl,
-            decoration: _buildInputDecoration(
-              context,
-              labelText: 'مساحة البناء الإجمالية (م²)',
-              hintText: 'مثال: 250',
-              prefixIcon: Icons.straighten_outlined,
-            ),
-            onChanged: (val) => cubit.updateFormField('building_area', val),
-            validator: (val) => (val == null || val.trim().isEmpty) ? 'يرجى إدخال مساحة البناء' : null,
-          ),
-        ],
-      );
-    } else if (state.selectedType == 'general_service') {
-      return Column(
-        key: const ValueKey('general_service_fields'),
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(height: 16.h(context)),
-          TextFormField(
-            initialValue: state.formData['service_description'] as String?,
-            enabled: !isLoading,
-            maxLines: 4,
-            style: TextStyle(
-              color: Colors.black87,
-              fontSize: 15.s(context),
-              fontWeight: FontWeight.w500,
-            ),
-            textDirection: TextDirection.rtl,
-            decoration: _buildInputDecoration(
-              context,
-              labelText: 'وصف الخدمة المطلوبة',
-              hintText: 'اشرح الخدمة البلدية التي تحتاجها',
-              prefixIcon: Icons.description_outlined,
-            ),
-            onChanged: (val) =>
-                cubit.updateFormField('service_description', val),
-            validator: (val) => (val == null || val.trim().isEmpty)
-                ? 'يرجى إدخال وصف الخدمة'
-                : null,
-          ),
-        ],
-      );
+    if (fields.isEmpty) {
+      return const SizedBox.shrink(key: ValueKey('empty_fields'));
     }
 
-    return const SizedBox.shrink(key: ValueKey('empty_fields'));
+    return Column(
+      key: ValueKey('${state.selectedType}_fields'),
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        for (final field in fields) ...[
+          SizedBox(height: 16.h(context)),
+          TextFormField(
+            initialValue: state.formData[field.key]?.toString(),
+            enabled: !isLoading,
+            maxLines: field.input == 'textarea' ? 4 : 1,
+            keyboardType: field.input == 'number'
+                ? TextInputType.number
+                : TextInputType.text,
+            style: TextStyle(
+              color: Colors.black87,
+              fontSize: 15.s(context),
+              fontWeight: FontWeight.w500,
+            ),
+            textDirection: TextDirection.rtl,
+            decoration: _buildInputDecoration(
+              context,
+              labelText: field.label,
+              hintText: field.hint,
+              prefixIcon: field.input == 'number'
+                  ? Icons.straighten_outlined
+                  : Icons.description_outlined,
+            ),
+            onChanged: (val) => cubit.updateFormField(field.key, val),
+            validator: (val) {
+              if (!field.isRequired) return null;
+              return (val == null || val.trim().isEmpty)
+                  ? 'يرجى إدخال ${field.label}'
+                  : null;
+            },
+          ),
+        ],
+      ],
+    );
   }
 
   @override
@@ -275,8 +205,21 @@ class _SubmitTransactionFormState extends State<SubmitTransactionForm> {
                               crossAxisAlignment: CrossAxisAlignment.stretch,
                               children: [
                                 // Dropdown for transaction type with prefix icon & dark typography
+                                if (state.isLoadingTypes)
+                                  Padding(
+                                    padding: EdgeInsets.only(bottom: 12.h(context)),
+                                    child: LinearProgressIndicator(
+                                      color: primaryColor,
+                                      backgroundColor:
+                                          primaryColor.withValues(alpha: 0.12),
+                                    ),
+                                  ),
                                 DropdownButtonFormField<String>(
-                                  initialValue: state.selectedType,
+                                  initialValue: state.types.any(
+                                    (type) => type.type == state.selectedType,
+                                  )
+                                      ? state.selectedType
+                                      : null,
                                   dropdownColor: Colors.white,
                                   borderRadius: BorderRadius.circular(12.r(context)),
                                   elevation: 4,
@@ -288,48 +231,30 @@ class _SubmitTransactionFormState extends State<SubmitTransactionForm> {
                                   decoration: _buildInputDecoration(
                                     context,
                                     labelText: 'نوع المعاملة',
-                                    hintText: 'اختر نوع المعاملة',
+                                    hintText: state.isLoadingTypes
+                                        ? 'جاري تحميل الأنواع...'
+                                        : 'اختر نوع المعاملة',
                                     prefixIcon: Icons.assignment_outlined,
                                   ),
                                   icon: Icon(
                                     Icons.arrow_drop_down,
                                     color: primaryColor,
                                   ),
-                                  items: [
-                                    DropdownMenuItem(
-                                      value: 'commercial_license',
-                                      child: Text(
-                                        'رخصة تجارية',
-                                        style: TextStyle(
-                                          color: Colors.black87,
-                                          fontSize: 15.s(context),
-                                          fontWeight: FontWeight.w500,
+                                  items: state.types
+                                      .map(
+                                        (type) => DropdownMenuItem(
+                                          value: type.type,
+                                          child: Text(
+                                            type.label,
+                                            style: TextStyle(
+                                              color: Colors.black87,
+                                              fontSize: 15.s(context),
+                                              fontWeight: FontWeight.w500,
+                                            ),
+                                          ),
                                         ),
-                                      ),
-                                    ),
-                                    DropdownMenuItem(
-                                      value: 'building_permit',
-                                      child: Text(
-                                        'تصريح بناء',
-                                        style: TextStyle(
-                                          color: Colors.black87,
-                                          fontSize: 15.s(context),
-                                          fontWeight: FontWeight.w500,
-                                        ),
-                                      ),
-                                    ),
-                                    DropdownMenuItem(
-                                      value: 'general_service',
-                                      child: Text(
-                                        'خدمة عامة',
-                                        style: TextStyle(
-                                          color: Colors.black87,
-                                          fontSize: 15.s(context),
-                                          fontWeight: FontWeight.w500,
-                                        ),
-                                      ),
-                                    ),
-                                  ],
+                                      )
+                                      .toList(),
                                   onChanged: isLoading
                                       ? null
                                       : (value) {
@@ -357,6 +282,7 @@ class _SubmitTransactionFormState extends State<SubmitTransactionForm> {
                                   SizedBox(height: 16.h(context)),
                                   RequiredDocumentsGuide(
                                     type: state.selectedType,
+                                    guide: state.selectedTypeConfig?.guide,
                                   ),
                                 ],
 

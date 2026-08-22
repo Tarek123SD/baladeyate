@@ -3,6 +3,7 @@ class TransactionModel {
   final int id;
   final String transactionNumber;
   final String type;
+  final String? typeLabel;
   final String status;
   final String createdAt;
   final String? updatedAt;
@@ -17,6 +18,7 @@ class TransactionModel {
     required this.id,
     required this.transactionNumber,
     required this.type,
+    this.typeLabel,
     required this.status,
     required this.createdAt,
     this.updatedAt,
@@ -64,6 +66,7 @@ class TransactionModel {
           json['transactionNumber'] as String? ??
           'TR-${json['id'] ?? 0}',
       type: json['type'] as String? ?? '',
+      typeLabel: json['type_label'] as String? ?? json['typeLabel'] as String?,
       status: json['status'] as String? ?? 'pending',
       createdAt: json['created_at'] as String? ??
           json['createdAt'] as String? ??

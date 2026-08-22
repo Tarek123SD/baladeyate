@@ -19,6 +19,7 @@ class EndPoints {
   static const String myHousehold = 'v1/citizen/my-household';
   static const String complaints = 'v1/complaints';
   static String complaintById(int id) => 'v1/complaints/$id';
+  static const String transactionTypes = 'v1/citizen/transaction-types';
   static const String transactions = 'v1/citizen/transactions';
   static String transactionById(int id) => 'v1/citizen/transactions/$id';
   static String transactionDocuments(int id) =>

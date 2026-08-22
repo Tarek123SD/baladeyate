@@ -7,15 +7,17 @@ class RequiredDocumentsGuide extends StatelessWidget {
   const RequiredDocumentsGuide({
     super.key,
     required this.type,
+    this.guide,
     this.compact = false,
   });
 
   final String? type;
+  final TransactionDocumentGuide? guide;
   final bool compact;
 
   @override
   Widget build(BuildContext context) {
-    final guide = TransactionDocumentCatalog.forType(type);
+    final guide = this.guide ?? TransactionDocumentCatalog.forType(type);
     if (guide == null) {
       return const SizedBox.shrink();
     }

@@ -127,7 +127,10 @@ class _LoadedBody extends StatelessWidget {
                 children: [
                   Expanded(
                     child: Text(
-                      getTransactionTypeLabel(transaction.type),
+                      getTransactionTypeLabel(
+                        transaction.type,
+                        typeLabel: transaction.typeLabel,
+                      ),
                       style: TextStyle(
                         fontSize: 18.f(context),
                         fontWeight: FontWeight.bold,

@@ -1,5 +1,7 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:baladeyate/core/utils/api_response_parser.dart';
+import 'package:baladeyate/features/transactions/models/transaction_document_catalog.dart';
+import 'package:baladeyate/features/transactions/presentation/components/transactions_filters.dart';
 import '../../repo/transactions_repository.dart';
 import 'transactions_state.dart';
 
@@ -10,6 +12,8 @@ class TransactionsCubit extends Cubit<TransactionsState> {
   String? _statusFilter;
   int _typeFilterIndex = 0;
   int _statusFilterIndex = 0;
+  List<({String label, String? typeKey})> _typeOptions =
+      TransactionsFilters.defaultTypeOptions;
 
   TransactionsCubit({required TransactionsRepository transactionsRepository})
       : _transactionsRepository = transactionsRepository,
@@ -41,6 +45,7 @@ class TransactionsCubit extends Cubit<TransactionsState> {
 
     emit(TransactionsLoading());
     try {
+      await _ensureTypeOptions();
       final transactions = await _transactionsRepository.getTransactions(
         type: effectiveType,
         status: effectiveStatus,
@@ -51,6 +56,7 @@ class TransactionsCubit extends Cubit<TransactionsState> {
         selectedStatusFilterIndex: _statusFilterIndex,
         selectedTypeFilter: _typeFilter,
         selectedStatusFilter: _statusFilter,
+        typeOptions: _typeOptions,
       ));
     } catch (e) {
       emit(TransactionsError(
@@ -84,5 +90,26 @@ class TransactionsCubit extends Cubit<TransactionsState> {
       type: _typeFilter,
       typeFilterIndex: _typeFilterIndex,
     );
+  }
+
+  Future<void> _ensureTypeOptions() async {
+    if (_typeOptions.length > TransactionsFilters.defaultTypeOptions.length) {
+      return;
+    }
+
+    try {
+      final types = await _transactionsRepository.getTransactionTypes();
+      if (types.isEmpty) return;
+
+      TransactionDocumentCatalog.replaceRemote(
+        types.map((type) => type.guide).toList(),
+      );
+      _typeOptions = [
+        (label: 'الكل', typeKey: null),
+        ...types.map((type) => (label: type.label, typeKey: type.type)),
+      ];
+    } catch (_) {
+      // Keep the built-in fallback chips if the catalog endpoint is unavailable.
+    }
   }
 }

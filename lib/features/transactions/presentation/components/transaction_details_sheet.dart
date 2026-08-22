@@ -27,7 +27,10 @@ class TransactionDetailsSheet extends StatelessWidget {
   Widget build(BuildContext context) {
     final primaryColor = Theme.of(context).colorScheme.primary;
     final statusProps = getTransactionStatusProps(transaction.status);
-    final typeLabel = getTransactionTypeLabel(transaction.type);
+    final typeLabel = getTransactionTypeLabel(
+      transaction.type,
+      typeLabel: transaction.typeLabel,
+    );
 
     return Directionality(
       textDirection: TextDirection.rtl,

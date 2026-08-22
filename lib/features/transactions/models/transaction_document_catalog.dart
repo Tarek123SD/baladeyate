@@ -33,6 +33,12 @@ class TransactionDocumentCatalog {
   static const String formatNote =
       'الصيغ المقبولة: PDF أو JPG أو PNG — بحد أقصى 5 ميغابايت لكل ملف.';
 
+  static List<TransactionDocumentGuide> _remote = const [];
+
+  static void replaceRemote(List<TransactionDocumentGuide> guides) {
+    _remote = guides;
+  }
+
   static const List<TransactionDocumentGuide> all = [
     TransactionDocumentGuide(
       type: 'commercial_license',
@@ -101,6 +107,9 @@ class TransactionDocumentCatalog {
 
   static TransactionDocumentGuide? forType(String? type) {
     if (type == null || type.isEmpty) return null;
+    for (final guide in _remote) {
+      if (guide.type == type) return guide;
+    }
     for (final guide in all) {
       if (guide.type == type) return guide;
     }

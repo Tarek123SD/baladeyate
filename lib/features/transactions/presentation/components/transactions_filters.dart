@@ -8,12 +8,14 @@ class TransactionsFilters extends StatelessWidget {
     super.key,
     required this.selectedTypeIndex,
     required this.selectedStatusIndex,
+    this.typeOptions = defaultTypeOptions,
   });
 
   final int selectedTypeIndex;
   final int selectedStatusIndex;
+  final List<({String label, String? typeKey})> typeOptions;
 
-  static const List<({String label, String? typeKey})> typeOptions = [
+  static const List<({String label, String? typeKey})> defaultTypeOptions = [
     (label: 'الكل', typeKey: null),
     (label: 'رخصة تجارية', typeKey: 'commercial_license'),
     (label: 'رخصة بناء', typeKey: 'building_permit'),

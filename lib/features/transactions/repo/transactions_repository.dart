@@ -7,12 +7,29 @@ import 'package:baladeyate/core/services/end_points.dart';
 import 'package:baladeyate/core/utils/api_response_parser.dart';
 import 'package:baladeyate/core/utils/attachment_compressor.dart';
 import 'package:baladeyate/features/transactions/models/transaction_model.dart';
+import 'package:baladeyate/features/transactions/models/transaction_type_config.dart';
 
 class TransactionsRepository {
   final ApiService _apiService;
 
   TransactionsRepository({required ApiService apiService})
       : _apiService = apiService;
+
+  Future<List<TransactionTypeConfig>> getTransactionTypes() async {
+    try {
+      final response = await _apiService.get(EndPoints.transactionTypes);
+      return ApiResponseParser.parseList<TransactionTypeConfig>(
+        response.data,
+        fromJson: TransactionTypeConfig.fromJson,
+        fallback: 'فشل جلب أنواع المعاملات',
+      );
+    } catch (error) {
+      throw ApiResponseParser.mapError(
+        error,
+        fallback: 'فشل جلب أنواع المعاملات',
+      );
+    }
+  }
 
   Future<List<TransactionModel>> getTransactions({
     String? type,

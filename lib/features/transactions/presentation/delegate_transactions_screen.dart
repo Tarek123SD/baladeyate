@@ -230,7 +230,10 @@ class _DelegateTransactionTile extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Text(
-            getTransactionTypeLabel(transaction.type),
+            getTransactionTypeLabel(
+              transaction.type,
+              typeLabel: transaction.typeLabel,
+            ),
             style: TextStyle(
               fontWeight: FontWeight.bold,
               fontSize: 15.f(context),

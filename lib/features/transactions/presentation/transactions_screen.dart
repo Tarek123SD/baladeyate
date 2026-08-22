@@ -149,6 +149,10 @@ class _TransactionsViewState extends State<TransactionsView> {
                                     TransactionsFilters(
                                       selectedTypeIndex: typeIndex,
                                       selectedStatusIndex: statusIndex,
+                                      typeOptions: state is TransactionsLoaded &&
+                                              state.typeOptions.isNotEmpty
+                                          ? state.typeOptions
+                                          : TransactionsFilters.defaultTypeOptions,
                                     ),
                                     SizedBox(height: 16.h(context)),
                                     TransactionsListHeader(

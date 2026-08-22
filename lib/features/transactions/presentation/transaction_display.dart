@@ -86,7 +86,11 @@ TransactionStatusProps getTransactionStatusProps(String status) {
   }
 }
 
-String getTransactionTypeLabel(String type) {
+String getTransactionTypeLabel(String type, {String? typeLabel}) {
+  if (typeLabel != null && typeLabel.trim().isNotEmpty) {
+    return typeLabel;
+  }
+
   switch (type.toLowerCase()) {
     case 'commercial_license':
       return 'رخصة تجارية';
