@@ -85,24 +85,6 @@ class TransactionDocumentCatalog {
         ),
       ],
     ),
-    TransactionDocumentGuide(
-      type: 'general_service',
-      typeLabel: 'خدمة عامة',
-      notes: 'ارفع ما يدعم طلبك بوضوح حسب نوع الخدمة.',
-      documents: [
-        TransactionDocumentItem(
-          title: 'صورة الهوية الشخصية',
-        ),
-        TransactionDocumentItem(
-          title: 'مستند داعم للطلب',
-          hint: 'مثل كتاب رسمي، صورة موقع، أو أي إثبات ذي صلة',
-        ),
-        TransactionDocumentItem(
-          title: 'مرفقات إضافية توضيحية',
-          isRequired: false,
-        ),
-      ],
-    ),
   ];
 
   static TransactionDocumentGuide? forType(String? type) {

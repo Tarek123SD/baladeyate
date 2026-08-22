@@ -19,7 +19,6 @@ class TransactionsFilters extends StatelessWidget {
     (label: 'الكل', typeKey: null),
     (label: 'رخصة تجارية', typeKey: 'commercial_license'),
     (label: 'رخصة بناء', typeKey: 'building_permit'),
-    (label: 'خدمة عامة', typeKey: 'general_service'),
   ];
 
   static const List<({String label, String? statusKey})> statusOptions = [
