@@ -6,6 +6,7 @@ import 'package:baladeyate/core/services/api_services.dart';
 import 'package:baladeyate/core/services/cache_service.dart';
 import 'package:baladeyate/core/services/end_points.dart';
 import 'package:baladeyate/core/utils/api_response_parser.dart';
+import 'package:baladeyate/features/auth/models/login_challenge.dart';
 import 'package:baladeyate/features/auth/models/signup_response.dart';
 import 'package:baladeyate/features/auth/models/user.dart';
 import 'package:dio/dio.dart';
@@ -58,8 +59,8 @@ class AuthRepository {
     }
   }
 
-  /// Login via POST /api/v1/login. Accepts any role and saves the session.
-  Future<User> login(
+  /// Password step of mobile login. Returns a challenge; no Sanctum token yet.
+  Future<LoginChallenge> login(
     String email,
     String password, {
     String? fcmToken,
@@ -74,9 +75,58 @@ class AuthRepository {
         },
       );
 
-      return _saveSessionFromResponse(response.data);
+      return _readLoginChallenge(response.data, fallbackEmail: email);
     } catch (error) {
       throw ApiResponseParser.mapError(error, fallback: 'فشل تسجيل الدخول');
+    }
+  }
+
+  /// Completes login 2FA and persists the normal session.
+  Future<User> verifyLoginOtp({
+    required String email,
+    required String otp,
+    required String challengeToken,
+    String? fcmToken,
+  }) async {
+    try {
+      final response = await _apiService.post(
+        EndPoints.verifyLoginOtp,
+        data: {
+          'email': email,
+          'otp': otp,
+          'challenge_token': challengeToken,
+          if (fcmToken != null && fcmToken.isNotEmpty) 'fcm_token': fcmToken,
+        },
+      );
+
+      return _saveSessionFromResponse(response.data);
+    } catch (error) {
+      throw ApiResponseParser.mapError(error, fallback: 'فشل التحقق من الرمز');
+    }
+  }
+
+  /// Resends the login OTP for an existing challenge (same pattern as reset).
+  Future<String> resendLoginOtp({
+    required String email,
+    required String challengeToken,
+  }) async {
+    try {
+      final response = await _apiService.post(
+        EndPoints.resendLoginOtp,
+        data: {
+          'email': email,
+          'challenge_token': challengeToken,
+        },
+      );
+      return _readSuccessMessage(
+        response.data,
+        fallback: 'تم إرسال رمز التحقق إلى بريدك الإلكتروني',
+      );
+    } catch (error) {
+      throw ApiResponseParser.mapError(
+        error,
+        fallback: 'فشل إرسال رمز التحقق',
+      );
     }
   }
 
@@ -305,6 +355,45 @@ class AuthRepository {
     await persistUser(authResponse.data.user);
 
     return authResponse.data.user;
+  }
+
+  LoginChallenge _readLoginChallenge(dynamic data, {required String fallbackEmail}) {
+    if (data is! Map<String, dynamic>) {
+      throw Exception('استجابة غير صالحة من الخادم');
+    }
+
+    if (data['success'] == false) {
+      throw Exception(
+        ApiResponseParser.toUserMessage(
+          Exception(ApiResponseParser.extractMessage(data) ?? 'فشل تسجيل الدخول'),
+          fallback: 'فشل تسجيل الدخول',
+        ),
+      );
+    }
+
+    final payload = data['data'];
+    if (payload is! Map) {
+      throw Exception('استجابة غير صالحة من الخادم');
+    }
+
+    final requiresOtp = payload['requires_otp'] == true;
+    final challengeToken = payload['challenge_token'];
+    if (!requiresOtp || challengeToken is! String || challengeToken.isEmpty) {
+      throw Exception('استجابة غير صالحة من الخادم');
+    }
+
+    final email = payload['email'];
+    final expiresIn = payload['expires_in'];
+    final message = data['message'];
+
+    return LoginChallenge(
+      email: email is String && email.isNotEmpty ? email : fallbackEmail,
+      challengeToken: challengeToken,
+      message: message is String && message.isNotEmpty
+          ? message
+          : 'تم إرسال رمز التحقق إلى بريدك الإلكتروني',
+      expiresIn: expiresIn is int ? expiresIn : 900,
+    );
   }
 
   String _readSuccessMessage(dynamic data, {required String fallback}) {

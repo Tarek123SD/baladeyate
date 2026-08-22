@@ -121,20 +121,66 @@ class AuthCubit extends Cubit<AuthState> {
     }
   }
 
-  /// Login with email and password.
+  /// Password step: on success the API sends an OTP and returns a challenge.
   Future<void> login(String email, String password) async {
     emit(const AuthLoading());
     try {
       final fcmToken = await _fcmService.getToken();
-      final user = await _authRepository.login(
+      final challenge = await _authRepository.login(
         email,
         password,
+        fcmToken: fcmToken,
+      );
+      emit(AuthOtpRequired(
+        email: challenge.email,
+        challengeToken: challenge.challengeToken,
+        message: challenge.message,
+      ));
+    } catch (e) {
+      emit(AuthFailure(message: _messageFromError(e)));
+    }
+  }
+
+  /// OTP step: issues the session token and continues the existing post-login path.
+  Future<void> verifyLoginOtp({
+    required String email,
+    required String otp,
+    required String challengeToken,
+  }) async {
+    emit(const AuthLoading());
+    try {
+      final fcmToken = await _fcmService.getToken();
+      final user = await _authRepository.verifyLoginOtp(
+        email: email,
+        otp: otp,
+        challengeToken: challengeToken,
         fcmToken: fcmToken,
       );
       emit(AuthSuccess(user: user));
       await _fcmService.syncTokenWithBackend();
     } catch (e) {
       emit(AuthFailure(message: _messageFromError(e)));
+    }
+  }
+
+  /// Same resend pattern as password reset (re-issues OTP, keeps the challenge).
+  Future<bool> resendLoginOtp({
+    required String email,
+    required String challengeToken,
+  }) async {
+    try {
+      final message = await _authRepository.resendLoginOtp(
+        email: email,
+        challengeToken: challengeToken,
+      );
+      emit(AuthOtpRequired(
+        email: email,
+        challengeToken: challengeToken,
+        message: message,
+      ));
+      return true;
+    } catch (e) {
+      return false;
     }
   }
 

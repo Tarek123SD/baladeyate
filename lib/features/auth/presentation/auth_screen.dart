@@ -8,7 +8,9 @@ import 'package:baladeyate/features/auth/cubits/auth_cubit/auth_cubit.dart';
 import 'package:baladeyate/features/auth/cubits/auth_cubit/auth_state.dart';
 import 'package:baladeyate/features/auth/cubits/auth_form_cubit/auth_form_cubit.dart';
 import 'package:baladeyate/features/auth/cubits/auth_form_cubit/auth_form_state.dart';
+import 'package:baladeyate/features/auth/models/otp_flow_purpose.dart';
 import 'package:baladeyate/features/auth/presentation/components/auth_screen_widgets.dart';
+import 'package:baladeyate/features/auth/presentation/verify_otp_screen.dart';
 import 'package:baladeyate/routes/auth_navigation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -44,11 +46,28 @@ class _AuthScreenState extends State<AuthScreen> {
   @override
   Widget build(BuildContext context) {
     return BlocListener<AuthCubit, AuthState>(
+      listenWhen: (previous, current) =>
+          (current is AuthOtpRequired && previous is AuthLoading) ||
+          current is AuthSuccess ||
+          current is AuthFailure,
       listener: (context, state) {
-        if (state is AuthSuccess) {
+        if (state is AuthOtpRequired) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => VerifyOtpScreen(
+                email: state.email,
+                challengeToken: state.challengeToken,
+                purpose: OtpFlowPurpose.login,
+              ),
+            ),
+          );
+        } else if (state is AuthSuccess) {
           context.go(homeRouteFor(state.user));
         } else if (state is AuthFailure) {
-          AppSnackBar.showError(context, state.message);
+          if (ModalRoute.of(context)?.isCurrent ?? false) {
+            AppSnackBar.showError(context, state.message);
+          }
         }
       },
       child: AuthScreenScaffold(

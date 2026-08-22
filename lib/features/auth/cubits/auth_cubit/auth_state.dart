@@ -25,6 +25,21 @@ final class AuthSuccess extends AuthState {
   List<Object?> get props => [user];
 }
 
+final class AuthOtpRequired extends AuthState {
+  const AuthOtpRequired({
+    required this.email,
+    required this.challengeToken,
+    required this.message,
+  });
+
+  final String email;
+  final String challengeToken;
+  final String message;
+
+  @override
+  List<Object?> get props => [email, challengeToken, message];
+}
+
 final class AuthFailure extends AuthState {
   const AuthFailure({required this.message});
 

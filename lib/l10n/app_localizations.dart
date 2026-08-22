@@ -181,6 +181,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Sign Up'**
   String get signupTitle;
+
+  /// No description provided for @loginOtpTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm login'**
+  String get loginOtpTitle;
+
+  /// No description provided for @loginOtpSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter the 6-digit verification code sent to your email to finish signing in'**
+  String get loginOtpSubtitle;
+
+  /// No description provided for @resetOtpTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Verify code'**
+  String get resetOtpTitle;
+
+  /// No description provided for @resetOtpSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter the 6-digit verification code sent to your email'**
+  String get resetOtpSubtitle;
 }
 
 class _AppLocalizationsDelegate

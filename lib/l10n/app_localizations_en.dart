@@ -50,4 +50,18 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get signupTitle => 'Sign Up';
+
+  @override
+  String get loginOtpTitle => 'Confirm login';
+
+  @override
+  String get loginOtpSubtitle =>
+      'Enter the 6-digit verification code sent to your email to finish signing in';
+
+  @override
+  String get resetOtpTitle => 'Verify code';
+
+  @override
+  String get resetOtpSubtitle =>
+      'Enter the 6-digit verification code sent to your email';
 }

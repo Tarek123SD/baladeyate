@@ -130,32 +130,6 @@ class ComplaintsCubit extends Cubit<ComplaintsState> {
     }
   }
 
-  Future<bool> deleteComplaint(int id) async {
-    final current = state;
-    if (current is ComplaintsLoaded) {
-      emit(current.copyWith(isSubmitting: true));
-    }
-
-    try {
-      await _complaintsRepository.deleteComplaint(id);
-
-      if (current is ComplaintsLoaded) {
-        final complaints =
-            current.complaints.where((item) => item.id != id).toList();
-        emit(ComplaintsLoaded(complaints: complaints));
-      } else {
-        await loadComplaints();
-      }
-      return true;
-    } catch (error) {
-      if (current is ComplaintsLoaded) {
-        emit(current.copyWith(isSubmitting: false));
-      }
-      emit(ComplaintsFailure(message: _messageFromError(error)));
-      return false;
-    }
-  }
-
   String _messageFromError(Object error) {
     return ApiResponseParser.toUserMessage(
       error,

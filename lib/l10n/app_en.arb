@@ -13,5 +13,9 @@
   "invalidEmail": "Invalid email format",
   "accountCreated": "Account created successfully",
   "loginTitle": "Login",
-  "signupTitle": "Sign Up"
+  "signupTitle": "Sign Up",
+  "loginOtpTitle": "Confirm login",
+  "loginOtpSubtitle": "Enter the 6-digit verification code sent to your email to finish signing in",
+  "resetOtpTitle": "Verify code",
+  "resetOtpSubtitle": "Enter the 6-digit verification code sent to your email"
 }

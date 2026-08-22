@@ -1,12 +1,8 @@
 import 'package:baladeyate/config/theme/app_colors.dart';
-import 'package:baladeyate/core/utils/app_snackbar.dart';
 import 'package:baladeyate/features/complaints/cubits/complaint_detail_cubit/complaint_detail_cubit.dart';
 import 'package:baladeyate/features/complaints/cubits/complaint_detail_cubit/complaint_detail_state.dart';
-import 'package:baladeyate/features/complaints/cubits/complaints_cubit/complaints_cubit.dart';
 import 'package:baladeyate/features/complaints/models/complaint.dart';
 import 'package:baladeyate/features/complaints/models/complaint_description.dart';
-import 'package:baladeyate/features/complaints/presentation/components/complaint_delete_confirmation_dialog.dart';
-import 'package:baladeyate/features/complaints/presentation/components/complaint_details_delete_bar.dart';
 import 'package:baladeyate/features/complaints/presentation/components/complaint_details_header_content.dart';
 import 'package:baladeyate/features/complaints/presentation/components/complaint_details_info_card.dart';
 import 'package:baladeyate/features/complaints/presentation/components/complaint_details_section_card.dart';
@@ -50,10 +46,6 @@ class ComplaintDetailsScreen extends StatelessWidget {
     final parts = parseComplaintDescription(targetComplaint.description);
     final locationDisplay = targetComplaint.cardLocationDisplay;
     final detailCubit = _tryRead<ComplaintDetailCubit>(context);
-
-    // Strict Business Rule: Only pending or in_progress complaints can be deleted
-    final bool canDelete = targetComplaint.status == 'pending' ||
-        targetComplaint.status == 'in_progress';
 
     final descriptionBody = parts.details.isNotEmpty
         ? parts.details
@@ -162,39 +154,7 @@ class ComplaintDetailsScreen extends StatelessWidget {
                 child: content,
               )
             : content,
-        bottomNavigationBar: canDelete
-            ? ComplaintDetailsDeleteBar(
-                onDelete: () => _confirmDelete(context, targetComplaint),
-              )
-            : const SizedBox.shrink(),
       ),
     );
-  }
-
-  Future<void> _confirmDelete(
-    BuildContext context,
-    Complaint targetComplaint,
-  ) async {
-    final detailCubit = _tryRead<ComplaintDetailCubit>(context);
-    final complaintsCubit = _tryRead<ComplaintsCubit>(context);
-    final navigator = Navigator.of(context);
-
-    final confirmed = await showComplaintDeleteConfirmationDialog(context);
-
-    if (confirmed != true) return;
-
-    bool success = false;
-    if (detailCubit != null) {
-      success = await detailCubit.deleteComplaint();
-    } else if (complaintsCubit != null) {
-      success = await complaintsCubit.deleteComplaint(targetComplaint.id);
-    }
-
-    if (success) {
-      navigator.pop();
-      if (context.mounted) {
-        AppSnackBar.showSuccess(context, 'تم حذف الشكوى بنجاح');
-      }
-    }
   }
 }

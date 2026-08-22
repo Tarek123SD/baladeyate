@@ -50,4 +50,18 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get signupTitle => 'إنشاء حساب';
+
+  @override
+  String get loginOtpTitle => 'تأكيد تسجيل الدخول';
+
+  @override
+  String get loginOtpSubtitle =>
+      'أدخل رمز التحقق المكوّن من 6 أرقام الذي أُرسل إلى بريدك الإلكتروني لإكمال تسجيل الدخول';
+
+  @override
+  String get resetOtpTitle => 'التحقق من الرمز';
+
+  @override
+  String get resetOtpSubtitle =>
+      'أدخل رمز التحقق المكوّن من 6 أرقام الذي أُرسل إلى بريدك الإلكتروني';
 }

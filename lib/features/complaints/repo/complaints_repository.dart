@@ -72,21 +72,6 @@ class ComplaintsRepository {
     }
   }
 
-  Future<void> deleteComplaint(int id) async {
-    try {
-      final response = await _apiService.delete(
-        EndPoints.complaintById(id),
-        data: const {},
-      );
-      ApiResponseParser.expectMap(
-        response.data,
-        fallback: 'فشل حذف الشكوى',
-      );
-    } catch (error) {
-      throw ApiResponseParser.mapError(error, fallback: 'فشل حذف الشكوى');
-    }
-  }
-
   Future<List<Complaint>> getDelegateComplaints() async {
     try {
       final response = await _apiService.get(EndPoints.delegateComplaints);

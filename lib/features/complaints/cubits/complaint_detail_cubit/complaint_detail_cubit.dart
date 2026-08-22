@@ -101,13 +101,4 @@ class ComplaintDetailCubit extends Cubit<ComplaintDetailState> {
     }
     return success;
   }
-
-  Future<bool> deleteComplaint() async {
-    emit(state.copyWith(isBusy: true));
-    final success = await _complaintsCubit.deleteComplaint(state.complaint.id);
-    if (!success) {
-      emit(state.copyWith(isBusy: false));
-    }
-    return success;
-  }
 }

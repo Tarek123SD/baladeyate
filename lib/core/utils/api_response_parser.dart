@@ -44,6 +44,7 @@ class ApiResponseParser {
     'fcm token': 'رمز الإشعارات',
     'otp': 'رمز التحقق',
     'reset token': 'رمز إعادة التعيين',
+    'challenge token': 'رمز التحقق المؤقت',
     'description': 'التفاصيل',
     'priority': 'الأولوية',
     'type': 'النوع',

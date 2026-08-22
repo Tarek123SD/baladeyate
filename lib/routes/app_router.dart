@@ -835,7 +835,7 @@ String? _authRedirect(BuildContext context, GoRouterState state) {
 
   // session restore and briefly landing back on home.
 
-  if (authState is AuthLoading) {
+  if (authState is AuthLoading || authState is AuthOtpRequired) {
 
     if (isPublicRoute(path)) return null;
 

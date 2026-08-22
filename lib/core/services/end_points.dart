@@ -12,6 +12,8 @@ class EndPoints {
   static const String forgotPassword = 'v1/auth/forgot-password';
   static const String verifyOtp = 'v1/auth/verify-otp';
   static const String resetPassword = 'v1/auth/reset-password';
+  static const String verifyLoginOtp = 'v1/auth/verify-login-otp';
+  static const String resendLoginOtp = 'v1/auth/resend-login-otp';
 
   // Citizen
   static const String profile = 'v1/profile';
